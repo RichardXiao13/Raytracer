@@ -3,7 +3,7 @@ EXE = raytracer
 
 # Add all object files needed for compiling:
 EXE_OBJ = main.o
-OBJS = main.o lodepng.o vector3d.o raytracer.o parser.o
+OBJS = main.o lodepng.o vector3d.o raytracer.o parser.o PNG.o
 
 # Compiler/linker config and object/depfile directory:
 CXX = clang++

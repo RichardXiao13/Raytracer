@@ -4,24 +4,12 @@
 #include <sstream>
 #include <iterator>
 #include <iostream>
+#include <algorithm>
 
 #include "parser.h"
+#include "raytracer.h"
 
 using namespace std;
-
-void Scene::addObject(Object *obj) {
-  objects.push_back(obj);
-}
-
-size_t Scene::getNumObjects() {
-  return objects.size();
-}
-
-Scene::~Scene() {
-  for (auto it = objects.begin(); it != objects.end(); ++it) {
-    delete *it;
-  }
-}
 
 template <typename Out>
 void split(const string &s, char delim, Out result) {
@@ -59,6 +47,8 @@ Scene *readDataFromStream(istream& in) {
   string filename = lineInfo.at(3);
   Scene *scene = new Scene(width, height, filename);
 
+  RGBAColor currentColor(1, 1, 1, 1);
+
   for (; getline(in, line);) {
     lineInfo = split(line, ' ');
     if (lineInfo.size() == 0) {
@@ -72,8 +62,20 @@ Scene *readDataFromStream(istream& in) {
       double y = stod(lineInfo.at(2));
       double z = stod(lineInfo.at(3));
       double r = stod(lineInfo.at(4));
-
-      scene->addObject(new Sphere(x, y, z, r));
+      Sphere *newObject = new Sphere(x, y, z, r);
+      newObject->setColor(currentColor);
+      scene->addObject(newObject);
+    } else if (keyword == "sun") {
+      double x = stod(lineInfo.at(1));
+      double y = stod(lineInfo.at(2));
+      double z = stod(lineInfo.at(3));
+      Light *newLight = new Light(x, y, z, currentColor);
+      scene->addLight(newLight);
+    } else if (keyword == "color") {
+      double r = stod(lineInfo.at(1));
+      double g = stod(lineInfo.at(2));
+      double b = stod(lineInfo.at(3));
+      currentColor = RGBAColor(r, g, b, 1);
     }
   }
 

@@ -1,11 +1,119 @@
+#include <string>
+#include <vector>
+#include <cmath>
 #include <algorithm>
+#include <utility>
+#include <float.h>
+
+#include "lodepng.h"
 #include "raytracer.h"
 
-using std::max;
+using namespace std;
 
-double getRayX(double x, int w, int h) {
+double getRayScaleX(double x, int w, int h) {
   return (2 * x - w) / max(w, h);
 }
-double getRayY(double y, int w, int h) {
+double getRayScaleY(double y, int w, int h) {
   return (h - 2 * y) / max(w, h);
+}
+
+IntersectionInfo Sphere::intersect(const Vector3D& origin, const Vector3D& direction) {
+  double radiusSquared = r * r;
+  Vector3D distanceFromSphere = center - origin;
+  bool isInsideSphere = dot(distanceFromSphere, distanceFromSphere) < radiusSquared;
+
+  Vector3D normalizedDirection = normalized(direction);
+  double tc = dot(distanceFromSphere, normalizedDirection);
+  
+  if (isInsideSphere == false && tc < 0) {
+    return { -1, Vector3D(), Vector3D(), nullptr };
+  }
+
+  Vector3D d = origin + tc * normalizedDirection - center;
+  double distanceSquared = dot(d, d);
+
+  if (isInsideSphere == false && radiusSquared < distanceSquared) {
+    return { -1, Vector3D(), Vector3D(), nullptr };
+  }
+
+  double tOffset = sqrt(radiusSquared - distanceSquared);
+  double t = 0;
+
+  if (isInsideSphere) {
+    t = tc + tOffset;
+  } else {
+    t = tc - tOffset;
+  }
+
+  Vector3D intersectionPoint = t * normalizedDirection + origin;
+  return { t, intersectionPoint, intersectionPoint - center, this };
+}
+
+void Scene::addObject(Object *obj) {
+  objects.push_back(obj);
+}
+
+void Scene::addLight(Light *light) {
+  lights.push_back(light);
+}
+
+size_t Scene::getNumObjects() {
+  return objects.size();
+}
+
+Scene::~Scene() {
+  for (auto it = objects.begin(); it != objects.end(); ++it) {
+    delete *it;
+  }
+}
+
+IntersectionInfo Scene::findClosestObject(const Vector3D& origin, const Vector3D& direction) {
+  IntersectionInfo closestInfo;
+  closestInfo.t = DBL_MAX;
+
+  for (auto it = objects.begin(); it != objects.end(); ++it) {
+    IntersectionInfo info = (*it)->intersect(origin, direction);
+    if (info.t >= 0 && info.t < closestInfo.t) {
+      closestInfo = info;
+    }
+  }
+  return closestInfo;
+}
+
+RGBAColor Scene::illuminate(const RGBAColor& objectColor, const Vector3D& surfaceNormal) {
+  double newR = 0;
+  double newG = 0;
+  double newB = 0;
+  Vector3D normalizedSurfaceNormal = normalized(surfaceNormal);
+  for (auto it = lights.begin(); it != lights.end(); ++it) {
+    Vector3D normalizedLightDirection = normalized((*it)->direction());
+    double reflectance = dot(normalizedSurfaceNormal, normalizedLightDirection);
+
+    newR += objectColor.r * (*it)->color().r * reflectance;
+    newG += objectColor.g * (*it)->color().g * reflectance;
+    newB += objectColor.b * (*it)->color().b * reflectance;
+  }
+
+  return RGBAColor(newR, newG, newB, objectColor.a);
+}
+
+RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction) {
+  IntersectionInfo intersectInfo = findClosestObject(origin, direction);
+  if (intersectInfo.obj != nullptr) {
+    return illuminate(intersectInfo.obj->color(), intersectInfo.normal);
+  }
+  return RGBAColor(1, 1, 1, 0);
+}
+
+PNG *Scene::render(const Vector3D& eye, const Vector3D& forward, const Vector3D& right, const Vector3D& up) {
+  PNG *img = new PNG(width_, height_);
+  for (int y = 0; y < height_; ++y) {
+    for (int x = 0; x < width_; ++x) {
+      double Sx = getRayScaleX(x, width_, height_);
+      double Sy = getRayScaleY(y, width_, height_);
+
+      img->getPixel(y, x) = raytrace(eye, forward + Sx * right + Sy * up);
+    }
+  }
+  return img;
 }
