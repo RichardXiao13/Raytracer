@@ -13,11 +13,13 @@ using namespace std;
 
 template <typename Out>
 void split(const string &s, char delim, Out result) {
-    istringstream iss(s);
-    string item;
-    while (getline(iss, item, delim)) {
-        *result++ = item;
+  istringstream iss(s);
+  string item;
+  while (getline(iss, item, delim)) {
+    if (!item.empty()) {
+      *result++ = item;
     }
+  }
 }
 
 vector<string> split(const string &s, char delim) {
@@ -76,6 +78,20 @@ Scene *readDataFromStream(istream& in) {
       double g = stod(lineInfo.at(2));
       double b = stod(lineInfo.at(3));
       currentColor = RGBAColor(r, g, b, 1);
+    } else if (keyword == "plane") {
+      double A = stod(lineInfo.at(1));
+      double B = stod(lineInfo.at(2));
+      double C = stod(lineInfo.at(3));
+      double D = stod(lineInfo.at(4));
+      Plane *newObject = new Plane(A, B, C, D);
+      newObject->setColor(currentColor);
+      scene->addObject(newObject);
+    } else if (keyword == "bulb") {
+      double x = stod(lineInfo.at(1));
+      double y = stod(lineInfo.at(2));
+      double z = stod(lineInfo.at(3));
+      Bulb *newBulb = new Bulb(x, y, z, currentColor);
+      scene->addBulb(newBulb);
     }
   }
 

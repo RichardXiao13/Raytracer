@@ -28,6 +28,8 @@ int main(int argc, char **argv) {
   Vector3D right   (1, 0, 0); // NORMALIZED
   Vector3D up      (0, 1, 0); // NORMALIZED
 
+  scene->setEye(eye);
+
   PNG *renderedScene = scene->render(eye, forward, right, up);
   renderedScene->saveToFile(scene->filename());
 
