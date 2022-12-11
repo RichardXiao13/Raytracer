@@ -62,11 +62,15 @@ private:
 class Bulb {
 public:
   Bulb(double x, double y, double z, const RGBAColor& color) : center_(x, y, z), color_(color) {};
-  Vector3D getLightDirection(const Vector3D& point);
+  Vector3D getLightDirection(const Vector3D& point) const;
   RGBAColor &color() {
     return color_;
   }
   Vector3D &center() {
+    return center_;
+  }
+
+  Vector3D center() const {
     return center_;
   }
 
@@ -119,6 +123,7 @@ public:
   size_t getNumObjects();
   PNG *render(const Vector3D& eye, const Vector3D& forward, const Vector3D& right, const Vector3D& up);
   bool pointInShadow(const Vector3D& origin, const Vector3D& light);
+  bool pointInShadow(const Vector3D& point, const Bulb *bulb);
 
   int width() {
     return width_;

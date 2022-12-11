@@ -17,7 +17,7 @@ double getRayScaleY(double y, int w, int h) {
   return (h - 2 * y) / max(w, h);
 }
 
-Vector3D Bulb::getLightDirection(const Vector3D& point) {
+Vector3D Bulb::getLightDirection(const Vector3D& point) const {
   return center_ - point;
 }
 
@@ -74,14 +74,12 @@ IntersectionInfo Plane::intersect(const Vector3D& origin, const Vector3D& direct
   return { t, t * normalizedDirection + origin, normal, this };
 }
 
-#include <iostream>
 Triangle::Triangle(const Vector3D& p1, const Vector3D& p2, const Vector3D& p3)
   : p1(p1), p2(p2), p3(p3) {
   Vector3D p3p1Diff = p3 - p1;
   Vector3D p2p1Diff = p2 - p1;
 
   normal = cross(p2p1Diff, p3p1Diff);
-  cout << p1 << p2 << p3 << endl;
 
   if (normal[2] < 0) {
     normal = -1 * normal;
@@ -189,8 +187,8 @@ RGBAColor Scene::illuminate(const IntersectionInfo& info) {
   }
 
   for (auto it = bulbs.begin(); it != bulbs.end(); ++it) {
-    if (pointInShadow(intersectionPoint + bias_ * normalized(surfaceNormal), (*it)->getLightDirection(intersectionPoint))) {
-      // continue;
+    if (pointInShadow(intersectionPoint + bias_ * normalized(surfaceNormal), *it)) {
+      continue;
     }
     Vector3D normalizedLightDirection = normalized((*it)->getLightDirection(intersectionPoint));
     double distance = magnitude((*it)->center() - intersectionPoint);
@@ -206,7 +204,21 @@ RGBAColor Scene::illuminate(const IntersectionInfo& info) {
 
 bool Scene::pointInShadow(const Vector3D& point, const Vector3D& lightDirection) {
   for (auto it = objects.begin(); it != objects.end(); ++it) {
-    if ((*it)->intersect(point, lightDirection).obj != nullptr) {
+    IntersectionInfo info = (*it)->intersect(point, lightDirection);
+    if (info.obj != nullptr) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool Scene::pointInShadow(const Vector3D& point, const Bulb *bulb) {
+  double intersectToBulbDist = magnitude(bulb->center() - point);
+
+  for (auto it = objects.begin(); it != objects.end(); ++it) {
+    IntersectionInfo info = (*it)->intersect(point, bulb->getLightDirection(point));
+    double objectToBulbDist = magnitude(bulb->center() - info.point);
+    if (info.obj != nullptr && objectToBulbDist < intersectToBulbDist) {
       return true;
     }
   }
