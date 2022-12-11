@@ -52,3 +52,4 @@ private:
 
 std::ostream& operator<<(std::ostream& out, const RGBAColor& color);
 double linearToGamma(double channel);
+double exponentialExposure(double channel, double exposure);

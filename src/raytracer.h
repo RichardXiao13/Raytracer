@@ -124,6 +124,7 @@ public:
   PNG *render(const Vector3D& eye, const Vector3D& forward, const Vector3D& right, const Vector3D& up);
   bool pointInShadow(const Vector3D& origin, const Vector3D& light);
   bool pointInShadow(const Vector3D& point, const Bulb *bulb);
+  void setExposure(double value);
 
   int width() {
     return width_;
@@ -155,4 +156,5 @@ private:
   string filename_;
   Vector3D eye_;
   double bias_ = 1e-4;
+  double exposure = -1.0;
 };

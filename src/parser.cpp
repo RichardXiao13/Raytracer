@@ -104,6 +104,9 @@ Scene *readDataFromStream(istream& in) {
       Triangle *newObject = new Triangle(scene->getPoint(i), scene->getPoint(j), scene->getPoint(k));
       newObject->setColor(currentColor);
       scene->addObject(newObject);
+    } else if (keyword == "expose") {
+      double exposure = stod(lineInfo.at(1));
+      scene->setExposure(exposure);
     }
   }
 

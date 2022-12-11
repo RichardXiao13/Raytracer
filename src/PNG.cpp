@@ -14,6 +14,10 @@ double linearToGamma(double channel) {
   return 1.055 * pow(channel, 1/2.4) - 0.055;
 }
 
+double exponentialExposure(double channel, double exposure) {
+  return 1.0 - exp(-1 * channel * exposure);
+}
+
 RGBAColor RGBAColor::toSRGB() {
   return RGBAColor(linearToGamma(r), linearToGamma(g), linearToGamma(b), a);
 }

@@ -141,6 +141,10 @@ size_t Scene::getNumObjects() {
   return objects.size();
 }
 
+void Scene::setExposure(double value) {
+  exposure = value;
+}
+
 Scene::~Scene() {
   for (auto it = objects.begin(); it != objects.end(); ++it) {
     delete *it;
@@ -181,6 +185,7 @@ RGBAColor Scene::illuminate(const IntersectionInfo& info) {
     Vector3D normalizedLightDirection = normalized((*it)->direction());
     double reflectance = dot(normalizedSurfaceNormal, normalizedLightDirection);
 
+    // can factor out objectColor to optimize
     newR += objectColor.r * (*it)->color().r * reflectance;
     newG += objectColor.g * (*it)->color().g * reflectance;
     newB += objectColor.b * (*it)->color().b * reflectance;
@@ -240,7 +245,13 @@ PNG *Scene::render(const Vector3D& eye, const Vector3D& forward, const Vector3D&
       double Sx = getRayScaleX(x, width_, height_);
       double Sy = getRayScaleY(y, width_, height_);
 
-      img->getPixel(y, x) = raytrace(eye, forward + Sx * right + Sy * up);
+      RGBAColor color = raytrace(eye, forward + Sx * right + Sy * up);
+      if (exposure >= 0) {
+        color.r = exponentialExposure(color.r, exposure);
+        color.g = exponentialExposure(color.g, exposure);
+        color.b = exponentialExposure(color.b, exposure);
+      }
+      img->getPixel(y, x) = color;
     }
   }
   return img;
