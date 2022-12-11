@@ -50,6 +50,7 @@ Scene *readDataFromStream(istream& in) {
   Scene *scene = new Scene(width, height, filename);
 
   RGBAColor currentColor(1, 1, 1, 1);
+  double currentShine = 0;
 
   for (; getline(in, line);) {
     lineInfo = split(line, ' ');
@@ -66,6 +67,7 @@ Scene *readDataFromStream(istream& in) {
       double r = stod(lineInfo.at(4));
       Sphere *newObject = new Sphere(x, y, z, r);
       newObject->setColor(currentColor);
+      newObject->setShine(currentShine);
       scene->addObject(newObject);
     } else if (keyword == "sun") {
       double x = stod(lineInfo.at(1));
@@ -85,6 +87,7 @@ Scene *readDataFromStream(istream& in) {
       double D = stod(lineInfo.at(4));
       Plane *newObject = new Plane(A, B, C, D);
       newObject->setColor(currentColor);
+      newObject->setShine(currentShine);
       scene->addObject(newObject);
     } else if (keyword == "bulb") {
       double x = stod(lineInfo.at(1));
@@ -103,10 +106,14 @@ Scene *readDataFromStream(istream& in) {
       int k = stoi(lineInfo.at(3)) - 1;
       Triangle *newObject = new Triangle(scene->getPoint(i), scene->getPoint(j), scene->getPoint(k));
       newObject->setColor(currentColor);
+      newObject->setShine(currentShine);
       scene->addObject(newObject);
     } else if (keyword == "expose") {
       double exposure = stod(lineInfo.at(1));
       scene->setExposure(exposure);
+    } else if (keyword == "shininess") {
+      double s = stod(lineInfo.at(1));
+      currentShine = s;
     }
   }
 

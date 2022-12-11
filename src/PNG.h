@@ -16,6 +16,10 @@ public:
   RGBAColor(double r1, double g1, double b1, double a1) : r(r1), g(g1), b(b1), a(a1) {};
   RGBAColor toSRGB();
 
+  friend RGBAColor operator*(double scalar, const RGBAColor& c);
+  friend RGBAColor operator*(const RGBAColor& c, double scalar);
+  RGBAColor operator+(const RGBAColor& other) const;
+
   double r;
   double g;
   double b;
@@ -53,3 +57,4 @@ private:
 std::ostream& operator<<(std::ostream& out, const RGBAColor& color);
 double linearToGamma(double channel);
 double exponentialExposure(double channel, double exposure);
+RGBAColor clipColor(const RGBAColor& c);

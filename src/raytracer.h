@@ -40,9 +40,16 @@ public:
   void setColor(const RGBAColor& color) {
     color_ = color;
   }
+  void setShine(double s) {
+    shine_ = s;
+  }
+  double shine() {
+    return shine_;
+  }
 
 protected:
   RGBAColor color_;
+  double shine_;
 };
 
 class Light {
@@ -144,7 +151,7 @@ public:
 
 private:
   RGBAColor illuminate(const IntersectionInfo& info);
-  RGBAColor raytrace(const Vector3D& origin, const Vector3D& direction);
+  RGBAColor raytrace(const Vector3D& origin, const Vector3D& direction, int depth);
   IntersectionInfo findClosestObject(const Vector3D& origin, const Vector3D& direction);
 
   vector<Object*> objects;
@@ -157,4 +164,7 @@ private:
   Vector3D eye_;
   double bias_ = 1e-4;
   double exposure = -1.0;
+  int maxBounces = 4;
 };
+
+void displayRenderProgress(double progress, int barWidth=70);

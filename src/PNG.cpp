@@ -22,6 +22,21 @@ RGBAColor RGBAColor::toSRGB() {
   return RGBAColor(linearToGamma(r), linearToGamma(g), linearToGamma(b), a);
 }
 
+RGBAColor operator*(double scalar, const RGBAColor& c) {
+  return RGBAColor(scalar * c.r, scalar * c.g, scalar * c.b, c.a);
+}
+RGBAColor operator*(const RGBAColor& c, double scalar) {
+  return RGBAColor(scalar * c.r, scalar * c.g, scalar * c.b, c.a);
+}
+
+RGBAColor RGBAColor::operator+(const RGBAColor& other) const {
+  return RGBAColor(other.r + r, other.g + g, other.b + b, 1.0);
+}
+
+RGBAColor clipColor(const RGBAColor& c) {
+  return RGBAColor(min(c.r, 1.0), min(c.g, 1.0), min(c.b, 1.0), min(c.a, 1.0));
+}
+
 RGBAColor &PNG::getPixel(int row, int col) {
   assert(row >= 0 && row < height_);
   assert(col >= 0 && col < width_);

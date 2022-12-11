@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <utility>
 #include <float.h>
+#include <iostream>
+#include <iomanip>
 
 #include "lodepng.h"
 #include "raytracer.h"
@@ -160,6 +162,7 @@ Scene::~Scene() {
 IntersectionInfo Scene::findClosestObject(const Vector3D& origin, const Vector3D& direction) {
   IntersectionInfo closestInfo;
   closestInfo.t = DBL_MAX;
+  closestInfo.obj = nullptr;
 
   for (auto it = objects.begin(); it != objects.end(); ++it) {
     IntersectionInfo info = (*it)->intersect(origin, direction);
@@ -204,7 +207,7 @@ RGBAColor Scene::illuminate(const IntersectionInfo& info) {
     newB += objectColor.b * (*it)->color().b * reflectance;
   }
 
-  return RGBAColor(min(newR, 1.0), min(newG, 1.0), min(newB, 1.0), objectColor.a);
+  return RGBAColor(newR, newG, newB, objectColor.a);
 }
 
 bool Scene::pointInShadow(const Vector3D& point, const Vector3D& lightDirection) {
@@ -230,28 +233,57 @@ bool Scene::pointInShadow(const Vector3D& point, const Bulb *bulb) {
   return false;
 }
 
-RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction) {
+RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int depth) {
   IntersectionInfo intersectInfo = findClosestObject(origin, direction);
   if (intersectInfo.obj != nullptr) {
-    return illuminate(intersectInfo);
+    double shine = intersectInfo.obj->shine();
+    if (depth < maxBounces && shine > 0) {
+      Vector3D normalizedSurfaceNormal = normalized(intersectInfo.normal);
+      Vector3D reflectedDirection = direction - 2 * dot(normalizedSurfaceNormal, direction) * normalizedSurfaceNormal;
+      RGBAColor shinedColor = raytrace(intersectInfo.point + bias_ * normalized(intersectInfo.normal), reflectedDirection, depth + 1);
+      return (1 - shine) * illuminate(intersectInfo) + shinedColor.a * shine * shinedColor;
+    } else if (depth < maxBounces) {
+      return illuminate(intersectInfo);
+    }
   }
   return RGBAColor(1, 1, 1, 0);
 }
 
+void displayRenderProgress(double progress, int barWidth) {
+  // https://stackoverflow.com/questions/14539867/how-to-display-a-progress-indicator-in-pure-c-c-cout-printf
+  int pos = barWidth * progress;
+  cout << "[";
+
+  for (int i = 0; i < barWidth; ++i) {
+    if (i < pos) cout << "=";
+    else if (i == pos) cout << ">";
+    else cout << " ";
+  }
+
+  std::cout << "] " << fixed << setprecision(2) << progress * 100.0 << " % \r";
+  std::cout.flush();
+}
+
 PNG *Scene::render(const Vector3D& eye, const Vector3D& forward, const Vector3D& right, const Vector3D& up) {
+  int totalPixels = height_ * width_;
+  int finishedPixels = 0;
+
   PNG *img = new PNG(width_, height_);
   for (int y = 0; y < height_; ++y) {
     for (int x = 0; x < width_; ++x) {
       double Sx = getRayScaleX(x, width_, height_);
       double Sy = getRayScaleY(y, width_, height_);
 
-      RGBAColor color = raytrace(eye, forward + Sx * right + Sy * up);
+      RGBAColor color = clipColor(raytrace(eye, forward + Sx * right + Sy * up, 0));
       if (exposure >= 0) {
         color.r = exponentialExposure(color.r, exposure);
         color.g = exponentialExposure(color.g, exposure);
         color.b = exponentialExposure(color.b, exposure);
       }
       img->getPixel(y, x) = color;
+
+      ++finishedPixels;
+      displayRenderProgress(static_cast<double>(finishedPixels) / totalPixels);
     }
   }
   return img;
