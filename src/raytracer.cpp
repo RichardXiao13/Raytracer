@@ -53,9 +53,7 @@ IntersectionInfo Sphere::intersect(const Vector3D& origin, const Vector3D& direc
   return { t, intersectionPoint, intersectionPoint - center, this };
 }
 
-IntersectionInfo Plane::intersect(const Vector3D& origin, const Vector3D& direction) {
-  Vector3D surfaceNormal(A, B, C);
-  Vector3D point;
+Plane::Plane(double A, double B, double C, double D) : normal(A, B, C) {
   if (A != 0) {
     point[0] = -D/A;
   } else if (B != 0) {
@@ -63,14 +61,59 @@ IntersectionInfo Plane::intersect(const Vector3D& origin, const Vector3D& direct
   } else {
     point[2] = -D/C;
   }
+}
+
+IntersectionInfo Plane::intersect(const Vector3D& origin, const Vector3D& direction) {
   Vector3D normalizedDirection = normalized(direction);
 
-  double t = dot((point - origin), surfaceNormal) / dot(normalizedDirection, surfaceNormal);
+  double t = dot((point - origin), normal) / dot(normalizedDirection, normal);
 
   if (t < 0) {
     return { -1, Vector3D(), Vector3D(), nullptr };
   }
-  return { t, t * normalizedDirection + origin, surfaceNormal, this };
+  return { t, t * normalizedDirection + origin, normal, this };
+}
+
+#include <iostream>
+Triangle::Triangle(const Vector3D& p1, const Vector3D& p2, const Vector3D& p3)
+  : p1(p1), p2(p2), p3(p3) {
+  Vector3D p3p1Diff = p3 - p1;
+  Vector3D p2p1Diff = p2 - p1;
+
+  normal = cross(p2p1Diff, p3p1Diff);
+  cout << p1 << p2 << p3 << endl;
+
+  if (normal[2] < 0) {
+    normal = -1 * normal;
+  }
+
+  Vector3D a1 = cross(p3p1Diff, normal);
+  Vector3D a2 = cross(p2p1Diff, normal);
+
+  e1 = 1.0 / dot(a1, p2p1Diff) * a1;
+  e2 = 1.0 / dot(a2, p3p1Diff) * a2;
+}
+
+IntersectionInfo Triangle::intersect(const Vector3D& origin, const Vector3D& direction) {
+  Vector3D normalizedDirection = normalized(direction);
+
+  double t = dot((p1 - origin), normal) / dot(normalizedDirection, normal);
+
+  if (t < 0) {
+    return { -1, Vector3D(), Vector3D(), nullptr };
+  }
+
+  Vector3D intersectionPoint = t * normalizedDirection + origin;
+
+  double b2 = dot(e1, intersectionPoint - p1);
+  double b3 = dot(e2, intersectionPoint - p1);
+  double b1 = 1.0 - b3 - b2;
+
+  if (b1 < 0 || b1 > 1 || b2 < 0 || b2 > 1 || b3 < 0 || b3 > 1) {
+    return { -1, Vector3D(), Vector3D(), nullptr };
+  }
+
+  return { t, intersectionPoint, normal, this };
 }
 
 void Scene::addObject(Object *obj) {
@@ -83,6 +126,17 @@ void Scene::addLight(Light *light) {
 
 void Scene::addBulb(Bulb *bulb) {
   bulbs.push_back(bulb);
+}
+
+void Scene::addPoint(double x, double y, double z) {
+  points.push_back(Vector3D(x, y, z));
+}
+
+Vector3D &Scene::getPoint(int i) {
+  if (i < 0) {
+    i += points.size() + 1;
+  }
+  return points.at(i);
 }
 
 size_t Scene::getNumObjects() {
@@ -147,7 +201,7 @@ RGBAColor Scene::illuminate(const IntersectionInfo& info) {
     newB += objectColor.b * (*it)->color().b * reflectance;
   }
 
-  return RGBAColor(newR, newG, newB, objectColor.a);
+  return RGBAColor(min(newR, 1.0), min(newG, 1.0), min(newB, 1.0), objectColor.a);
 }
 
 bool Scene::pointInShadow(const Vector3D& point, const Vector3D& lightDirection) {

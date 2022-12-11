@@ -78,7 +78,6 @@ private:
 class Sphere : public Object {
 public:
   Sphere(double x1, double y1, double z1, double r1) : center(x1, y1, z1), r(r1) {};
-  ~Sphere() {};
   IntersectionInfo intersect(const Vector3D& origin, const Vector3D& direction);
 
   Vector3D center;
@@ -87,15 +86,26 @@ public:
 
 class Plane : public Object {
 public:
-  Plane(double A1, double B1, double C1, double D1) : A(A1), B(B1), C(C1), D(D1) {};
-  ~Plane() {};
+  Plane(double A1, double B1, double C1, double D1);
   IntersectionInfo intersect(const Vector3D& origin, const Vector3D& direction);
 
 private:
-  double A;
-  double B;
-  double C;
-  double D;
+  Vector3D normal;
+  Vector3D point;
+};
+
+class Triangle : public Object {
+public:
+  Triangle(const Vector3D& p1, const Vector3D& p2, const Vector3D& p3);
+  IntersectionInfo intersect(const Vector3D& origin, const Vector3D& direction);
+
+private:
+  Vector3D p1;
+  Vector3D p2;
+  Vector3D p3;
+  Vector3D normal;
+  Vector3D e1;
+  Vector3D e2;
 };
 class Scene {
 public:
@@ -104,6 +114,8 @@ public:
   void addObject(Object *obj);
   void addLight(Light *light);
   void addBulb(Bulb *bulb);
+  void addPoint(double x, double y, double z);
+  Vector3D &getPoint(int i);
   size_t getNumObjects();
   PNG *render(const Vector3D& eye, const Vector3D& forward, const Vector3D& right, const Vector3D& up);
   bool pointInShadow(const Vector3D& origin, const Vector3D& light);
@@ -132,6 +144,7 @@ private:
   vector<Object*> objects;
   vector<Light*> lights;
   vector<Bulb*> bulbs;
+  vector<Vector3D> points;
   int width_;
   int height_;
   string filename_;

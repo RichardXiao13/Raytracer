@@ -92,6 +92,18 @@ Scene *readDataFromStream(istream& in) {
       double z = stod(lineInfo.at(3));
       Bulb *newBulb = new Bulb(x, y, z, currentColor);
       scene->addBulb(newBulb);
+    } else if (keyword == "xyz") {
+      double x = stod(lineInfo.at(1));
+      double y = stod(lineInfo.at(2));
+      double z = stod(lineInfo.at(3));
+      scene->addPoint(x, y, z);
+    } else if (keyword == "trif") {
+      int i = stoi(lineInfo.at(1)) - 1;
+      int j = stoi(lineInfo.at(2)) - 1;
+      int k = stoi(lineInfo.at(3)) - 1;
+      Triangle *newObject = new Triangle(scene->getPoint(i), scene->getPoint(j), scene->getPoint(k));
+      newObject->setColor(currentColor);
+      scene->addObject(newObject);
     }
   }
 
