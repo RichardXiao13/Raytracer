@@ -50,7 +50,10 @@ Scene *readDataFromStream(istream& in) {
   Scene *scene = new Scene(width, height, filename);
 
   RGBAColor currentColor(1, 1, 1, 1);
-  double currentShine = 0;
+  Vector3D currentShine(0, 0, 0);
+  Vector3D currentTransparency(0, 0, 0);
+  double currentIOR = 1.458;
+  double currentRoughness = 0.0;
 
   for (; getline(in, line);) {
     lineInfo = split(line, ' ');
@@ -68,6 +71,9 @@ Scene *readDataFromStream(istream& in) {
       Sphere *newObject = new Sphere(x, y, z, r);
       newObject->setColor(currentColor);
       newObject->setShine(currentShine);
+      newObject->setTransparency(currentTransparency);
+      newObject->setIndexOfRefraction(currentIOR);
+      newObject->setRoughness(currentRoughness);
       scene->addObject(newObject);
     } else if (keyword == "sun") {
       double x = stod(lineInfo.at(1));
@@ -88,7 +94,10 @@ Scene *readDataFromStream(istream& in) {
       Plane *newObject = new Plane(A, B, C, D);
       newObject->setColor(currentColor);
       newObject->setShine(currentShine);
-      scene->addObject(newObject);
+      newObject->setTransparency(currentTransparency);
+      newObject->setIndexOfRefraction(currentIOR);
+      newObject->setRoughness(currentRoughness);
+      scene->addPlane(newObject);
     } else if (keyword == "bulb") {
       double x = stod(lineInfo.at(1));
       double y = stod(lineInfo.at(2));
@@ -107,13 +116,40 @@ Scene *readDataFromStream(istream& in) {
       Triangle *newObject = new Triangle(scene->getPoint(i), scene->getPoint(j), scene->getPoint(k));
       newObject->setColor(currentColor);
       newObject->setShine(currentShine);
+      newObject->setTransparency(currentTransparency);
+      newObject->setIndexOfRefraction(currentIOR);
+      newObject->setRoughness(currentRoughness);
       scene->addObject(newObject);
     } else if (keyword == "expose") {
       double exposure = stod(lineInfo.at(1));
       scene->setExposure(exposure);
     } else if (keyword == "shininess") {
-      double s = stod(lineInfo.at(1));
-      currentShine = s;
+      double Sr = stod(lineInfo.at(1));
+      double Sg = Sr;
+      double Sb = Sr;
+      if (lineInfo.size() > 2) {
+        Sg = stod(lineInfo.at(2));
+        Sb = stod(lineInfo.at(3));
+      }
+      currentShine = Vector3D(Sr, Sg, Sb);
+    } else if (keyword == "bounces") {
+      double d = stoi(lineInfo.at(1));
+      scene->setMaxBounces(d);
+    } else if (keyword == "transparency") {
+      double Tr = stod(lineInfo.at(1));
+      double Tg = Tr;
+      double Tb = Tr;
+      if (lineInfo.size() > 2) {
+        Tg = stod(lineInfo.at(2));
+        Tb = stod(lineInfo.at(3));
+      }
+      currentTransparency = Vector3D(Tr, Tg, Tb);
+    } else if (keyword == "aa") {
+      int n = stoi(lineInfo.at(1));
+      scene->setNumRays(n);
+    } else if (keyword == "roughness") {
+      double roughness = stod(lineInfo.at(1));
+      currentRoughness = roughness;
     }
   }
 

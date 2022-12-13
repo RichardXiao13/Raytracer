@@ -2,6 +2,8 @@
 
 #include <string>
 
+#include "vector3d.h"
+
 using namespace std;
 
 /**
@@ -19,6 +21,7 @@ public:
   friend RGBAColor operator*(double scalar, const RGBAColor& c);
   friend RGBAColor operator*(const RGBAColor& c, double scalar);
   RGBAColor operator+(const RGBAColor& other) const;
+  RGBAColor &operator+=(const RGBAColor& other);
 
   double r;
   double g;
@@ -26,6 +29,8 @@ public:
   double a;
 };
 
+RGBAColor operator*(const Vector3D& v, const RGBAColor& c);
+RGBAColor operator*(const RGBAColor& c, const Vector3D& v);
 class PNG {
 public:
   PNG(int w, int h) : width_(w), height_(h) {

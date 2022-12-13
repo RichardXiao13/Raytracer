@@ -3,9 +3,11 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <random>
 
 #include "PNG.h"
 #include "vector3d.h"
+#include "BVH.h"
 
 using namespace std;
 
@@ -34,22 +36,73 @@ class Object {
 public:
   virtual ~Object() {};
   virtual IntersectionInfo intersect(const Vector3D& origin, const Vector3D& direction) = 0;
+
+  Vector3D aabbMin() {
+    return aabbMin_;
+  }
+
+  Vector3D aabbMax() {
+    return aabbMax_;
+  }
+
+  Vector3D centroid() {
+    return centroid_;
+  }
   RGBAColor color() {
     return color_;
   }
+
   void setColor(const RGBAColor& color) {
     color_ = color;
   }
-  void setShine(double s) {
+
+  void setShine(Vector3D s) {
     shine_ = s;
   }
-  double shine() {
+
+  Vector3D &shine() {
     return shine_;
+  }
+
+  void setTransparency(Vector3D t) {
+    transparency_ = t;
+  }
+
+  Vector3D &transparency() {
+    return transparency_;
+  }
+
+  void setIndexOfRefraction(double n) {
+    indexOfRefraction_ = n;
+  }
+
+  double indexOfRefraction() {
+    return indexOfRefraction_;
+  }
+
+  void setRoughness(double s) {
+    roughness_ = s;
+    roughnessDistribution = normal_distribution<>(0, roughness_);
+  }
+
+  double roughness() {
+    return roughness_;
+  }
+
+  double getPerturbation(mt19937& rng) {
+    return roughnessDistribution(rng);
   }
 
 protected:
   RGBAColor color_;
-  double shine_;
+  Vector3D shine_;
+  Vector3D transparency_;
+  double indexOfRefraction_;
+  double roughness_;
+  normal_distribution<> roughnessDistribution;
+  Vector3D aabbMin_;
+  Vector3D aabbMax_;
+  Vector3D centroid_;
 };
 
 class Light {
@@ -88,7 +141,7 @@ private:
 
 class Sphere : public Object {
 public:
-  Sphere(double x1, double y1, double z1, double r1) : center(x1, y1, z1), r(r1) {};
+  Sphere(double x1, double y1, double z1, double r1);
   IntersectionInfo intersect(const Vector3D& origin, const Vector3D& direction);
 
   Vector3D center;
@@ -123,15 +176,17 @@ public:
   Scene(int w, int h, const string& file) : width_(w), height_(h), filename_(file) {};
   ~Scene();
   void addObject(Object *obj);
+  void addPlane(Plane *plane);
   void addLight(Light *light);
   void addBulb(Bulb *bulb);
   void addPoint(double x, double y, double z);
   Vector3D &getPoint(int i);
   size_t getNumObjects();
-  PNG *render(const Vector3D& eye, const Vector3D& forward, const Vector3D& right, const Vector3D& up);
+  PNG *render(const Vector3D& eye, const Vector3D& forward, const Vector3D& right, const Vector3D& up, int seed=56);
   bool pointInShadow(const Vector3D& origin, const Vector3D& light);
   bool pointInShadow(const Vector3D& point, const Bulb *bulb);
   void setExposure(double value);
+  void setMaxBounces(int d);
 
   int width() {
     return width_;
@@ -149,12 +204,17 @@ public:
     eye_ = eye;
   }
 
+  void setNumRays(int n) {
+    numRays = n;
+  }
+
 private:
   RGBAColor illuminate(const IntersectionInfo& info);
   RGBAColor raytrace(const Vector3D& origin, const Vector3D& direction, int depth);
   IntersectionInfo findClosestObject(const Vector3D& origin, const Vector3D& direction);
 
   vector<Object*> objects;
+  vector<Plane*> planes;
   vector<Light*> lights;
   vector<Bulb*> bulbs;
   vector<Vector3D> points;
@@ -165,6 +225,10 @@ private:
   double bias_ = 1e-4;
   double exposure = -1.0;
   int maxBounces = 4;
+  int numRays = 1;
+  mt19937 rng;
+  uniform_real_distribution<> aliasingDistribution = uniform_real_distribution<>(-0.5, 0.5);
+  BVH *bvh;
 };
 
 void displayRenderProgress(double progress, int barWidth=70);

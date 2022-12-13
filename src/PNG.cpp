@@ -4,6 +4,7 @@
 
 #include "PNG.h"
 #include "lodepng.h"
+#include "vector3d.h"
 
 using namespace std;
 
@@ -31,6 +32,21 @@ RGBAColor operator*(const RGBAColor& c, double scalar) {
 
 RGBAColor RGBAColor::operator+(const RGBAColor& other) const {
   return RGBAColor(other.r + r, other.g + g, other.b + b, 1.0);
+}
+
+RGBAColor &RGBAColor::operator+=(const RGBAColor& other) {
+  r += other.r;
+  g += other.g;
+  b += other.b;
+  return *this;
+}
+
+RGBAColor operator*(const Vector3D& v, const RGBAColor& c) {
+  return RGBAColor(c.r * v[0], c.g * v[1], c.b * v[2], c.a);
+}
+
+RGBAColor operator*(const RGBAColor& c, const Vector3D& v) {
+  return RGBAColor(c.r * v[0], c.g * v[1], c.b * v[2], c.a);
 }
 
 RGBAColor clipColor(const RGBAColor& c) {

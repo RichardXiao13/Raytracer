@@ -12,9 +12,12 @@ public:
   double operator[](size_t i) const;
   Vector3D operator-(const Vector3D& other) const;
   Vector3D operator+(const Vector3D& other) const;
+  Vector3D operator*(const Vector3D& other) const;
 
   friend Vector3D operator*(double scalar, const Vector3D& v);
   friend Vector3D operator*(const Vector3D& v, double scalar);
+  friend Vector3D operator-(double scalar, const Vector3D& v);
+  friend Vector3D operator-(const Vector3D& v, double scalar);
   friend double magnitude(const Vector3D& v);
   friend Vector3D normalized(const Vector3D& v);
   friend double dot(const Vector3D& v1, const Vector3D& v2);
