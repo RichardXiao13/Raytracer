@@ -2,6 +2,7 @@
 #include <limits>
 #include <queue>
 #include <functional>
+#include <iostream>
 
 #include "raytracer.h"
 #include "BVH.h"
@@ -18,8 +19,8 @@ BVH::BVH(vector<Object*> &objects) : objects(objects) {
 
 void BVH::updateNodeBounds(Node *node) {
   double inf = numeric_limits<double>::infinity();
-  node->aabbMin = Vector3D(-inf, -inf, -inf);
-  node->aabbMax = Vector3D(inf, inf, inf);
+  node->aabbMin = Vector3D(inf, inf, inf);
+  node->aabbMax = Vector3D(-inf, -inf, -inf);
   int end = node->start + node->numObjects;
   for (int i = node->start; i < end; ++i) {
     Vector3D aabbObjMin = objects.at(i)->aabbMin();
@@ -116,9 +117,18 @@ IntersectionInfo BVH::findClosestObject(const Vector3D& origin, const Vector3D& 
 double BVH::intersectAABB(const Vector3D& origin, const Vector3D& direction, const Vector3D& aabbMin, const Vector3D& aabbMax) {
   double tx_near = (aabbMin[0] - origin[0]) / direction[0];
   double tx_far = (aabbMax[0] - origin[0]) / direction[0];
+  double tmin = min(tx_near, tx_far);
+  double tmax = max(tx_near, tx_far);
   double ty_near = (aabbMin[1] - origin[1]) / direction[1];
   double ty_far = (aabbMax[1] - origin[1]) / direction[1];
+  tmin = max(tmin, min(ty_near, ty_far));
+  tmax = min(tmax, max(ty_near, ty_far));
   double tz_near = (aabbMin[2] - origin[2]) / direction[2];
   double tz_far = (aabbMax[2] - origin[2]) / direction[2];
-  return min(min(min(tx_near, tx_far), min(ty_near, ty_far)), min(tz_near, tz_far));
+  tmin = max(tmin, min(tz_near, tz_far));
+  tmax = min(tmax, max(tz_near, tz_far));
+  if (tmax >= tmin && tmax > 0) {
+    return tmin;
+  }
+  return -1;
 }

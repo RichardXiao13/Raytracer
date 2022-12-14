@@ -191,10 +191,11 @@ Scene::~Scene() {
 
 IntersectionInfo Scene::findClosestObject(const Vector3D& origin, const Vector3D& direction) {
   IntersectionInfo closestInfo = bvh->findClosestObject(origin, direction);
+  // cout << closestInfo.t << endl;
 
   for (auto it = planes.begin(); it != planes.end(); ++it) {
     IntersectionInfo info = (*it)->intersect(origin, direction);
-    if (info.t >= 0 && info.t < closestInfo.t) {
+    if (info.t >= 0 && (closestInfo.obj == nullptr || info.t < closestInfo.t)) {
       closestInfo = info;
     }
   }
@@ -269,9 +270,11 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
   Vector3D normalizedDirection = normalized(direction);
 
   IntersectionInfo intersectInfo = findClosestObject(origin, direction);
+  cout <<intersectInfo.obj << endl;
   
   if (intersectInfo.obj != nullptr) {
     intersectInfo.normal = normalized(intersectInfo.normal);
+    cout << intersectInfo.obj->roughness() << endl;
     for (int i = 0; i < 3; ++i) {
       intersectInfo.normal[i] += min(1.0, ceil(intersectInfo.obj->roughness())) * intersectInfo.obj->getPerturbation(rng);
     }
