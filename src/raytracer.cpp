@@ -6,11 +6,15 @@
 #include <limits>
 #include <iostream>
 #include <iomanip>
+#include <chrono>
+#include <ctime>
 
 #include "lodepng.h"
 #include "raytracer.h"
+#include "SafeQueue.h"
 
 using namespace std;
+using std::cout;
 
 double getRayScaleX(double x, int w, int h) {
   return (2 * x - w) / max(w, h);
@@ -191,7 +195,6 @@ Scene::~Scene() {
 
 IntersectionInfo Scene::findClosestObject(const Vector3D& origin, const Vector3D& direction) {
   IntersectionInfo closestInfo = bvh->findClosestObject(origin, direction);
-  // cout << closestInfo.t << endl;
 
   for (auto it = planes.begin(); it != planes.end(); ++it) {
     IntersectionInfo info = (*it)->intersect(origin, direction);
@@ -218,9 +221,9 @@ RGBAColor Scene::illuminate(const IntersectionInfo& info) {
     double reflectance = fabs(dot(surfaceNormal, normalizedLightDirection));
 
     // can factor out objectColor to optimize
-    newR += objectColor.r * (*it)->color().r * reflectance;
-    newG += objectColor.g * (*it)->color().g * reflectance;
-    newB += objectColor.b * (*it)->color().b * reflectance;
+    newR += (*it)->color().r * reflectance;
+    newG += (*it)->color().g * reflectance;
+    newB += (*it)->color().b * reflectance;
   }
 
   for (auto it = bulbs.begin(); it != bulbs.end(); ++it) {
@@ -231,81 +234,76 @@ RGBAColor Scene::illuminate(const IntersectionInfo& info) {
     double distance = magnitude((*it)->center() - intersectionPoint);
     double reflectance = fabs(dot(surfaceNormal, normalizedLightDirection)) / (distance * distance);
 
-    newR += objectColor.r * (*it)->color().r * reflectance;
-    newG += objectColor.g * (*it)->color().g * reflectance;
-    newB += objectColor.b * (*it)->color().b * reflectance;
+    newR += (*it)->color().r * reflectance;
+    newG += (*it)->color().g * reflectance;
+    newB += (*it)->color().b * reflectance;
   }
 
-  return RGBAColor(newR, newG, newB, objectColor.a);
+  return RGBAColor(objectColor.r * newR, objectColor.g * newG, objectColor.b * newB, objectColor.a);
 }
 
 bool Scene::pointInShadow(const Vector3D& point, const Vector3D& lightDirection) {
-  for (auto it = objects.begin(); it != objects.end(); ++it) {
-    IntersectionInfo info = (*it)->intersect(point, lightDirection);
-    if (info.obj != nullptr) {
-      return true;
-    }
-  }
-  return false;
+  return bvh->findClosestObject(point, lightDirection).obj != nullptr;
 }
 
 bool Scene::pointInShadow(const Vector3D& point, const Bulb *bulb) {
   double intersectToBulbDist = magnitude(bulb->center() - point);
-
-  for (auto it = objects.begin(); it != objects.end(); ++it) {
-    IntersectionInfo info = (*it)->intersect(point, bulb->getLightDirection(point));
-    double objectToBulbDist = magnitude(bulb->center() - info.point);
-    if (info.obj != nullptr && objectToBulbDist < intersectToBulbDist) {
-      return true;
-    }
-  }
-  return false;
+  IntersectionInfo info = bvh->findClosestObject(point, bulb->getLightDirection(point));
+  double objectToBulbDist = magnitude(bulb->center() - info.point);
+  return info.obj != nullptr && objectToBulbDist < intersectToBulbDist;
 }
 
 RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int depth) {
-  if (depth >= maxBounces) {
-    return RGBAColor(1, 1, 1, 0);
-  }
-
   Vector3D normalizedDirection = normalized(direction);
-
   IntersectionInfo intersectInfo = findClosestObject(origin, direction);
-  cout <<intersectInfo.obj << endl;
   
   if (intersectInfo.obj != nullptr) {
     intersectInfo.normal = normalized(intersectInfo.normal);
-    cout << intersectInfo.obj->roughness() << endl;
-    for (int i = 0; i < 3; ++i) {
-      intersectInfo.normal[i] += min(1.0, ceil(intersectInfo.obj->roughness())) * intersectInfo.obj->getPerturbation(rng);
+    if (intersectInfo.obj->roughness() > 0) {
+      for (int i = 0; i < 3; ++i) {
+        intersectInfo.normal[i] += intersectInfo.obj->getPerturbation(rng);
+      }
+      intersectInfo.normal = normalized(intersectInfo.normal);
     }
-    intersectInfo.normal = normalized(intersectInfo.normal);
-
-    Vector3D &shine = intersectInfo.obj->shine();
+    
+    Vector3D &reflectance = intersectInfo.obj->shine();
     Vector3D &transparency = intersectInfo.obj->transparency();
-    Vector3D refraction = (1.0 - shine) * transparency;
-    Vector3D diffuse = 1.0 - refraction - shine;
+    Vector3D refraction = (1.0 - reflectance) * transparency;
+    Vector3D diffuse = 1.0 - refraction - reflectance;
     RGBAColor color = diffuse * illuminate(intersectInfo);
 
-    if (depth < maxBounces && (transparency[0] > 0 || transparency[1] > 0 || transparency[2] > 0)) {
-      Vector3D normalizedSurfaceNormal = intersectInfo.normal;
-      if (dot(normalizedSurfaceNormal, normalizedDirection) > 0) {
-        normalizedSurfaceNormal = -1 * normalizedSurfaceNormal;
-      }
-    
-      double ior = intersectInfo.obj->indexOfRefraction();
-      double refractedAngle = dot(normalizedSurfaceNormal, normalizedDirection);
-      double k = 1.0 - ior * ior * (1.0 - refractedAngle * refractedAngle);
+    if (depth >= maxBounces) {
+      return color;
+    }
 
-      if (k > 0) {
-        Vector3D refractedDirection = ior * normalizedDirection - (ior * refractedAngle + sqrt(k)) * normalizedSurfaceNormal;
+    if (transparency[0] > 0 || transparency[1] > 0 || transparency[2] > 0) {
+      Vector3D normalizedSurfaceNormal = intersectInfo.normal;
+      double ior = intersectInfo.obj->indexOfRefraction();
+      double enteringCosine = dot(normalizedSurfaceNormal, normalizedDirection);
+
+      if (enteringCosine > 0) {
+        normalizedSurfaceNormal = -1 * normalizedSurfaceNormal;
+      } else {
+        ior = 1.0 / ior;
+        enteringCosine = -enteringCosine;
+      }
+      
+      double k = 1.0 - ior * ior * (1.0 - enteringCosine * enteringCosine);
+
+      if (k >= 0) {
+        Vector3D refractedDirection = ior * normalizedDirection + (ior * enteringCosine - sqrt(k)) * normalizedSurfaceNormal;
         RGBAColor refractedColor = refraction * raytrace(intersectInfo.point - bias_ * normalizedSurfaceNormal, refractedDirection, depth + 1);
         color += refractedColor.a * refractedColor;
+      } else {
+        Vector3D reflectedDirection = normalizedDirection - 2 * enteringCosine * normalizedSurfaceNormal;
+        RGBAColor reflectedColor = refraction * raytrace(intersectInfo.point + bias_ * normalizedSurfaceNormal, reflectedDirection, depth + 1);
+        color += reflectedColor.a * reflectedColor;
       }
     }
-    if (depth < maxBounces && (shine[0] > 0 || shine[1] > 0 || shine[2] > 0)) {
+    if (reflectance[0] > 0 || reflectance[1] > 0 || reflectance[2] > 0) {
       Vector3D reflectedDirection = normalizedDirection - 2 * dot(intersectInfo.normal, normalizedDirection) * intersectInfo.normal;
-      RGBAColor shinedColor = shine * raytrace(intersectInfo.point + bias_ * intersectInfo.normal, reflectedDirection, depth + 1);
-      color += shinedColor.a * shinedColor;
+      RGBAColor reflectedColor = reflectance * raytrace(intersectInfo.point + bias_ * intersectInfo.normal, reflectedDirection, depth + 1);
+      color += reflectedColor.a * reflectedColor;
     }
     return color;
   }
@@ -327,7 +325,7 @@ void displayRenderProgress(double progress, int barWidth) {
   std::cout.flush();
 }
 
-PNG *Scene::render(const Vector3D& eye, const Vector3D& forward, const Vector3D& right, const Vector3D& up, int seed) {
+PNG *Scene::render(int seed) {
   bvh = new BVH(objects);
 
   int totalPixels = height_ * width_;
@@ -338,6 +336,12 @@ PNG *Scene::render(const Vector3D& eye, const Vector3D& forward, const Vector3D&
   int allowAntiAliasing = min(1, numRays - 1);
 
   PNG *img = new PNG(width_, height_);
+
+  auto start = std::chrono::system_clock::now();
+  double invNumRays = 1.0 / numRays;
+  double invForwardLength = 1.0 / magnitude(forward);
+  Vector3D normalizedForward = normalized(forward);
+  
   for (int y = 0; y < height_; ++y) {
     for (int x = 0; x < width_; ++x) {
       RGBAColor avgColor(0, 0, 0, 1);
@@ -347,6 +351,16 @@ PNG *Scene::render(const Vector3D& eye, const Vector3D& forward, const Vector3D&
         double Sx = getRayScaleX(x + aliasingDistribution(rng) * allowAntiAliasing, width_, height_);
         double Sy = getRayScaleY(y + aliasingDistribution(rng) * allowAntiAliasing, width_, height_);
 
+        if (fisheye) {
+          Sx *= invForwardLength;
+          Sy *= invForwardLength;
+          double r_2 = Sx * Sx + Sy * Sy;
+          if (r_2 > 1) {
+            continue;
+          }
+          forward = sqrt(1 - r_2) * normalizedForward;
+        }
+
         RGBAColor color = clipColor(raytrace(eye, forward + Sx * right + Sy * up, 0));
         if (color.a != 0) {
           avgColor += color;
@@ -354,10 +368,10 @@ PNG *Scene::render(const Vector3D& eye, const Vector3D& forward, const Vector3D&
         }
       }
 
-      avgColor.r /= numRays;
-      avgColor.g /= numRays;
-      avgColor.b /= numRays;
-      avgColor.a = static_cast<double>(hits) / numRays;
+      avgColor.r *= invNumRays;
+      avgColor.g *= invNumRays;
+      avgColor.b *= invNumRays;
+      avgColor.a = hits * invNumRays;
 
       if (exposure >= 0) {
         avgColor.r = exponentialExposure(avgColor.r, exposure);
@@ -371,5 +385,13 @@ PNG *Scene::render(const Vector3D& eye, const Vector3D& forward, const Vector3D&
       displayRenderProgress(static_cast<double>(finishedPixels) / totalPixels);
     }
   }
+
+  // Some computation here
+  auto end = chrono::system_clock::now();
+
+  chrono::duration<double> elapsed_seconds = end-start;
+  time_t end_time = chrono::system_clock::to_time_t(end);
+
+  cout << "\nElapsed time: " << elapsed_seconds.count() << "s" << endl;
   return img;
 }

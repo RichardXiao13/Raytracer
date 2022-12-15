@@ -32,11 +32,13 @@ private:
 public:
   BVH(vector<Object*> &objects);
   IntersectionInfo findClosestObject(const Vector3D& origin, const Vector3D& direction);
+  int height();
 
 private:
   void updateNodeBounds(Node *node);
   void partition(Node *node);
   double intersectAABB(const Vector3D& origin, const Vector3D& direction, const Vector3D& aabbMin, const Vector3D& aabbMax);
+  int height(Node *node);
   Node *root;
   vector<Object*> &objects;
 };

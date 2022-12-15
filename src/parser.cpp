@@ -150,6 +150,23 @@ Scene *readDataFromStream(istream& in) {
     } else if (keyword == "roughness") {
       double roughness = stod(lineInfo.at(1));
       currentRoughness = roughness;
+    } else if (keyword == "eye") {
+      double x = stod(lineInfo.at(1));
+      double y = stod(lineInfo.at(2));
+      double z = stod(lineInfo.at(3));
+      scene->setEye(Vector3D(x, y, z));
+    } else if (keyword == "forward") {
+      double x = stod(lineInfo.at(1));
+      double y = stod(lineInfo.at(2));
+      double z = stod(lineInfo.at(3));
+      scene->setForward(Vector3D(x, y, z));
+    } else if (keyword == "up") {
+      double x = stod(lineInfo.at(1));
+      double y = stod(lineInfo.at(2));
+      double z = stod(lineInfo.at(3));
+      scene->setUp(Vector3D(x, y, z));
+    } else if (keyword == "fisheye") {
+      scene->enableFisheye();
     }
   }
 

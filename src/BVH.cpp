@@ -127,8 +127,19 @@ double BVH::intersectAABB(const Vector3D& origin, const Vector3D& direction, con
   double tz_far = (aabbMax[2] - origin[2]) / direction[2];
   tmin = max(tmin, min(tz_near, tz_far));
   tmax = min(tmax, max(tz_near, tz_far));
-  if (tmax >= tmin && tmax > 0) {
-    return tmin;
+  if (tmax >= tmin) {
+    return max(tmin, 0.0);
   }
   return -1;
+}
+
+int BVH::height(Node *node) {
+  if (node->isLeaf()) {
+    return 1;
+  }
+  return max(height(node->left), height(node->right)) + 1;
+}
+
+int BVH::height() {
+  return height(root);
 }

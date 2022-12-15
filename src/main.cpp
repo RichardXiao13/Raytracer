@@ -18,19 +18,13 @@ int main(int argc, char **argv) {
       scene = readDataFromStream(infile);
     } else {
       cerr << "Couldn't open file " << argv[1] << endl;
+      return 1;
     }
   } else {
     scene = readDataFromStream(cin);
   }
 
-  Vector3D eye     (0, 0, 0); // POINT; NOT NORMALIZED
-  Vector3D forward(0, 0, -1); // NOT NORMALIZED; LONGER VECTOR FOR NARROWER FIELD OF VIEW
-  Vector3D right   (1, 0, 0); // NORMALIZED
-  Vector3D up      (0, 1, 0); // NORMALIZED
-
-  scene->setEye(eye);
-
-  PNG *renderedScene = scene->render(eye, forward, right, up);
+  PNG *renderedScene = scene->render();
   renderedScene->saveToFile(scene->filename());
 
   delete renderedScene;
