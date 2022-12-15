@@ -4,7 +4,7 @@
 #include <mutex>
 #include <condition_variable>
 
-// A threadsafe-queue.
+// A thread-safe queue.
 // https://stackoverflow.com/questions/15278343/c11-thread-safe-queue
 template <class T>
 class SafeQueue

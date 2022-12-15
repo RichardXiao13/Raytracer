@@ -223,10 +223,11 @@ RGBAColor Scene::illuminate(const IntersectionInfo& info, int giDepth) {
   double newB = 0;
   
   for (auto it = lights.begin(); it != lights.end(); ++it) {
-    if (pointInShadow(intersectionPoint + bias_ * surfaceNormal, (*it)->direction())) {
+    Vector3D normalizedLightDirection = normalized((*it)->direction());
+    if (pointInShadow(intersectionPoint + bias_ * surfaceNormal, normalizedLightDirection)) {
       continue;
     }
-    Vector3D normalizedLightDirection = normalized((*it)->direction());
+
     double reflectance = fabs(dot(surfaceNormal, normalizedLightDirection));
 
     newR += (*it)->color().r * reflectance;
@@ -235,10 +236,11 @@ RGBAColor Scene::illuminate(const IntersectionInfo& info, int giDepth) {
   }
 
   for (auto it = bulbs.begin(); it != bulbs.end(); ++it) {
+    Vector3D normalizedLightDirection = normalized((*it)->getLightDirection(intersectionPoint));
     if (pointInShadow(intersectionPoint + bias_ * surfaceNormal, *it)) {
       continue;
     }
-    Vector3D normalizedLightDirection = normalized((*it)->getLightDirection(intersectionPoint));
+    
     double distance = magnitude((*it)->center() - intersectionPoint);
     double reflectance = fabs(dot(surfaceNormal, normalizedLightDirection)) / (distance * distance);
 
@@ -255,8 +257,9 @@ RGBAColor Scene::illuminate(const IntersectionInfo& info, int giDepth) {
   //   double theta = acos(costheta);
   //   double r = R * cbrt(u);
   //   Vector3D sampledRay(r * sin(theta) * cos(phi), r * sin(theta) * sin(phi), r * cos(theta));
-  //   Vector3D globalIlluminationDirection = surfaceNormal + -1 * sampledRay;
-  //   RGBAColor giColor = clipColor(raytrace(intersectionPoint + bias_ * surfaceNormal, globalIlluminationDirection, 0, giDepth + 1));
+  //   Vector3D globalIlluminationDirection = surfaceNormal + sampledRay;
+  //   RGBAColor giColor = raytrace(intersectionPoint + bias_ * surfaceNormal, globalIlluminationDirection, 0, giDepth + 1);
+  //   giColor = giColor.a * giColor;
   //   newR += giColor.r;
   //   newG += giColor.g;
   //   newB += giColor.b;
@@ -440,3 +443,4 @@ void Scene::expose(PNG *img) {
     }
   }
 }
+
