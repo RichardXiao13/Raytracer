@@ -8,6 +8,7 @@
 
 #include "parser.h"
 #include "raytracer.h"
+#include "Objects.h"
 
 using namespace std;
 
