@@ -162,6 +162,7 @@ class Triangle : public Object {
 public:
   Triangle(const Vector3D& p1, const Vector3D& p2, const Vector3D& p3);
   IntersectionInfo intersect(const Vector3D& origin, const Vector3D& direction);
+  void orientNormal(const Vector3D& eye);
 
 private:
   Vector3D p1;
@@ -188,6 +189,7 @@ public:
   bool pointInShadow(const Vector3D& point, const Bulb *bulb);
   void setExposure(double value);
   void setMaxBounces(int d);
+  void createBVH();
 
   int width() {
     return width_;
@@ -224,10 +226,19 @@ public:
     fisheye = true;
   }
 
+  Vector3D getEye() {
+    return eye;
+  }
+
+  void setGlobalIllumination(int gi) {
+    globalIllumination = gi;
+  }
+
 private:
-  RGBAColor illuminate(const IntersectionInfo& info);
-  RGBAColor raytrace(const Vector3D& origin, const Vector3D& direction, int depth);
+  RGBAColor illuminate(const IntersectionInfo& info, int giDepth);
+  RGBAColor raytrace(const Vector3D& origin, const Vector3D& direction, int depth, int giDepth);
   IntersectionInfo findClosestObject(const Vector3D& origin, const Vector3D& direction);
+  void expose(PNG *img);
 
   vector<Object*> objects;
   vector<Plane*> planes;
@@ -246,9 +257,10 @@ private:
   int maxBounces = 4;
   int numRays = 1;
   mt19937 rng;
-  uniform_real_distribution<> aliasingDistribution = uniform_real_distribution<>(-0.5, 0.5);
+  uniform_real_distribution<> uniformDistribution = uniform_real_distribution<>(-0.5, 0.5);
   BVH *bvh;
   bool fisheye = false;
+  int globalIllumination = 0;
 };
 
 void displayRenderProgress(double progress, int barWidth=70);

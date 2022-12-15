@@ -119,6 +119,7 @@ Scene *readDataFromStream(istream& in) {
       newObject->setTransparency(currentTransparency);
       newObject->setIndexOfRefraction(currentIOR);
       newObject->setRoughness(currentRoughness);
+      newObject->orientNormal(scene->getEye());
       scene->addObject(newObject);
     } else if (keyword == "expose") {
       double exposure = stod(lineInfo.at(1));
@@ -167,6 +168,12 @@ Scene *readDataFromStream(istream& in) {
       scene->setUp(Vector3D(x, y, z));
     } else if (keyword == "fisheye") {
       scene->enableFisheye();
+    } else if (keyword == "ior") {
+      double ior = stod(lineInfo.at(1));
+      currentIOR = ior;
+    } else if (keyword == "gi") {
+      int gi = stoi(lineInfo.at(1));
+      scene->setGlobalIllumination(gi);
     }
   }
 
