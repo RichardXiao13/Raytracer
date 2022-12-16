@@ -13,6 +13,7 @@
 #include "raytracer.h"
 #include "SafeQueue.h"
 #include "timer.h"
+#include "math_utils.h"
 
 using namespace std;
 using std::cout;
@@ -154,7 +155,7 @@ bool Scene::pointInShadow(const Vector3D& point, const Bulb *bulb) {
 
 RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int depth, int giDepth) {
   Vector3D normalizedDirection = normalized(direction);
-  IntersectionInfo intersectInfo = findClosestObject(origin, direction);
+  IntersectionInfo intersectInfo = findClosestObject(origin, normalizedDirection);
   
   if (intersectInfo.obj != nullptr) {
     intersectInfo.normal = normalized(intersectInfo.normal);
@@ -178,32 +179,14 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
     if (transparency[0] > 0 || transparency[1] > 0 || transparency[2] > 0) {
       Vector3D normalizedSurfaceNormal = intersectInfo.normal;
       double ior = intersectInfo.obj->indexOfRefraction();
-      double enteringCosine = dot(normalizedSurfaceNormal, normalizedDirection);
+      Vector3D point = intersectInfo.point;
 
-      // cosine is positive when vectors are in the same direction
-      // so normal and incident ray are in the same direction
-      // make normal point inside the object
-      if (enteringCosine > 0) {
-        normalizedSurfaceNormal = -1 * normalizedSurfaceNormal;
-      } else {
-        ior = 1.0 / ior;
-        enteringCosine = -enteringCosine;
-      }
-      
-      double k = 1.0 - ior * ior * (1.0 - enteringCosine * enteringCosine);
-
-      if (k >= 0) {
-        Vector3D refractedDirection = ior * normalizedDirection + (ior * enteringCosine - sqrt(k)) * normalizedSurfaceNormal;
-        RGBAColor refractedColor = refraction * raytrace(intersectInfo.point - bias_ * normalizedSurfaceNormal, refractedDirection, depth + 1, giDepth);
-        color += refractedColor.a * refractedColor;
-      } else {
-        Vector3D reflectedDirection = normalizedDirection - 2 * dot(normalizedSurfaceNormal, normalizedDirection) * normalizedSurfaceNormal;
-        RGBAColor reflectedColor = refraction * raytrace(intersectInfo.point + bias_ * normalizedSurfaceNormal, reflectedDirection, depth + 1, giDepth);
-        color += reflectedColor.a * reflectedColor;
-      }
+      Vector3D refractedDirection = refract(normalizedDirection, normalizedSurfaceNormal, ior, point, bias_);
+      RGBAColor refractedColor = refraction * raytrace(point, refractedDirection, depth + 1, giDepth);
+      color += refractedColor.a * refractedColor;
     }
     if (reflectance[0] > 0 || reflectance[1] > 0 || reflectance[2] > 0) {
-      Vector3D reflectedDirection = normalizedDirection - 2 * dot(intersectInfo.normal, normalizedDirection) * intersectInfo.normal;
+      Vector3D reflectedDirection = reflect(normalizedDirection, intersectInfo.normal);
       RGBAColor reflectedColor = reflectance * raytrace(intersectInfo.point + bias_ * intersectInfo.normal, reflectedDirection, depth + 1, giDepth);
       color += reflectedColor.a * reflectedColor;
     }
@@ -353,7 +336,7 @@ PNG *Scene::render(int seed) {
     cout << "Fisheye enabled." << endl;
     return renderFisheye();
   } else {
-    return render();
+    return renderDefault();
   }
 }
 
