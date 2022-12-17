@@ -44,6 +44,7 @@ private:
 public:
   BVH(vector<Object*> &objects);
   IntersectionInfo findClosestObject(const Vector3D& origin, const Vector3D& direction);
+  bool findAnyObject(const Vector3D& origin, const Vector3D& direction);
   int height();
 
 private:

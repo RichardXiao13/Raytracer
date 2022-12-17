@@ -91,36 +91,29 @@ IntersectionInfo Scene::findClosestObject(const Vector3D& origin, const Vector3D
 RGBAColor Scene::illuminate(const IntersectionInfo& info, int giDepth) {
   const RGBAColor& objectColor = info.obj->color();
   const Vector3D& surfaceNormal = info.normal;
-  const Vector3D& intersectionPoint = info.point;
-  double newR = 0;
-  double newG = 0;
-  double newB = 0;
+  const Vector3D& intersectionPoint = info.point + bias_ * surfaceNormal;
+  RGBAColor newColor(0, 0, 0, objectColor.a);
   
   for (auto it = lights.begin(); it != lights.end(); ++it) {
     Vector3D normalizedLightDirection = normalized((*it)->direction());
-    if (pointInShadow(intersectionPoint + bias_ * surfaceNormal, normalizedLightDirection)) {
+    if (pointInShadow(intersectionPoint, normalizedLightDirection)) {
       continue;
     }
 
     double reflectance = fabs(dot(surfaceNormal, normalizedLightDirection));
-
-    newR += (*it)->color().r * reflectance;
-    newG += (*it)->color().g * reflectance;
-    newB += (*it)->color().b * reflectance;
+    newColor += (*it)->color() * reflectance;
   }
 
   for (auto it = bulbs.begin(); it != bulbs.end(); ++it) {
     Vector3D normalizedLightDirection = normalized((*it)->getLightDirection(intersectionPoint));
-    if (pointInShadow(intersectionPoint + bias_ * surfaceNormal, *it)) {
+    if (pointInShadow(intersectionPoint, *it)) {
       continue;
     }
     
     double distance = magnitude((*it)->center() - intersectionPoint);
     double reflectance = fabs(dot(surfaceNormal, normalizedLightDirection)) / (distance * distance);
 
-    newR += (*it)->color().r * reflectance;
-    newG += (*it)->color().g * reflectance;
-    newB += (*it)->color().b * reflectance;
+    newColor += (*it)->color() * reflectance;
   }
 
   // if (giDepth < globalIllumination) {
@@ -132,18 +125,15 @@ RGBAColor Scene::illuminate(const IntersectionInfo& info, int giDepth) {
   //   double r = R * cbrt(u);
   //   Vector3D sampledRay(r * sin(theta) * cos(phi), r * sin(theta) * sin(phi), r * cos(theta));
   //   Vector3D globalIlluminationDirection = surfaceNormal + sampledRay;
-  //   RGBAColor giColor = raytrace(intersectionPoint + bias_ * surfaceNormal, globalIlluminationDirection, 0, giDepth + 1);
+  //   RGBAColor giColor = raytrace(intersectionPoint, globalIlluminationDirection, 0, giDepth + 1);
   //   giColor = giColor.a * giColor;
-  //   newR += giColor.r;
-  //   newG += giColor.g;
-  //   newB += giColor.b;
+  //   newColor += giColor;
   // }
-
-  return RGBAColor(objectColor.r * newR, objectColor.g * newG, objectColor.b * newB, objectColor.a);
+  return RGBAColor(objectColor.r * newColor.r, objectColor.g * newColor.g, objectColor.b * newColor.b, objectColor.a);
 }
 
 bool Scene::pointInShadow(const Vector3D& point, const Vector3D& lightDirection) {
-  return bvh->findClosestObject(point, lightDirection).obj != nullptr;
+  return bvh->findAnyObject(point, lightDirection);
 }
 
 bool Scene::pointInShadow(const Vector3D& point, const Bulb *bulb) {
@@ -159,6 +149,15 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
   
   if (intersectInfo.obj != nullptr) {
     intersectInfo.normal = normalized(intersectInfo.normal);
+    double ior = intersectInfo.obj->indexOfRefraction();
+
+    // Make normals point away from incident ray
+    if (dot(intersectInfo.normal, direction) > 0) {
+      intersectInfo.normal = -1 * intersectInfo.normal;
+    } else {
+      ior = 1 / ior;
+    }
+
     if (intersectInfo.obj->roughness() > 0) {
       for (int i = 0; i < 3; ++i) {
         intersectInfo.normal[i] += intersectInfo.obj->getPerturbation(rng);
@@ -178,7 +177,6 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
 
     if (transparency[0] > 0 || transparency[1] > 0 || transparency[2] > 0) {
       Vector3D normalizedSurfaceNormal = intersectInfo.normal;
-      double ior = intersectInfo.obj->indexOfRefraction();
       Vector3D point = intersectInfo.point;
 
       Vector3D refractedDirection = refract(normalizedDirection, normalizedSurfaceNormal, ior, point, bias_);
@@ -206,8 +204,8 @@ void displayRenderProgress(double progress, int barWidth) {
     else cout << " ";
   }
 
-  std::cout << "] " << fixed << setprecision(2) << progress * 100.0 << " % \r";
-  std::cout.flush();
+  cout << "] " << fixed << setprecision(2) << progress * 100.0 << " % \r";
+  cout.flush();
 }
 
 void Scene::createBVH() {
@@ -230,10 +228,13 @@ PNG *Scene::renderFisheye() {
 
   PNG *img = new PNG(width_, height_);
 
-  auto start = std::chrono::system_clock::now();
   double invNumRays = 1.0 / numRays;
+  int tick = min(totalPixels * 0.01, 4096.0);
+
   double invForwardLength = 1.0 / magnitude(forward);
   Vector3D normalizedForward = normalized(forward);
+
+  auto start = std::chrono::system_clock::now();
 
   for (int y = 0; y < height_; ++y) {
     for (int x = 0; x < width_; ++x) {
@@ -259,15 +260,15 @@ PNG *Scene::renderFisheye() {
         }
       }
 
-      avgColor.r *= invNumRays;
-      avgColor.g *= invNumRays;
-      avgColor.b *= invNumRays;
+      avgColor *= invNumRays;
       avgColor.a = hits * invNumRays;
 
       img->getPixel(y, x) = avgColor;
 
       ++finishedPixels;
-      displayRenderProgress(static_cast<double>(finishedPixels) / totalPixels);
+      if (finishedPixels % tick == 0) {
+        displayRenderProgress(static_cast<double>(finishedPixels) / totalPixels);
+      }
     }
   }
 
@@ -288,9 +289,11 @@ PNG *Scene::renderDefault() {
 
   PNG *img = new PNG(width_, height_);
 
-  auto start = std::chrono::system_clock::now();
   double invNumRays = 1.0 / numRays;
-  
+  int tick = min(totalPixels * 0.01, 4096.0);
+
+  auto start = std::chrono::system_clock::now();
+
   for (int y = 0; y < height_; ++y) {
     for (int x = 0; x < width_; ++x) {
       RGBAColor avgColor(0, 0, 0, 1);
@@ -307,15 +310,15 @@ PNG *Scene::renderDefault() {
         }
       }
 
-      avgColor.r *= invNumRays;
-      avgColor.g *= invNumRays;
-      avgColor.b *= invNumRays;
+      avgColor *= invNumRays;
       avgColor.a = hits * invNumRays;
 
       img->getPixel(y, x) = avgColor;
 
       ++finishedPixels;
-      displayRenderProgress(static_cast<double>(finishedPixels) / totalPixels);
+      if (finishedPixels % tick == 0) {
+        displayRenderProgress(static_cast<double>(finishedPixels) / totalPixels);
+      }
     }
   }
 
@@ -336,6 +339,7 @@ PNG *Scene::render(int seed) {
     cout << "Fisheye enabled." << endl;
     return renderFisheye();
   } else {
+    cout << "Default render." << endl;
     return renderDefault();
   }
 }
@@ -383,9 +387,7 @@ void Scene::expose(PNG *img) {
 //       }
 //     }
 
-//     avgColor.r *= invNumRays;
-//     avgColor.g *= invNumRays;
-//     avgColor.b *= invNumRays;
+//     avgColor *= invNumRays;
 //     avgColor.a = hits * invNumRays;
 
 //     img->getPixel(y, x) = avgColor;

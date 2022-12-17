@@ -155,7 +155,6 @@ class Triangle : public Object {
 public:
   Triangle(const Vector3D& p1, const Vector3D& p2, const Vector3D& p3);
   IntersectionInfo intersect(const Vector3D& origin, const Vector3D& direction);
-  void orientNormal(const Vector3D& eye);
 
 private:
   Vector3D p1;

@@ -22,11 +22,18 @@ Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heur
 
 Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heuristic and Stack traversal
 
-    Takes 35 minutes 41 seconds on tenthousand.txt; BVH creation takes 50.04 seconds.
+    Takes 35 minutes 41 seconds on tenthousand.txt; BVH creation takes 40.04 seconds.
 
     Takes 4 minutes 43 seconds on redchair.txt; BVH creation takes 1.62 seconds. NO Global Illumination.
 
     Takes 11 minutes 48 seconds on redchair.txt; BVH creation takes 1.60 seconds. WITH Global Illumination.
+
+Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heuristic, Stack traversal, and early shadow breaking
+
+    Takes 16 minutes 19 seconds on tenthousand.txt; BVH creation takes 40.02 seconds.
+
+    Takes 2 minutes 41 seconds on redchair.txt; BVH creation takes 1.62 seconds. NO Global Illumination.
+
 
 # Multi-threading strategies
 
@@ -45,3 +52,7 @@ Queue allows each thread to process dense locations uniformly.
 Scenes with evenly dispersed objects will take roughly the same time to finish rendering each pixel, and therefore, each chunk.
 
 This avoids incurring synchronization costs of a thread-safe queue.
+
+# Bottlenecks
+
+findingClosestObject and findingAnyObject calls to the BVH. Given log(N) find time, each ray incurs 2log(N) cost, double single call.

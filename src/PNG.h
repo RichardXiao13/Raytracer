@@ -22,6 +22,7 @@ public:
   friend RGBAColor operator*(const RGBAColor& c, double scalar);
   RGBAColor operator+(const RGBAColor& other) const;
   RGBAColor &operator+=(const RGBAColor& other);
+  RGBAColor &operator*=(double scalar);
 
   double r;
   double g;

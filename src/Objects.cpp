@@ -101,12 +101,6 @@ Triangle::Triangle(const Vector3D& p1, const Vector3D& p2, const Vector3D& p3)
   e2 = 1.0 / dot(a2, p3p1Diff) * a2;
 }
 
-void Triangle::orientNormal(const Vector3D& eye) {
-  if (dot(eye, normal) < 0) {
-    normal = -1 * normal;
-  }
-}
-
 IntersectionInfo Triangle::intersect(const Vector3D& origin, const Vector3D& direction) {
   Vector3D normalizedDirection = normalized(direction);
 

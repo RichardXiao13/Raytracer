@@ -120,7 +120,6 @@ Scene *readDataFromStream(istream& in) {
       newObject->setTransparency(currentTransparency);
       newObject->setIndexOfRefraction(currentIOR);
       newObject->setRoughness(currentRoughness);
-      newObject->orientNormal(scene->getEye());
       scene->addObject(newObject);
     } else if (keyword == "expose") {
       double exposure = stod(lineInfo.at(1));

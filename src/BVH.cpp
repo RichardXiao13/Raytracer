@@ -147,7 +147,9 @@ void BVH::partition(Node *node) {
 }
 
 IntersectionInfo BVH::findClosestObject(const Vector3D& origin, const Vector3D& direction) {
-  stack<pair<double, Node*>> to_visit;
+  // Use vector as the underlying container
+  // Better/faster for operations on the top of the stack, which is all this function does
+  stack<pair<double, Node*>, vector<pair<double, Node*>>> to_visit;
   to_visit.push({ intersectAABB(origin, direction, root->aabbMin, root->aabbMax), root });
 
   double minDistance = numeric_limits<double>::infinity();
@@ -183,6 +185,43 @@ IntersectionInfo BVH::findClosestObject(const Vector3D& origin, const Vector3D& 
   }
 
   return closestInfo;
+}
+
+bool BVH::findAnyObject(const Vector3D& origin, const Vector3D& direction) {
+  stack<pair<double, Node*>, vector<pair<double, Node*>>> to_visit;
+  to_visit.push({ intersectAABB(origin, direction, root->aabbMin, root->aabbMax), root });
+
+  double minDistance = numeric_limits<double>::infinity();
+
+  while (to_visit.empty() == false) {
+    pair<double, Node*> pairing = to_visit.top();
+    double dist = pairing.first;
+    Node *subtree = pairing.second;
+    to_visit.pop();
+    if (dist < minDistance) {
+      if (subtree->isLeaf()) {
+        int end = subtree->start + subtree->numObjects;
+        for (int i = subtree->start; i < end; ++i) {
+          IntersectionInfo info = objects.at(i)->intersect(origin, direction);
+          if (info.obj != nullptr) {
+            return true;
+          }
+        }
+      } else {
+        double leftDistance = intersectAABB(origin, direction, subtree->left->aabbMin, subtree->left->aabbMax);
+        double rightDistance = intersectAABB(origin, direction, subtree->right->aabbMin, subtree->right->aabbMax);
+        if (leftDistance < rightDistance) {
+          to_visit.push({ rightDistance, subtree->right });
+          to_visit.push({ leftDistance, subtree->left });
+        } else {
+          to_visit.push({ leftDistance, subtree->left });
+          to_visit.push({ rightDistance, subtree->right });
+        }
+      }
+    }
+  }
+
+  return false;
 }
 
 // IntersectionInfo BVH::findClosestObject(const Vector3D& origin, const Vector3D& direction) {
@@ -233,8 +272,8 @@ double BVH::intersectAABB(const Vector3D& origin, const Vector3D& direction, con
   double tz_far = (aabbMax[2] - origin[2]) / direction[2];
   tmin = max(tmin, min(tz_near, tz_far));
   tmax = min(tmax, max(tz_near, tz_far));
-  if (tmax >= tmin) {
-    return max(tmin, 0.0);
+  if (tmax >= tmin && tmax > 0) {
+    return tmin;
   }
   return numeric_limits<double>::infinity();
 }
