@@ -76,8 +76,8 @@ void Scene::threadTaskFisheye(PNG *img, SafeQueue<RenderTask> *tasks) {
     int hits = 0;
 
     for (int i = 0; i < numRays; ++i) {
-      double Sx = getRayScaleX(x + uniformDistribution(rng) * allowAntiAliasing, width_, height_);
-      double Sy = getRayScaleY(y + uniformDistribution(rng) * allowAntiAliasing, width_, height_);
+      double Sx = getRayScaleX(x + rayDistribution(rng) * allowAntiAliasing, width_, height_);
+      double Sy = getRayScaleY(y + rayDistribution(rng) * allowAntiAliasing, width_, height_);
 
       Sx *= invForwardLength;
       Sy *= invForwardLength;

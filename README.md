@@ -48,6 +48,16 @@ Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heur
 
     Takes 2 minutes 23 seconds on spiral.txt; BVH creation takes 2.32 seconds.
 
+# Multi-threading Results Using Fastest Single Threaded Method
+
+4 threads: Takes 37.15 seconds on spiral.txt.
+
+6 threads: Takes 31.62 seconds on spiral.txt.
+
+8 threads: Takes 29.98 seconds on spiral.txt.
+
+16 threads: Takes 29.06 seconds on spiral.txt.
+
 # Bottlenecks
 
 findingClosestObject and findingAnyObject calls to the BVH. Given log(N) find time, each ray incurs 2log(N) cost, double a single call to the BVH. Need to improve intersection algorithm/data structure, or reduce calls.
@@ -69,3 +79,13 @@ Queue allows each thread to process dense locations uniformly.
 Scenes with evenly dispersed objects will take roughly the same time to finish rendering each pixel, and therefore, each chunk.
 
 This avoids incurring synchronization costs of a thread-safe queue.
+
+# Difficulties
+
+Multi-threading with member functions of classes. Spent a very long time figuring out how to pass arguments correctly (Need to pass in 'this' as first argument since its needed to access member variables). Also can't have variable references (&) due to move semantics.
+
+# Current Known Bugs
+
+Can't use more than 6 threads for some reason on redchair. Perhaps due to a race condition in threadTaskFisheye or raytrace?
+
+Global Illumination is not showing correct colors. Maybe improper sampling?
