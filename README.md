@@ -4,7 +4,7 @@ Naive implementation of finding closest object
 
     Takes around 20 hours on tenthousand.txt
 
-Bounding Volume Hierarchy: Axis-Aligned Bounding Box using Midpoint split and Priority Queue traversal
+Bounding Volume Hierarchy: Axis-Aligned Bounding Box using Midpoint split and Priority Queue traversal: O(NlogN) for traversing - NO Compiler Optimizations
 
     Takes 72 minutes 19 seconds on tenthousand.txt
 
@@ -12,15 +12,15 @@ Bounding Volume Hierarchy: Axis-Aligned Bounding Box using Midpoint split and Pr
 
     Takes 77 minutes 29 seconds on spiral.txt
 
-Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heuristic and Priority Queue traversal
+Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heuristic and Priority Queue traversal: O(NlogN) for traversing - NO Compiler Optimizations
 
     Takes 64 minutes 46 seconds on tenthousand.txt; BVH creation takes 39.76 seconds.
 
     Takes 7 minutes 37 seconds on redchair.txt; BVH creation takes 1.59 seconds. NO Global Illumination.
 
-    Takes 70 minutes 13 seconds on tenthousand.txt; BVH creation takes 9.63 seconds.
+    Takes 70 minutes 13 seconds on spiral.txt; BVH creation takes 9.63 seconds.
 
-Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heuristic and Stack traversal
+Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heuristic and Stack traversal: O(logN) for traversing - NO Compiler Optimizations
 
     Takes 35 minutes 41 seconds on tenthousand.txt; BVH creation takes 40.04 seconds.
 
@@ -28,12 +28,27 @@ Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heur
 
     Takes 11 minutes 48 seconds on redchair.txt; BVH creation takes 1.60 seconds. WITH Global Illumination.
 
-Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heuristic, Stack traversal, and early shadow breaking
+Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heuristic, Stack traversal, and early shadow breaking: O(logN) for traversing - NO Compiler Optimizations
 
     Takes 16 minutes 19 seconds on tenthousand.txt; BVH creation takes 40.02 seconds.
 
     Takes 2 minutes 41 seconds on redchair.txt; BVH creation takes 1.62 seconds. NO Global Illumination.
+    
+    Takes 42 minutes 40 seconds on redchair.txt; BVH creation takes 1.61 seconds. WITH Global Illumination.
 
+    Takes 14 minutes 17 seconds on spiral.txt; BVH creation takes 9.49 seconds.
+
+Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heuristic, Stack traversal, and early shadow breaking: O(logN) for traversing - WITH Compiler Optimizations -O3
+
+    Takes 2 minutes 33 seconds on tenthousand.txt; BVH creation takes 12.25 seconds.
+
+    Takes 25.09 seconds on redchair.txt; BVH creation takes 0.50 seconds. NO Global Illumination.
+
+    Takes 2 minutes 23 seconds on spiral.txt; BVH creation takes 2.32 seconds.
+
+# Bottlenecks
+
+findingClosestObject and findingAnyObject calls to the BVH. Given log(N) find time, each ray incurs 2log(N) cost, double a single call to the BVH. Need to improve intersection algorithm/data structure, or reduce calls.
 
 # Multi-threading strategies
 
@@ -52,7 +67,3 @@ Queue allows each thread to process dense locations uniformly.
 Scenes with evenly dispersed objects will take roughly the same time to finish rendering each pixel, and therefore, each chunk.
 
 This avoids incurring synchronization costs of a thread-safe queue.
-
-# Bottlenecks
-
-findingClosestObject and findingAnyObject calls to the BVH. Given log(N) find time, each ray incurs 2log(N) cost, double single call.

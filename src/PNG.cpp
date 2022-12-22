@@ -57,7 +57,7 @@ RGBAColor operator*(const RGBAColor& c, const Vector3D& v) {
 }
 
 RGBAColor clipColor(const RGBAColor& c) {
-  return RGBAColor(min(c.r, 1.0), min(c.g, 1.0), min(c.b, 1.0), min(c.a, 1.0));
+  return RGBAColor(max(0.0, min(c.r, 1.0)), max(0.0, min(c.g, 1.0)), max(0.0, min(c.b, 1.0)), max(0.0, min(c.a, 1.0)));
 }
 
 RGBAColor &PNG::getPixel(int row, int col) {

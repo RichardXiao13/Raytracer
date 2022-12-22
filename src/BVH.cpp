@@ -10,6 +10,8 @@
 
 using namespace std;
 
+const double inf = numeric_limits<double>::infinity();
+
 void Box::shrink(const Vector3D& minPoint) {
   minPoint_[0] = min(minPoint_[0], minPoint[0]);
   minPoint_[1] = min(minPoint_[1], minPoint[1]);
@@ -38,7 +40,6 @@ BVH::BVH(vector<Object*> &objects) : objects(objects) {
 }
 
 void BVH::updateNodeBounds(Node *node) {
-  double inf = numeric_limits<double>::infinity();
   node->aabbMin = Vector3D(inf, inf, inf);
   node->aabbMax = Vector3D(-inf, -inf, -inf);
   int end = node->start + node->numObjects;
@@ -59,7 +60,6 @@ void BVH::updateNodeBounds(Node *node) {
 double BVH::calculateSAH(Node *node, int axis, double position) {
   int leftBoxCount = 0;
   int rightBoxCount = 0;
-  double inf = numeric_limits<double>::infinity();
 
   Box leftBox(Vector3D(inf, inf, inf), Vector3D(-inf, -inf, -inf));
   Box rightBox(Vector3D(inf, inf, inf), Vector3D(-inf, -inf, -inf));
@@ -87,13 +87,9 @@ double BVH::calculateSAH(Node *node, int axis, double position) {
 }
 
 void BVH::partition(Node *node) {
-  if (node->numObjects <= 2) {
-    return;
-  }
-
   int bestAxis = -1;
   double bestPosition = 0;
-  double bestCost = numeric_limits<double>::infinity();
+  double bestCost = inf;
   int end = node->start + node->numObjects;
   for(int i = node->start; i < end; ++i) {
     Vector3D centroid = objects.at(i)->centroid();
@@ -152,8 +148,8 @@ IntersectionInfo BVH::findClosestObject(const Vector3D& origin, const Vector3D& 
   stack<pair<double, Node*>, vector<pair<double, Node*>>> to_visit;
   to_visit.push({ intersectAABB(origin, direction, root->aabbMin, root->aabbMax), root });
 
-  double minDistance = numeric_limits<double>::infinity();
-  IntersectionInfo closestInfo{ -1, {}, {}, nullptr };
+  double minDistance = inf;
+  IntersectionInfo closestInfo{ inf, {}, {}, nullptr };
 
   while (to_visit.empty() == false) {
     pair<double, Node*> pairing = to_visit.top();
@@ -165,7 +161,7 @@ IntersectionInfo BVH::findClosestObject(const Vector3D& origin, const Vector3D& 
         int end = subtree->start + subtree->numObjects;
         for (int i = subtree->start; i < end; ++i) {
           IntersectionInfo info = objects.at(i)->intersect(origin, direction);
-          if (info.obj != nullptr && info.t < minDistance) {
+          if (info.t < minDistance) {
             minDistance = info.t;
             closestInfo = info;
           }
@@ -191,7 +187,7 @@ bool BVH::findAnyObject(const Vector3D& origin, const Vector3D& direction) {
   stack<pair<double, Node*>, vector<pair<double, Node*>>> to_visit;
   to_visit.push({ intersectAABB(origin, direction, root->aabbMin, root->aabbMax), root });
 
-  double minDistance = numeric_limits<double>::infinity();
+  double minDistance = inf;
 
   while (to_visit.empty() == false) {
     pair<double, Node*> pairing = to_visit.top();
@@ -224,41 +220,6 @@ bool BVH::findAnyObject(const Vector3D& origin, const Vector3D& direction) {
   return false;
 }
 
-// IntersectionInfo BVH::findClosestObject(const Vector3D& origin, const Vector3D& direction) {
-//   auto cmp = [](const pair<double, Node*>& a, const pair<double, Node*>& b) {
-//     return a.first > b.first;
-//   };
-//   priority_queue<pair<double, Node*>, vector<pair<double, Node*>>, decltype(cmp)> min_queue(cmp);
-
-//   min_queue.push({ intersectAABB(origin, direction, root->aabbMin, root->aabbMax), root });
-//   double minDistance = numeric_limits<double>::infinity();
-//   IntersectionInfo closestInfo{ -1, {}, {}, nullptr };
-  
-//   while (min_queue.empty() == false) {
-//     pair<double, Node*> pairing = min_queue.top();
-//     double dist = pairing.first;
-//     Node *subtree = pairing.second;
-//     min_queue.pop();
-//     if (dist >= 0 && dist < minDistance) {
-//       if (subtree->isLeaf()) {
-//         int end = subtree->start + subtree->numObjects;
-//         for (int i = subtree->start; i < end; ++i) {
-//           IntersectionInfo info = objects.at(i)->intersect(origin, direction);
-//           if (info.obj != nullptr && info.t < minDistance) {
-//             minDistance = info.t;
-//             closestInfo = info;
-//           }
-//         }
-//       } else {
-//         min_queue.push({ intersectAABB(origin, direction, subtree->left->aabbMin, subtree->left->aabbMax), subtree->left });
-//         min_queue.push({ intersectAABB(origin, direction, subtree->right->aabbMin, subtree->right->aabbMax), subtree->right });
-//       }
-//     }
-//   }
-
-//   return closestInfo;
-// }
-
 double BVH::intersectAABB(const Vector3D& origin, const Vector3D& direction, const Vector3D& aabbMin, const Vector3D& aabbMax) {
   double tx_near = (aabbMin[0] - origin[0]) / direction[0];
   double tx_far = (aabbMax[0] - origin[0]) / direction[0];
@@ -275,7 +236,7 @@ double BVH::intersectAABB(const Vector3D& origin, const Vector3D& direction, con
   if (tmax >= tmin && tmax > 0) {
     return tmin;
   }
-  return numeric_limits<double>::infinity();
+  return inf;
 }
 
 int BVH::height(Node *node) {

@@ -78,7 +78,7 @@ public:
   }
 
 private:
-  RGBAColor illuminate(const IntersectionInfo& info, int giDepth);
+  RGBAColor illuminate(const IntersectionInfo& info);
   RGBAColor raytrace(const Vector3D& origin, const Vector3D& direction, int depth, int giDepth);
   IntersectionInfo findClosestObject(const Vector3D& origin, const Vector3D& direction);
   void expose(PNG *img);

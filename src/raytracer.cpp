@@ -88,7 +88,7 @@ IntersectionInfo Scene::findClosestObject(const Vector3D& origin, const Vector3D
   return closestInfo;
 }
 
-RGBAColor Scene::illuminate(const IntersectionInfo& info, int giDepth) {
+RGBAColor Scene::illuminate(const IntersectionInfo& info) {
   const RGBAColor& objectColor = info.obj->color();
   const Vector3D& surfaceNormal = info.normal;
   const Vector3D& intersectionPoint = info.point + bias_ * surfaceNormal;
@@ -116,19 +116,6 @@ RGBAColor Scene::illuminate(const IntersectionInfo& info, int giDepth) {
     newColor += (*it)->color() * reflectance;
   }
 
-  // if (giDepth < globalIllumination) {
-  //   double phi = (uniformDistribution(rng) + 0.5) * 2 * M_PI;
-  //   double costheta = uniformDistribution(rng) * 2;
-  //   double u = uniformDistribution(rng) + 0.5;
-  //   double R = uniformDistribution(rng) + 0.5;
-  //   double theta = acos(costheta);
-  //   double r = R * cbrt(u);
-  //   Vector3D sampledRay(r * sin(theta) * cos(phi), r * sin(theta) * sin(phi), r * cos(theta));
-  //   Vector3D globalIlluminationDirection = surfaceNormal + sampledRay;
-  //   RGBAColor giColor = raytrace(intersectionPoint, globalIlluminationDirection, 0, giDepth + 1);
-  //   giColor = giColor.a * giColor;
-  //   newColor += giColor;
-  // }
   return RGBAColor(objectColor.r * newColor.r, objectColor.g * newColor.g, objectColor.b * newColor.b, objectColor.a);
 }
 
@@ -169,7 +156,7 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
     Vector3D &transparency = intersectInfo.obj->transparency();
     Vector3D refraction = (1.0 - reflectance) * transparency;
     Vector3D diffuse = 1.0 - refraction - reflectance;
-    RGBAColor color = diffuse * illuminate(intersectInfo, giDepth);
+    RGBAColor color = diffuse * illuminate(intersectInfo);
 
     if (depth >= maxBounces) {
       return color;
@@ -181,16 +168,33 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
 
       Vector3D refractedDirection = refract(normalizedDirection, normalizedSurfaceNormal, ior, point, bias_);
       RGBAColor refractedColor = refraction * raytrace(point, refractedDirection, depth + 1, giDepth);
-      color += refractedColor.a * refractedColor;
+      color += refractedColor;
     }
     if (reflectance[0] > 0 || reflectance[1] > 0 || reflectance[2] > 0) {
       Vector3D reflectedDirection = reflect(normalizedDirection, intersectInfo.normal);
       RGBAColor reflectedColor = reflectance * raytrace(intersectInfo.point + bias_ * intersectInfo.normal, reflectedDirection, depth + 1, giDepth);
-      color += reflectedColor.a * reflectedColor;
+      color += reflectedColor;
     }
+    // if (giDepth < globalIllumination) {
+    //   double phi = (uniformDistribution(rng) + 0.5) * 2 * M_PI;
+    //   double costheta = uniformDistribution(rng) * 2;
+    //   double u = uniformDistribution(rng) + 0.5;
+    //   double R = uniformDistribution(rng) + 0.5;
+    //   double theta = acos(costheta);
+    //   double r = R * cbrt(u);
+    //   Vector3D sampledRay(r * sin(theta) * cos(phi), r * sin(theta) * sin(phi), r * cos(theta));
+    //   Vector3D globalIlluminationDirection = normalized(intersectInfo.normal + sampledRay);
+    //   double gi = fabs(dot(intersectInfo.normal, globalIlluminationDirection));
+    //   RGBAColor giColor = gi * raytrace(intersectInfo.point + bias_ * intersectInfo.normal, globalIlluminationDirection, 0, giDepth + 1);
+    //   const RGBAColor& objectColor = intersectInfo.obj->color();
+    //   giColor.r *= objectColor.r;
+    //   giColor.g *= objectColor.g;
+    //   giColor.b *= objectColor.b;
+    //   color += giColor;
+    // }
     return color;
   }
-  return RGBAColor(1, 1, 1, 0);
+  return RGBAColor(0, 0, 0);
 }
 
 void displayRenderProgress(double progress, int barWidth) {
@@ -229,7 +233,7 @@ PNG *Scene::renderFisheye() {
   PNG *img = new PNG(width_, height_);
 
   double invNumRays = 1.0 / numRays;
-  int tick = min(totalPixels * 0.01, 4096.0);
+  int tick = max(totalPixels * 0.01, 4096.0);
 
   double invForwardLength = 1.0 / magnitude(forward);
   Vector3D normalizedForward = normalized(forward);
@@ -290,7 +294,7 @@ PNG *Scene::renderDefault() {
   PNG *img = new PNG(width_, height_);
 
   double invNumRays = 1.0 / numRays;
-  int tick = min(totalPixels * 0.01, 4096.0);
+  int tick = max(totalPixels * 0.01, 4096.0);
 
   auto start = std::chrono::system_clock::now();
 

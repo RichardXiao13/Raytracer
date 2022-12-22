@@ -5,6 +5,9 @@ EXE = raytracer
 EXE_OBJ = main.o
 OBJS = main.o lodepng.o vector3d.o raytracer.o parser.o PNG.o BVH.o SafeQueue.o timer.o Objects.o math_utils.o
 
+# Optimization level:
+OPT = -Ofast
+
 # Compiler/linker config and object/depfile directory:
 CXX = clang++
 LD = clang++
@@ -21,10 +24,10 @@ DEPFILE_FLAGS = -MMD -MP
 WARNINGS = -pedantic -Wall -Werror -Wfatal-errors -Wextra -Wno-unused-parameter -Wno-unused-variable -Wno-unused-function
 
 # Flags for compile:
-CXXFLAGS += $(CS225) -std=c++17 -stdlib=libc++ -O0 $(WARNINGS) $(DEPFILE_FLAGS) -g -c
+CXXFLAGS += -std=c++17 -stdlib=libc++ $(OPT) $(WARNINGS) $(DEPFILE_FLAGS) -g -c
 
 # Flags for linking:
-LDFLAGS += $(CS225) -std=c++17 -stdlib=libc++ -lc++abi
+LDFLAGS += -std=c++17 -stdlib=libc++ -lc++abi
 
 # Rule for `all` (first/default rule):
 all: $(EXE)

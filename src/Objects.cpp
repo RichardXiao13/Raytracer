@@ -1,8 +1,11 @@
+#include <limits>
+
 #include "Objects.h"
 
 using namespace std;
 
 const double ONE_THIRD = 1.0 / 3.0;
+const double inf = numeric_limits<double>::infinity();
 
 Vector3D Bulb::getLightDirection(const Vector3D& point) const {
   return center_ - point;
@@ -29,14 +32,14 @@ IntersectionInfo Sphere::intersect(const Vector3D& origin, const Vector3D& direc
   double tc = dot(distanceFromSphere, normalizedDirection);
   
   if (isInsideSphere == false && tc < 0) {
-    return { -1, Vector3D(), Vector3D(), nullptr };
+    return { inf, Vector3D(), Vector3D(), nullptr };
   }
 
   Vector3D d = origin + tc * normalizedDirection - center;
   double distanceSquared = dot(d, d);
 
   if (isInsideSphere == false && radiusSquared < distanceSquared) {
-    return { -1, Vector3D(), Vector3D(), nullptr };
+    return { inf, Vector3D(), Vector3D(), nullptr };
   }
 
   double tOffset = sqrt(radiusSquared - distanceSquared);
@@ -68,7 +71,7 @@ IntersectionInfo Plane::intersect(const Vector3D& origin, const Vector3D& direct
   double t = dot((point - origin), normal) / dot(normalizedDirection, normal);
 
   if (t < 0) {
-    return { -1, Vector3D(), Vector3D(), nullptr };
+    return { inf, Vector3D(), Vector3D(), nullptr };
   }
   return { t, t * normalizedDirection + origin, normal, this };
 }
@@ -90,10 +93,6 @@ Triangle::Triangle(const Vector3D& p1, const Vector3D& p2, const Vector3D& p3)
 
   normal = cross(p2p1Diff, p3p1Diff);
 
-  if (normal[2] < 0) {
-    normal = -1 * normal;
-  }
-
   Vector3D a1 = cross(p3p1Diff, normal);
   Vector3D a2 = cross(p2p1Diff, normal);
 
@@ -107,7 +106,7 @@ IntersectionInfo Triangle::intersect(const Vector3D& origin, const Vector3D& dir
   double t = dot((p1 - origin), normal) / dot(normalizedDirection, normal);
 
   if (t < 0) {
-    return { -1, Vector3D(), Vector3D(), nullptr };
+    return { inf, Vector3D(), Vector3D(), nullptr };
   }
 
   Vector3D intersectionPoint = t * normalizedDirection + origin;
@@ -117,7 +116,7 @@ IntersectionInfo Triangle::intersect(const Vector3D& origin, const Vector3D& dir
   double b1 = 1.0 - b3 - b2;
 
   if (b1 < 0 || b1 > 1 || b2 < 0 || b2 > 1 || b3 < 0 || b3 > 1) {
-    return { -1, Vector3D(), Vector3D(), nullptr };
+    return { inf, Vector3D(), Vector3D(), nullptr };
   }
 
   return { t, intersectionPoint, normal, this };
