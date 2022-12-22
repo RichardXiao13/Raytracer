@@ -33,13 +33,21 @@ public:
   void addPoint(double x, double y, double z);
   Vector3D &getPoint(int i);
   size_t getNumObjects();
-  PNG *render(int numThreads=1, int seed=56);
+  PNG *render(void (Scene::* worker)(PNG *, SafeQueue<RenderTask> *), int numThreads);
+  PNG *render(int numThreads=4, int seed=56);
   bool pointInShadow(const Vector3D& origin, const Vector3D& light);
   bool pointInShadow(const Vector3D& point, const Bulb *bulb);
   void setExposure(double value);
   void setMaxBounces(int d);
   void createBVH();
+  /**
+   * threadTaskDefault - default worker function for threads.
+  */
   void threadTaskDefault(PNG *img, SafeQueue<RenderTask> *tasks);
+  /**
+   * threadTaskFisheye - fisheye render worker function for threads.
+  */
+  void threadTaskFisheye(PNG *img, SafeQueue<RenderTask> *tasks);
 
   int width() {
     return width_;
@@ -89,8 +97,6 @@ private:
   RGBAColor raytrace(const Vector3D& origin, const Vector3D& direction, int depth, int giDepth);
   IntersectionInfo findClosestObject(const Vector3D& origin, const Vector3D& direction);
   void expose(PNG *img);
-  PNG *renderDefault(int numThreads);
-  PNG *renderFisheye();
 
   vector<Object*> objects;
   vector<Plane*> planes;

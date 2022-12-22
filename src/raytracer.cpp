@@ -19,9 +19,6 @@
 using namespace std;
 using std::cout;
 
-/**
- * threadTaskDefault - default worker function for threads. Runs same routine as render default.
-*/
 void Scene::threadTaskDefault(PNG *img, SafeQueue<RenderTask> *tasks) {
   RenderTask task;
   mt19937 rng;
@@ -56,9 +53,53 @@ void Scene::threadTaskDefault(PNG *img, SafeQueue<RenderTask> *tasks) {
   }
 }
 
-// void threadTaskFisheye(PNG *img, SafeQueue<pair<int, int>> &tasks) {
+void Scene::threadTaskFisheye(PNG *img, SafeQueue<RenderTask> *tasks) {
+  RenderTask task;
+  mt19937 rng;
 
-// }
+  double invNumRays = 1.0 / numRays;
+  int allowAntiAliasing = min(1, numRays - 1);
+
+  double invForwardLength = 1.0 / magnitude(forward);
+  Vector3D normalizedForward = normalized(forward);
+
+  uniform_real_distribution<> rayDistribution = uniform_real_distribution<>(-0.5, 0.5);
+
+  auto start = std::chrono::system_clock::now();
+
+  // hacky... but does the job
+  while ((task = tasks->dequeue()).x != -1) {
+    int x = task.x;
+    int y = task.y;
+
+    RGBAColor avgColor(0, 0, 0, 1);
+    int hits = 0;
+
+    for (int i = 0; i < numRays; ++i) {
+      double Sx = getRayScaleX(x + uniformDistribution(rng) * allowAntiAliasing, width_, height_);
+      double Sy = getRayScaleY(y + uniformDistribution(rng) * allowAntiAliasing, width_, height_);
+
+      Sx *= invForwardLength;
+      Sy *= invForwardLength;
+      double r_2 = Sx * Sx + Sy * Sy;
+      if (r_2 > 1) {
+        continue;
+      }
+      forward = sqrt(1 - r_2) * normalizedForward;
+
+      RGBAColor color = clipColor(raytrace(eye, forward + Sx * right + Sy * up, 0, 0));
+      if (color.a != 0) {
+        avgColor += color;
+        ++hits;
+      }
+    }
+
+    avgColor *= invNumRays;
+    avgColor.a = hits * invNumRays;
+
+    img->getPixel(y, x) = avgColor;
+  }
+}
 
 
 double getRayScaleX(double x, int w, int h) {
@@ -254,84 +295,18 @@ void Scene::createBVH() {
   cout << "BVH creation time: " << elapsed_seconds.count() << "s" << endl;
 }
 
-PNG *Scene::renderFisheye() {
+PNG *Scene::render(void (Scene::* worker)(PNG *, SafeQueue<RenderTask> *), int numThreads) {
   int totalPixels = height_ * width_;
   int finishedPixels = 0;
 
-  int allowAntiAliasing = min(1, numRays - 1);
-
   PNG *img = new PNG(width_, height_);
-
-  double invNumRays = 1.0 / numRays;
-  int tick = max(totalPixels * 0.01, 4096.0);
-
-  double invForwardLength = 1.0 / magnitude(forward);
-  Vector3D normalizedForward = normalized(forward);
-
-  auto start = std::chrono::system_clock::now();
-
-  for (int y = 0; y < height_; ++y) {
-    for (int x = 0; x < width_; ++x) {
-      RGBAColor avgColor(0, 0, 0, 1);
-      int hits = 0;
-
-      for (int i = 0; i < numRays; ++i) {
-        double Sx = getRayScaleX(x + uniformDistribution(rng) * allowAntiAliasing, width_, height_);
-        double Sy = getRayScaleY(y + uniformDistribution(rng) * allowAntiAliasing, width_, height_);
-
-        Sx *= invForwardLength;
-        Sy *= invForwardLength;
-        double r_2 = Sx * Sx + Sy * Sy;
-        if (r_2 > 1) {
-          continue;
-        }
-        forward = sqrt(1 - r_2) * normalizedForward;
-
-        RGBAColor color = clipColor(raytrace(eye, forward + Sx * right + Sy * up, 0, 0));
-        if (color.a != 0) {
-          avgColor += color;
-          ++hits;
-        }
-      }
-
-      avgColor *= invNumRays;
-      avgColor.a = hits * invNumRays;
-
-      img->getPixel(y, x) = avgColor;
-
-      ++finishedPixels;
-      if (finishedPixels % tick == 0) {
-        displayRenderProgress(static_cast<double>(finishedPixels) / totalPixels);
-      }
-    }
-  }
-  displayRenderProgress(1.0);
-
-  expose(img);
-
-  auto end = chrono::system_clock::now();
-  chrono::duration<double> elapsed_seconds = end-start;
-  time_t end_time = chrono::system_clock::to_time_t(end);
-  cout << "\nRaytracing elapsed time: " << elapsed_seconds.count() << "s" << endl;
-  return img;
-}
-
-PNG *Scene::renderDefault(int numThreads) {
-  int totalPixels = height_ * width_;
-  int finishedPixels = 0;
-
-  // int allowAntiAliasing = min(1, numRays - 1);
-
-  PNG *img = new PNG(width_, height_);
-
-  // double invNumRays = 1.0 / numRays;
   int tick = max(totalPixels * 0.01, 4096.0);
 
   SafeQueue<RenderTask> tasks;
 
   vector<thread> threads;
   for (int i = 0; i < numThreads; ++i) {
-    threads.emplace_back(&Scene::threadTaskDefault, this, img, &tasks);
+    threads.emplace_back(worker, this, img, &tasks);
   }
 
   auto start = std::chrono::system_clock::now();
@@ -339,29 +314,6 @@ PNG *Scene::renderDefault(int numThreads) {
   for (int y = 0; y < height_; ++y) {
     for (int x = 0; x < width_; ++x) {
       tasks.enqueue({ x, y });
-      // RGBAColor avgColor(0, 0, 0, 1);
-      // int hits = 0;
-
-      // for (int i = 0; i < numRays; ++i) {
-      //   double Sx = getRayScaleX(x + uniformDistribution(rng) * allowAntiAliasing, width_, height_);
-      //   double Sy = getRayScaleY(y + uniformDistribution(rng) * allowAntiAliasing, width_, height_);
-
-      //   RGBAColor color = clipColor(raytrace(eye, forward + Sx * right + Sy * up, 0, 0));
-      //   if (color.a != 0) {
-      //     avgColor += color;
-      //     ++hits;
-      //   }
-      // }
-
-      // avgColor *= invNumRays;
-      // avgColor.a = hits * invNumRays;
-
-      // img->getPixel(y, x) = avgColor;
-
-      // ++finishedPixels;
-      // if (finishedPixels % tick == 0) {
-      //   displayRenderProgress(static_cast<double>(finishedPixels) / totalPixels);
-      // }
     }
   }
   for (int i = 0; i < numThreads; ++i) {
@@ -370,6 +322,7 @@ PNG *Scene::renderDefault(int numThreads) {
   for (int i = 0; i < numThreads; ++i) {
     threads.at(i).join();
   }
+
   displayRenderProgress(1.0);
 
   expose(img);
@@ -387,10 +340,10 @@ PNG *Scene::render(int numThreads, int seed) {
 
   if (fisheye) {
     cout << "Fisheye enabled." << endl;
-    return renderFisheye();
+    return render(&Scene::threadTaskFisheye, numThreads);
   } else {
     cout << "Default render." << endl;
-    return renderDefault(numThreads);
+    return render(&Scene::threadTaskDefault, numThreads);
   }
 }
 
