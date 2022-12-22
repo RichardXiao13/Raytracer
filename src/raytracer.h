@@ -8,6 +8,7 @@
 #include "vector3d.h"
 #include "BVH.h"
 #include "Objects.h"
+#include "SafeQueue.h"
 
 using namespace std;
 
@@ -15,8 +16,13 @@ using namespace std;
 double getRayScaleX(double x, int w, int h);
 double getRayScaleY(double y, int w, int h);
 
+struct RenderTask {
+  int x;
+  int y;
+};
+
 class Scene {
-public:
+public: 
   Scene(int w, int h, const string& file)
   : width_(w), height_(h), filename_(file), eye(0, 0, 0), forward(0, 0, -1), right(1, 0, 0), up(0, 1, 0) {};
   ~Scene();
@@ -27,12 +33,13 @@ public:
   void addPoint(double x, double y, double z);
   Vector3D &getPoint(int i);
   size_t getNumObjects();
-  PNG *render(int seed=56);
+  PNG *render(int numThreads=1, int seed=56);
   bool pointInShadow(const Vector3D& origin, const Vector3D& light);
   bool pointInShadow(const Vector3D& point, const Bulb *bulb);
   void setExposure(double value);
   void setMaxBounces(int d);
   void createBVH();
+  void threadTaskDefault(PNG *img, SafeQueue<RenderTask> *tasks);
 
   int width() {
     return width_;
@@ -82,7 +89,7 @@ private:
   RGBAColor raytrace(const Vector3D& origin, const Vector3D& direction, int depth, int giDepth);
   IntersectionInfo findClosestObject(const Vector3D& origin, const Vector3D& direction);
   void expose(PNG *img);
-  PNG *renderDefault();
+  PNG *renderDefault(int numThreads);
   PNG *renderFisheye();
 
   vector<Object*> objects;

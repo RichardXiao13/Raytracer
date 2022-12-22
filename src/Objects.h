@@ -82,9 +82,11 @@ public:
     return roughness_;
   }
 
-  double getPerturbation(mt19937& rng) {
-    return roughnessDistribution(rng);
+  double getPerturbation() {
+    return roughnessDistribution(rng_);
   }
+
+  virtual Vector3D sampleRay();
 
 protected:
   RGBAColor color_;
@@ -92,7 +94,9 @@ protected:
   Vector3D transparency_;
   double indexOfRefraction_;
   double roughness_;
+  mt19937 rng_;
   normal_distribution<> roughnessDistribution;
+  uniform_real_distribution<> sampleDistribution;
   Vector3D aabbMin_;
   Vector3D aabbMax_;
   Vector3D centroid_;

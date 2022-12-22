@@ -8,6 +8,7 @@
 #include <iomanip>
 #include <chrono>
 #include <ctime>
+#include <thread>
 
 #include "lodepng.h"
 #include "raytracer.h"
@@ -17,6 +18,48 @@
 
 using namespace std;
 using std::cout;
+
+/**
+ * threadTaskDefault - default worker function for threads. Runs same routine as render default.
+*/
+void Scene::threadTaskDefault(PNG *img, SafeQueue<RenderTask> *tasks) {
+  RenderTask task;
+  mt19937 rng;
+
+  double invNumRays = 1.0 / numRays;
+  int allowAntiAliasing = min(1, numRays - 1);
+  uniform_real_distribution<> rayDistribution = uniform_real_distribution<>(-0.5, 0.5);
+
+  // hacky... but does the job
+  while ((task = tasks->dequeue()).x != -1) {
+    int x = task.x;
+    int y = task.y;
+
+    RGBAColor avgColor(0, 0, 0, 1);
+    int hits = 0;
+
+    for (int i = 0; i < numRays; ++i) {
+      double Sx = getRayScaleX(x + rayDistribution(rng) * allowAntiAliasing, width_, height_);
+      double Sy = getRayScaleY(y + rayDistribution(rng) * allowAntiAliasing, width_, height_);
+
+      RGBAColor color = clipColor(raytrace(eye, forward + Sx * right + Sy * up, 0, 0));
+      if (color.a != 0) {
+        avgColor += color;
+        ++hits;
+      }
+    }
+
+    avgColor *= invNumRays;
+    avgColor.a = hits * invNumRays;
+
+    img->getPixel(y, x) = avgColor;
+  }
+}
+
+// void threadTaskFisheye(PNG *img, SafeQueue<pair<int, int>> &tasks) {
+
+// }
+
 
 double getRayScaleX(double x, int w, int h) {
   return (2 * x - w) / max(w, h);
@@ -117,14 +160,7 @@ RGBAColor Scene::illuminate(const IntersectionInfo& info, int giDepth) {
   }
 
   if (giDepth < globalIllumination) {
-    double phi = (uniformDistribution(rng) + 0.5) * 2 * M_PI;
-    double costheta = uniformDistribution(rng) * 2;
-    double u = uniformDistribution(rng) + 0.5;
-    double R = uniformDistribution(rng) + 0.5;
-    double theta = acos(costheta);
-    double r = R * cbrt(u);
-    Vector3D sampledRay(r * sin(theta) * cos(phi), r * sin(theta) * sin(phi), r * cos(theta));
-    Vector3D globalIlluminationDirection = normalized(surfaceNormal + sampledRay);
+    Vector3D globalIlluminationDirection = normalized(surfaceNormal + info.obj->sampleRay());
     double gi = fabs(dot(surfaceNormal, globalIlluminationDirection));
     RGBAColor giColor = raytrace(intersectionPoint + bias_ * surfaceNormal, globalIlluminationDirection, 0, giDepth + 1);
     newColor += giColor * gi;
@@ -161,7 +197,7 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
 
     if (intersectInfo.obj->roughness() > 0) {
       for (int i = 0; i < 3; ++i) {
-        intersectInfo.normal[i] += intersectInfo.obj->getPerturbation(rng);
+        intersectInfo.normal[i] += intersectInfo.obj->getPerturbation();
       }
       intersectInfo.normal = normalized(intersectInfo.normal);
     }
@@ -280,45 +316,59 @@ PNG *Scene::renderFisheye() {
   return img;
 }
 
-PNG *Scene::renderDefault() {
+PNG *Scene::renderDefault(int numThreads) {
   int totalPixels = height_ * width_;
   int finishedPixels = 0;
 
-  int allowAntiAliasing = min(1, numRays - 1);
+  // int allowAntiAliasing = min(1, numRays - 1);
 
   PNG *img = new PNG(width_, height_);
 
-  double invNumRays = 1.0 / numRays;
+  // double invNumRays = 1.0 / numRays;
   int tick = max(totalPixels * 0.01, 4096.0);
+
+  SafeQueue<RenderTask> tasks;
+
+  vector<thread> threads;
+  for (int i = 0; i < numThreads; ++i) {
+    threads.emplace_back(&Scene::threadTaskDefault, this, img, &tasks);
+  }
 
   auto start = std::chrono::system_clock::now();
 
   for (int y = 0; y < height_; ++y) {
     for (int x = 0; x < width_; ++x) {
-      RGBAColor avgColor(0, 0, 0, 1);
-      int hits = 0;
+      tasks.enqueue({ x, y });
+      // RGBAColor avgColor(0, 0, 0, 1);
+      // int hits = 0;
 
-      for (int i = 0; i < numRays; ++i) {
-        double Sx = getRayScaleX(x + uniformDistribution(rng) * allowAntiAliasing, width_, height_);
-        double Sy = getRayScaleY(y + uniformDistribution(rng) * allowAntiAliasing, width_, height_);
+      // for (int i = 0; i < numRays; ++i) {
+      //   double Sx = getRayScaleX(x + uniformDistribution(rng) * allowAntiAliasing, width_, height_);
+      //   double Sy = getRayScaleY(y + uniformDistribution(rng) * allowAntiAliasing, width_, height_);
 
-        RGBAColor color = clipColor(raytrace(eye, forward + Sx * right + Sy * up, 0, 0));
-        if (color.a != 0) {
-          avgColor += color;
-          ++hits;
-        }
-      }
+      //   RGBAColor color = clipColor(raytrace(eye, forward + Sx * right + Sy * up, 0, 0));
+      //   if (color.a != 0) {
+      //     avgColor += color;
+      //     ++hits;
+      //   }
+      // }
 
-      avgColor *= invNumRays;
-      avgColor.a = hits * invNumRays;
+      // avgColor *= invNumRays;
+      // avgColor.a = hits * invNumRays;
 
-      img->getPixel(y, x) = avgColor;
+      // img->getPixel(y, x) = avgColor;
 
-      ++finishedPixels;
-      if (finishedPixels % tick == 0) {
-        displayRenderProgress(static_cast<double>(finishedPixels) / totalPixels);
-      }
+      // ++finishedPixels;
+      // if (finishedPixels % tick == 0) {
+      //   displayRenderProgress(static_cast<double>(finishedPixels) / totalPixels);
+      // }
     }
+  }
+  for (int i = 0; i < numThreads; ++i) {
+    tasks.enqueue({ -1, -1 });
+  }
+  for (int i = 0; i < numThreads; ++i) {
+    threads.at(i).join();
   }
   displayRenderProgress(1.0);
 
@@ -331,7 +381,7 @@ PNG *Scene::renderDefault() {
   return img;
 }
 
-PNG *Scene::render(int seed) {
+PNG *Scene::render(int numThreads, int seed) {
   createBVH();
   rng.seed(seed);
 
@@ -340,7 +390,7 @@ PNG *Scene::render(int seed) {
     return renderFisheye();
   } else {
     cout << "Default render." << endl;
-    return renderDefault();
+    return renderDefault(numThreads);
   }
 }
 
@@ -356,44 +406,4 @@ void Scene::expose(PNG *img) {
       }
     }
   }
-}
-
-
-/**
- * threadTaskDefault - default worker function for threads. Runs same routine as render default.
-*/
-// void threadTaskDefault(PNG *img, double invNumRays, SafeQueue<pair<int, int>> &tasks, int seed) {
-//   pair<int, int> task;
-//   mt19937 rng;
-//   rng.seed(seed);
-//   uniform_real_distribution<> rayDistribution = uniform_real_distribution<>(-0.5, 0.5);
-
-//   // hacky... but does the job
-//   while ((task = tasks.dequeue()).first != -1) {
-//     int x = task.first;
-//     int y = task.second;
-
-//     RGBAColor avgColor(0, 0, 0, 1);
-//     int hits = 0;
-
-//     for (int i = 0; i < numRays; ++i) {
-//       double Sx = getRayScaleX(x + rayDistribution(rng) * allowAntiAliasing, width_, height_);
-//       double Sy = getRayScaleY(y + rayDistribution(rng) * allowAntiAliasing, width_, height_);
-
-//       RGBAColor color = clipColor(raytrace(eye, forward + Sx * right + Sy * up, 0, 0));
-//       if (color.a != 0) {
-//         avgColor += color;
-//         ++hits;
-//       }
-//     }
-
-//     avgColor *= invNumRays;
-//     avgColor.a = hits * invNumRays;
-
-//     img->getPixel(y, x) = avgColor;
-//   }
-// }
-
-void threadTaskFisheye(PNG *img, SafeQueue<pair<int, int>> &tasks) {
-
 }

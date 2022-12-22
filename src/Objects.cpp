@@ -7,6 +7,16 @@ using namespace std;
 const double ONE_THIRD = 1.0 / 3.0;
 const double inf = numeric_limits<double>::infinity();
 
+Vector3D Object::sampleRay() {
+  double phi = sampleDistribution(rng_) * 2 * M_PI;
+  double costheta = (sampleDistribution(rng_) - 0.5) * 2;
+  double u = sampleDistribution(rng_);
+  double R = sampleDistribution(rng_);
+  double theta = acos(costheta);
+  double r = R * cbrt(u);
+  return Vector3D(r * sin(theta) * cos(phi), r * sin(theta) * sin(phi), r * cos(theta));
+}
+
 Vector3D Bulb::getLightDirection(const Vector3D& point) const {
   return center_ - point;
 }
