@@ -175,23 +175,23 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
       RGBAColor reflectedColor = reflectance * raytrace(intersectInfo.point + bias_ * intersectInfo.normal, reflectedDirection, depth + 1, giDepth);
       color += reflectedColor;
     }
-    // if (giDepth < globalIllumination) {
-    //   double phi = (uniformDistribution(rng) + 0.5) * 2 * M_PI;
-    //   double costheta = uniformDistribution(rng) * 2;
-    //   double u = uniformDistribution(rng) + 0.5;
-    //   double R = uniformDistribution(rng) + 0.5;
-    //   double theta = acos(costheta);
-    //   double r = R * cbrt(u);
-    //   Vector3D sampledRay(r * sin(theta) * cos(phi), r * sin(theta) * sin(phi), r * cos(theta));
-    //   Vector3D globalIlluminationDirection = normalized(intersectInfo.normal + sampledRay);
-    //   double gi = fabs(dot(intersectInfo.normal, globalIlluminationDirection));
-    //   RGBAColor giColor = gi * raytrace(intersectInfo.point + bias_ * intersectInfo.normal, globalIlluminationDirection, 0, giDepth + 1);
-    //   const RGBAColor& objectColor = intersectInfo.obj->color();
-    //   giColor.r *= objectColor.r;
-    //   giColor.g *= objectColor.g;
-    //   giColor.b *= objectColor.b;
-    //   color += giColor;
-    // }
+    if (giDepth < globalIllumination) {
+      double phi = (uniformDistribution(rng) + 0.5) * 2 * M_PI;
+      double costheta = uniformDistribution(rng) * 2;
+      double u = uniformDistribution(rng) + 0.5;
+      double R = uniformDistribution(rng) + 0.5;
+      double theta = acos(costheta);
+      double r = R * cbrt(u);
+      Vector3D sampledRay(r * sin(theta) * cos(phi), r * sin(theta) * sin(phi), r * cos(theta));
+      Vector3D globalIlluminationDirection = normalized(intersectInfo.normal + sampledRay);
+      double gi = fabs(dot(intersectInfo.normal, globalIlluminationDirection));
+      RGBAColor giColor = gi * raytrace(intersectInfo.point + bias_ * intersectInfo.normal, globalIlluminationDirection, 0, giDepth + 1);
+      const RGBAColor& objectColor = intersectInfo.obj->color();
+      giColor.r *= objectColor.r;
+      giColor.g *= objectColor.g;
+      giColor.b *= objectColor.b;
+      color += giColor;
+    }
     return color;
   }
   return RGBAColor(0, 0, 0);
