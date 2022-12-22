@@ -44,6 +44,8 @@ Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heur
 
     Takes 25.09 seconds on redchair.txt; BVH creation takes 0.50 seconds. NO Global Illumination.
 
+    Takes 5 minutes 33 seconds on redchair.txt; BVH creation takes 0.49 seconds. WITH Global Illumination.
+
     Takes 2 minutes 23 seconds on spiral.txt; BVH creation takes 2.32 seconds.
 
 # Bottlenecks
