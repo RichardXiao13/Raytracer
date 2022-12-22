@@ -11,7 +11,7 @@ using namespace std;
 int main(int argc, char **argv) {
   Scene *scene = nullptr;
   if (argc > 3) {
-    cerr << "usage: " << argv[0] << "[-t numThreads] filepath" << endl;
+    cerr << "usage: " << argv[0] << " [-t numThreads] filepath" << endl;
     return 1;
   }
 
@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
         numThreads = atoi(optarg);
         break;
       default:
-        cerr << "usage: " << argv[0] << "[-t numThreads] filepath" << endl;
+        cerr << "usage: " << argv[0] << " [-t numThreads] filepath" << endl;
         return -1;
     }
   }
