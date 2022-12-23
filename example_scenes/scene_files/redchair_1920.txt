@@ -1,4 +1,4 @@
-png 1920 1920 example_scenes/scene_images/hwray_redchair_1920.png
+png 1920 1920 example_scenes/scene_images/redchair_1920.png
 
 expose 2
 
