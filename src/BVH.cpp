@@ -87,6 +87,11 @@ double BVH::calculateSAH(Node *node, int axis, double position) {
 }
 
 void BVH::partition(Node *node) {
+  // Base case: allow a max of 4 objects for a node before becoming a leaf
+  if (node->numObjects <= 4) {
+    return;
+  }
+  
   int bestAxis = -1;
   double bestPosition = 0;
   double bestCost = inf;
