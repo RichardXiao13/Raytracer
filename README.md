@@ -86,6 +86,6 @@ Multi-threading with member functions of classes. Spent a very long time figurin
 
 # Current Known Bugs
 
-Can't use more than 6 threads for some reason on redchair. Perhaps due to a race condition in threadTaskFisheye or raytrace?
+Can't use more than 6 threads for some reason on redchair - FIXED: Due to a race condition in threadTaskFisheye; Was modifiying Scene's forward vector, which is shared. Solution: Make a copy of forward.
 
 Global Illumination is not showing correct colors. Maybe improper sampling?

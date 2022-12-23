@@ -63,9 +63,10 @@ void Scene::threadTaskFisheye(PNG *img, SafeQueue<RenderTask> *tasks) {
   double invForwardLength = 1.0 / magnitude(forward);
   Vector3D normalizedForward = normalized(forward);
 
-  uniform_real_distribution<> rayDistribution = uniform_real_distribution<>(-0.5, 0.5);
+  // Avoid race condiiton
+  Vector3D forwardCopy = forward;
 
-  auto start = std::chrono::system_clock::now();
+  uniform_real_distribution<> rayDistribution = uniform_real_distribution<>(-0.5, 0.5);
 
   // hacky... but does the job
   while ((task = tasks->dequeue()).x != -1) {
@@ -85,9 +86,9 @@ void Scene::threadTaskFisheye(PNG *img, SafeQueue<RenderTask> *tasks) {
       if (r_2 > 1) {
         continue;
       }
-      forward = sqrt(1 - r_2) * normalizedForward;
+      forwardCopy = sqrt(1 - r_2) * normalizedForward;
 
-      RGBAColor color = clipColor(raytrace(eye, forward + Sx * right + Sy * up, 0, 0));
+      RGBAColor color = clipColor(raytrace(eye, forwardCopy + Sx * right + Sy * up, 0, 0));
       if (color.a != 0) {
         avgColor += color;
         ++hits;
@@ -328,7 +329,7 @@ PNG *Scene::render(void (Scene::* worker)(PNG *, SafeQueue<RenderTask> *), int n
   expose(img);
 
   auto end = chrono::system_clock::now();
-  chrono::duration<double> elapsed_seconds = end-start;
+  chrono::duration<double> elapsed_seconds = end - start;
   time_t end_time = chrono::system_clock::to_time_t(end);
   cout << "\nRaytracing elapsed time: " << elapsed_seconds.count() << "s" << endl;
   return img;
@@ -336,7 +337,6 @@ PNG *Scene::render(void (Scene::* worker)(PNG *, SafeQueue<RenderTask> *), int n
 
 PNG *Scene::render(int numThreads, int seed) {
   createBVH();
-  rng.seed(seed);
 
   if (fisheye) {
     cout << "Fisheye enabled." << endl;

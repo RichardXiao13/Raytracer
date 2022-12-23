@@ -114,8 +114,6 @@ private:
   double exposure = -1.0;
   int maxBounces = 4;
   int numRays = 1;
-  mt19937 rng;
-  uniform_real_distribution<> uniformDistribution = uniform_real_distribution<>(-0.5, 0.5);
   BVH *bvh;
   bool fisheye = false;
   int globalIllumination = 0;
