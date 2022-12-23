@@ -36,7 +36,7 @@ Any feedback or issues found are very much welcome, as well as additional contri
 
 * Create a testing suite (Should've started with this but oh well... Who actually *tests* their code?? Right? *Right??* Just Kidding!)
 
-# Findings
+# Findings - M1 Macbook Pro
 
 Naive implementation of finding closest object
 
