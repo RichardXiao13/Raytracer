@@ -274,18 +274,18 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
     intersectInfo.normal = normalized(intersectInfo.normal);
     double ior = intersectInfo.obj->indexOfRefraction();
 
-    // Make normals point away from incident ray
-    if (dot(intersectInfo.normal, direction) > 0) {
-      intersectInfo.normal = -1 * intersectInfo.normal;
-    } else {
-      ior = 1 / ior;
-    }
-
     if (intersectInfo.obj->roughness() > 0) {
       for (int i = 0; i < 3; ++i) {
         intersectInfo.normal[i] += intersectInfo.obj->getPerturbation();
       }
       intersectInfo.normal = normalized(intersectInfo.normal);
+    }
+
+    // Make normals point away from incident ray
+    if (dot(intersectInfo.normal, direction) > 0) {
+      intersectInfo.normal = -1 * intersectInfo.normal;
+    } else {
+      ior = 1 / ior;
     }
     
     Vector3D &reflectance = intersectInfo.obj->shine();
