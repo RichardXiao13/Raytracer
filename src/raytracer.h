@@ -41,14 +41,6 @@ public:
   void setExposure(double value);
   void setMaxBounces(int d);
   void createBVH();
-  /**
-   * threadTaskDefault - default worker function for threads.
-  */
-  void threadTaskDefault(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBar *counter);
-  /**
-   * threadTaskFisheye - fisheye render worker function for threads.
-  */
-  void threadTaskFisheye(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBar *counter);
 
   int width() {
     return width_;
@@ -93,11 +85,28 @@ public:
     globalIllumination = gi;
   }
 
+  void setFocus(double f) {
+    focus_ = f;
+  }
+
+  void setLens(double l) {
+    lens_ = l;
+  }
+
 private:
   RGBAColor illuminate(const IntersectionInfo& info, int giDepth);
   RGBAColor raytrace(const Vector3D& origin, const Vector3D& direction, int depth, int giDepth);
   IntersectionInfo findClosestObject(const Vector3D& origin, const Vector3D& direction);
   void expose(PNG *img);
+  /**
+   * threadTaskDefault - default worker function for threads.
+  */
+  void threadTaskDefault(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBar *counter);
+  /**
+   * threadTaskFisheye - fisheye render worker function for threads.
+  */
+  void threadTaskFisheye(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBar *counter);
+  void threadTaskDOF(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBar *counter);
 
   vector<Object*> objects;
   vector<Plane*> planes;
@@ -118,4 +127,6 @@ private:
   BVH *bvh;
   bool fisheye = false;
   int globalIllumination = 0;
+  double focus_ = -1.0;
+  double lens_ = 0;
 };

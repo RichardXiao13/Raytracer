@@ -174,6 +174,11 @@ Scene *readDataFromStream(istream& in) {
     } else if (keyword == "gi") {
       int gi = stoi(lineInfo.at(1));
       scene->setGlobalIllumination(gi);
+    } else if (keyword == "dof") {
+      double focus = stod(lineInfo.at(1));
+      double lens = stod(lineInfo.at(2));
+      scene->setFocus(focus);
+      scene->setLens(lens);
     }
   }
 

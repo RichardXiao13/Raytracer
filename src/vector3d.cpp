@@ -31,6 +31,13 @@ Vector3D Vector3D::operator*(const Vector3D& other) const {
   return Vector3D(vec[0] * other.vec[0], vec[1] * other.vec[1], vec[2] * other.vec[2]);
 }
 
+Vector3D &Vector3D::operator*=(double scalar) {
+  vec[0] *= scalar;
+  vec[1] *= scalar;
+  vec[2] *= scalar;
+  return *this;
+}
+
 Vector3D operator*(double scalar, const Vector3D& v) {
   return Vector3D(v.vec[0] * scalar, v.vec[1] * scalar, v.vec[2] * scalar);
 }

@@ -13,6 +13,7 @@ public:
   Vector3D operator-(const Vector3D& other) const;
   Vector3D operator+(const Vector3D& other) const;
   Vector3D operator*(const Vector3D& other) const;
+  Vector3D &operator*=(double scalar);
 
   friend Vector3D operator*(double scalar, const Vector3D& v);
   friend Vector3D operator*(const Vector3D& v, double scalar);

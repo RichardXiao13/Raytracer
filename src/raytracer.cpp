@@ -105,6 +105,47 @@ void Scene::threadTaskFisheye(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgre
   }
 }
 
+void Scene::threadTaskDOF(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBar *counter) {
+  RenderTask task;
+  mt19937 rng;
+
+  double invNumRays = 1.0 / numRays;
+  int allowAntiAliasing = min(1, numRays - 1);
+  uniform_real_distribution<> rayDistribution = uniform_real_distribution<>(-0.5, 0.5);
+  uniform_real_distribution<> lensDistribution = uniform_real_distribution<>(0, 2 * M_PI);
+
+  // hacky... but does the job
+  while ((task = tasks->dequeue()).x != -1) {
+    int x = task.x;
+    int y = task.y;
+
+    RGBAColor avgColor(0, 0, 0, 1);
+    int hits = 0;
+
+    for (int i = 0; i < numRays; ++i) {
+      double Sx = getRayScaleX(x + rayDistribution(rng) * allowAntiAliasing, width_, height_);
+      double Sy = getRayScaleY(y + rayDistribution(rng) * allowAntiAliasing, width_, height_);
+      Vector3D rayDirection = forward + Sx * right + Sy * up;
+      Vector3D intersectionPoint = focus_ / magnitude(rayDirection) * rayDirection + eye;
+      double weight = lensDistribution(rng);
+      double r = rayDistribution(rng) + 0.5;
+      Vector3D origin = r * cos(weight) * lens_ / magnitude(right) * right + r * sin(weight) * lens_ / magnitude(up) * up + eye;
+      rayDirection = intersectionPoint - origin;
+
+      RGBAColor color = clipColor(raytrace(origin, rayDirection, 0, 0));
+      if (color.a != 0) {
+        avgColor += color;
+        ++hits;
+      }
+    }
+
+    avgColor *= invNumRays;
+    avgColor.a = hits * invNumRays;
+
+    img->getPixel(y, x) = avgColor;
+    counter->increment();
+  }
+}
 
 double getRayScaleX(double x, int w, int h) {
   return (2 * x - w) / max(w, h);
@@ -330,6 +371,9 @@ PNG *Scene::render(int numThreads, int seed) {
   if (fisheye) {
     cout << "Fisheye enabled." << endl;
     return render(&Scene::threadTaskFisheye, numThreads);
+  } else if (focus_ > 0) {
+    cout << "Depth of Field enabled." << endl;
+    return render(&Scene::threadTaskDOF, numThreads);
   } else {
     cout << "Default render." << endl;
     return render(&Scene::threadTaskDefault, numThreads);
