@@ -3,6 +3,8 @@
 
 !src/
 !src/*
+!src/materials
+!src/materials/*
 
 !example_scenes/
 !example_scenes/*
