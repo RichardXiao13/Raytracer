@@ -4,6 +4,7 @@
 #include <functional>
 #include <iostream>
 #include <stack>
+#include <memory>
 
 #include "raytracer.h"
 #include "BVH.h"
@@ -31,7 +32,7 @@ double Box::surfaceArea() {
   return 2 * (extent[0] * extent[1] + extent[1] * extent[2] + extent[0] * extent[2]);
 }
 
-BVH::BVH(vector<Object*> &objects) : objects(objects) {
+BVH::BVH(vector<unique_ptr<Object>> &objects) : objects(objects) {
   root = new Node();
   root->start = 0;
   root->numObjects = objects.size();
@@ -66,7 +67,7 @@ double BVH::calculateSAH(Node *node, int axis, double position) {
 
   int end = node->start + node->numObjects;
   for(int i = node->start; i < end; ++i) {
-    Object *obj = objects.at(i);
+    unique_ptr<Object> &obj = objects.at(i);
     if (obj->centroid()[axis] < position) {
       leftBox.shrink(obj->aabbMin());
       leftBox.expand(obj->aabbMax());
@@ -96,9 +97,9 @@ void BVH::partition(Node *node) {
   double bestPosition = 0;
   double bestCost = inf;
   int end = node->start + node->numObjects;
-  for(int i = node->start; i < end; ++i) {
+  for (int i = node->start; i < end; ++i) {
     Vector3D centroid = objects.at(i)->centroid();
-    for(int axis = 0; axis < 3; ++axis) {
+    for (int axis = 0; axis < 3; ++axis) {
       double possiblePosition = centroid[axis];
       double cost = calculateSAH(node, axis, possiblePosition);
       if (cost < bestCost) {

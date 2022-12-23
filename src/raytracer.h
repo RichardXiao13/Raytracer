@@ -26,18 +26,17 @@ class Scene {
 public: 
   Scene(int w, int h, const string& file)
   : width_(w), height_(h), filename_(file), eye(0, 0, 0), forward(0, 0, -1), right(1, 0, 0), up(0, 1, 0) {};
-  ~Scene();
-  void addObject(Object *obj);
-  void addPlane(Plane *plane);
-  void addLight(Light *light);
-  void addBulb(Bulb *bulb);
+  void addObject(unique_ptr<Object> obj);
+  void addPlane(unique_ptr<Plane> plane);
+  void addLight(unique_ptr<Light> light);
+  void addBulb(unique_ptr<Bulb> bulb);
   void addPoint(double x, double y, double z);
   Vector3D &getPoint(int i);
   size_t getNumObjects();
   PNG *render(void (Scene::* worker)(PNG *, SafeQueue<RenderTask> *, SafeProgressBar *), int numThreads);
   PNG *render(int numThreads=4, int seed=56);
   bool pointInShadow(const Vector3D& origin, const Vector3D& light);
-  bool pointInShadow(const Vector3D& point, const Bulb *bulb);
+  bool pointInShadow(const Vector3D& point, const unique_ptr<Bulb>& bulb);
   void setExposure(double value);
   void setMaxBounces(int d);
   void createBVH();
@@ -108,10 +107,10 @@ private:
   void threadTaskFisheye(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBar *counter);
   void threadTaskDOF(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBar *counter);
 
-  vector<Object*> objects;
-  vector<Plane*> planes;
-  vector<Light*> lights;
-  vector<Bulb*> bulbs;
+  vector<unique_ptr<Object>> objects;
+  vector<unique_ptr<Plane>> planes;
+  vector<unique_ptr<Light>> lights;
+  vector<unique_ptr<Bulb>> bulbs;
   vector<Vector3D> points;
   int width_;
   int height_;

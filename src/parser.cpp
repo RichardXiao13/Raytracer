@@ -5,10 +5,14 @@
 #include <iterator>
 #include <iostream>
 #include <algorithm>
+#include <memory>
+#include <random>
 
 #include "parser.h"
 #include "raytracer.h"
 #include "Objects.h"
+#include "materials/Material.h"
+#include "materials/Glass.h"
 
 using namespace std;
 
@@ -29,7 +33,7 @@ vector<string> split(const string &s, char delim) {
   return elems;
 }
 
-Scene *readDataFromStream(istream& in) {
+unique_ptr<Scene> readDataFromStream(istream& in) {
   string line;
   getline(in, line);
   vector<string> lineInfo = split(line, ' ');
@@ -48,13 +52,9 @@ Scene *readDataFromStream(istream& in) {
   int width = stoi(lineInfo.at(1));
   int height = stoi(lineInfo.at(2));
   string filename = lineInfo.at(3);
-  Scene *scene = new Scene(width, height, filename);
-
+  unique_ptr<Scene> scene = make_unique<Scene>(width, height, filename);
+  unique_ptr<Material> currentMaterial = make_unique<Material>(Vector3D(0,0,0), Vector3D(0,0,0), 1.458, 0.0);
   RGBAColor currentColor(1, 1, 1, 1);
-  Vector3D currentShine(0, 0, 0);
-  Vector3D currentTransparency(0, 0, 0);
-  double currentIOR = 1.458;
-  double currentRoughness = 0.0;
 
   for (; getline(in, line);) {
     lineInfo = split(line, ' ');
@@ -69,19 +69,17 @@ Scene *readDataFromStream(istream& in) {
       double y = stod(lineInfo.at(2));
       double z = stod(lineInfo.at(3));
       double r = stod(lineInfo.at(4));
-      Sphere *newObject = new Sphere(x, y, z, r);
+      unique_ptr<Sphere> newObject = make_unique<Sphere>(x, y, z, r);
+      unique_ptr<Material> material = make_unique<Material>(*currentMaterial);
       newObject->setColor(currentColor);
-      newObject->setShine(currentShine);
-      newObject->setTransparency(currentTransparency);
-      newObject->setIndexOfRefraction(currentIOR);
-      newObject->setRoughness(currentRoughness);
-      scene->addObject(newObject);
+      newObject->setMaterial(move(material));
+      scene->addObject(move(newObject));
     } else if (keyword == "sun") {
       double x = stod(lineInfo.at(1));
       double y = stod(lineInfo.at(2));
       double z = stod(lineInfo.at(3));
-      Light *newLight = new Light(x, y, z, currentColor);
-      scene->addLight(newLight);
+      unique_ptr<Light> newLight = make_unique<Light>(x, y, z, currentColor);
+      scene->addLight(move(newLight));
     } else if (keyword == "color") {
       double r = stod(lineInfo.at(1));
       double g = stod(lineInfo.at(2));
@@ -92,19 +90,17 @@ Scene *readDataFromStream(istream& in) {
       double B = stod(lineInfo.at(2));
       double C = stod(lineInfo.at(3));
       double D = stod(lineInfo.at(4));
-      Plane *newObject = new Plane(A, B, C, D);
+      unique_ptr<Plane> newObject = make_unique<Plane>(A, B, C, D);
+      unique_ptr<Material> material = make_unique<Material>(*currentMaterial);
       newObject->setColor(currentColor);
-      newObject->setShine(currentShine);
-      newObject->setTransparency(currentTransparency);
-      newObject->setIndexOfRefraction(currentIOR);
-      newObject->setRoughness(currentRoughness);
-      scene->addPlane(newObject);
+      newObject->setMaterial(move(material));
+      scene->addPlane(move(newObject));
     } else if (keyword == "bulb") {
       double x = stod(lineInfo.at(1));
       double y = stod(lineInfo.at(2));
       double z = stod(lineInfo.at(3));
-      Bulb *newBulb = new Bulb(x, y, z, currentColor);
-      scene->addBulb(newBulb);
+      unique_ptr<Bulb> newBulb = make_unique<Bulb>(x, y, z, currentColor);
+      scene->addBulb(move(newBulb));
     } else if (keyword == "xyz") {
       double x = stod(lineInfo.at(1));
       double y = stod(lineInfo.at(2));
@@ -114,13 +110,11 @@ Scene *readDataFromStream(istream& in) {
       int i = stoi(lineInfo.at(1)) - 1;
       int j = stoi(lineInfo.at(2)) - 1;
       int k = stoi(lineInfo.at(3)) - 1;
-      Triangle *newObject = new Triangle(scene->getPoint(i), scene->getPoint(j), scene->getPoint(k));
+      unique_ptr<Triangle> newObject = make_unique<Triangle>(scene->getPoint(i), scene->getPoint(j), scene->getPoint(k));
+      unique_ptr<Material> material = make_unique<Material>(*currentMaterial);
       newObject->setColor(currentColor);
-      newObject->setShine(currentShine);
-      newObject->setTransparency(currentTransparency);
-      newObject->setIndexOfRefraction(currentIOR);
-      newObject->setRoughness(currentRoughness);
-      scene->addObject(newObject);
+      newObject->setMaterial(move(material));
+      scene->addObject(move(newObject));
     } else if (keyword == "expose") {
       double exposure = stod(lineInfo.at(1));
       scene->setExposure(exposure);
@@ -132,7 +126,7 @@ Scene *readDataFromStream(istream& in) {
         Sg = stod(lineInfo.at(2));
         Sb = stod(lineInfo.at(3));
       }
-      currentShine = Vector3D(Sr, Sg, Sb);
+      currentMaterial->shine = Vector3D(Sr, Sg, Sb);
     } else if (keyword == "bounces") {
       double d = stoi(lineInfo.at(1));
       scene->setMaxBounces(d);
@@ -144,13 +138,14 @@ Scene *readDataFromStream(istream& in) {
         Tg = stod(lineInfo.at(2));
         Tb = stod(lineInfo.at(3));
       }
-      currentTransparency = Vector3D(Tr, Tg, Tb);
+      currentMaterial->transparency = Vector3D(Tr, Tg, Tb);
     } else if (keyword == "aa") {
       int n = stoi(lineInfo.at(1));
       scene->setNumRays(n);
     } else if (keyword == "roughness") {
       double roughness = stod(lineInfo.at(1));
-      currentRoughness = roughness;
+      currentMaterial->roughness = roughness;
+      currentMaterial->roughnessDistribution = normal_distribution<>(0, roughness);
     } else if (keyword == "eye") {
       double x = stod(lineInfo.at(1));
       double y = stod(lineInfo.at(2));
@@ -170,7 +165,7 @@ Scene *readDataFromStream(istream& in) {
       scene->enableFisheye();
     } else if (keyword == "ior") {
       double ior = stod(lineInfo.at(1));
-      currentIOR = ior;
+      currentMaterial->indexOfRefraction = ior;
     } else if (keyword == "gi") {
       int gi = stoi(lineInfo.at(1));
       scene->setGlobalIllumination(gi);
@@ -179,6 +174,10 @@ Scene *readDataFromStream(istream& in) {
       double lens = stod(lineInfo.at(2));
       scene->setFocus(focus);
       scene->setLens(lens);
+    } else if (keyword == "glass") {
+      currentMaterial = make_unique<Glass>();
+    } else if (keyword == "none") {
+      currentMaterial = make_unique<Material>(Vector3D(0,0,0), Vector3D(0,0,0), 1.458, 0.0);
     }
   }
 

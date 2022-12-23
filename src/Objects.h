@@ -1,9 +1,11 @@
 #pragma once
 
 #include <random>
+#include <memory>
 
 #include "vector3d.h"
 #include "PNG.h"
+#include "materials/Material.h"
 
 using namespace std;
 
@@ -49,53 +51,36 @@ public:
     color_ = color;
   }
 
-  void setShine(Vector3D s) {
-    shine_ = s;
-  }
-
   Vector3D &shine() {
-    return shine_;
-  }
-
-  void setTransparency(Vector3D t) {
-    transparency_ = t;
+    return material_->shine;
   }
 
   Vector3D &transparency() {
-    return transparency_;
-  }
-
-  void setIndexOfRefraction(double n) {
-    indexOfRefraction_ = n;
+    return material_->transparency;
   }
 
   double indexOfRefraction() {
-    return indexOfRefraction_;
-  }
-
-  void setRoughness(double s) {
-    roughness_ = s;
-    roughnessDistribution = normal_distribution<>(0, roughness_);
-  }
-
-  double roughness() {
-    return roughness_;
+    return material_->indexOfRefraction;
   }
 
   double getPerturbation() {
-    return roughnessDistribution(rng_);
+    return material_->getPerturbation();
+  }
+
+  void setMaterial(unique_ptr<Material> mat) {
+    material_ = move(mat);
+  }
+
+  const unique_ptr<Material>& material() {
+    return material_;
   }
 
   virtual Vector3D sampleRay();
 
 protected:
   RGBAColor color_;
-  Vector3D shine_;
-  Vector3D transparency_;
-  double indexOfRefraction_;
-  double roughness_;
+  unique_ptr<Material> material_;
   mt19937 rng_;
-  normal_distribution<> roughnessDistribution;
   uniform_real_distribution<> sampleDistribution;
   Vector3D aabbMin_;
   Vector3D aabbMax_;

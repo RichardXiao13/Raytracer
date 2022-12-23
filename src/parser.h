@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <fstream>
+#include <memory>
 
 #include "raytracer.h"
 
@@ -13,4 +14,4 @@ void split(const string &s, char delim, Out result);
 
 vector<string> split(const string &s, char delim);
 
-Scene *readDataFromStream(istream& in);
+unique_ptr<Scene> readDataFromStream(istream& in);

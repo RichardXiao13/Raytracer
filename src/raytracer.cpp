@@ -154,20 +154,20 @@ double getRayScaleY(double y, int w, int h) {
   return (h - 2 * y) / max(w, h);
 }
 
-void Scene::addObject(Object *obj) {
-  objects.push_back(obj);
+void Scene::addObject(unique_ptr<Object> obj) {
+  objects.push_back(move(obj));
 }
 
-void Scene::addPlane(Plane *plane) {
-  planes.push_back(plane);
+void Scene::addPlane(unique_ptr<Plane> plane) {
+  planes.push_back(move(plane));
 }
 
-void Scene::addLight(Light *light) {
-  lights.push_back(light);
+void Scene::addLight(unique_ptr<Light> light) {
+  lights.push_back(move(light));
 }
 
-void Scene::addBulb(Bulb *bulb) {
-  bulbs.push_back(bulb);
+void Scene::addBulb(unique_ptr<Bulb> bulb) {
+  bulbs.push_back(move(bulb));
 }
 
 void Scene::addPoint(double x, double y, double z) {
@@ -191,18 +191,6 @@ void Scene::setExposure(double value) {
 
 void Scene::setMaxBounces(int d) {
   maxBounces = d;
-}
-
-Scene::~Scene() {
-  for (auto it = objects.begin(); it != objects.end(); ++it) {
-    delete *it;
-  }
-  for (auto it = lights.begin(); it != lights.end(); ++it) {
-    delete *it;
-  }
-  for (auto it = bulbs.begin(); it != bulbs.end(); ++it) {
-    delete *it;
-  }
 }
 
 IntersectionInfo Scene::findClosestObject(const Vector3D& origin, const Vector3D& direction) {
@@ -259,7 +247,7 @@ bool Scene::pointInShadow(const Vector3D& point, const Vector3D& lightDirection)
   return bvh->findAnyObject(point, lightDirection);
 }
 
-bool Scene::pointInShadow(const Vector3D& point, const Bulb *bulb) {
+bool Scene::pointInShadow(const Vector3D& point, const unique_ptr<Bulb>& bulb) {
   double intersectToBulbDist = magnitude(bulb->center() - point);
   IntersectionInfo info = bvh->findClosestObject(point, bulb->getLightDirection(point));
   double objectToIntersect = magnitude(point - info.point);
@@ -274,7 +262,7 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
     intersectInfo.normal = normalized(intersectInfo.normal);
     double ior = intersectInfo.obj->indexOfRefraction();
 
-    if (intersectInfo.obj->roughness() > 0) {
+    if (intersectInfo.obj->material()->roughness > 0) {
       for (int i = 0; i < 3; ++i) {
         intersectInfo.normal[i] += intersectInfo.obj->getPerturbation();
       }

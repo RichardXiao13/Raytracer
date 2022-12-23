@@ -1,6 +1,7 @@
 #pragma once 
 
 #include <vector>
+#include <memory>
 
 #include "raytracer.h"
 #include "vector3d.h"
@@ -42,7 +43,7 @@ private:
   };
 
 public:
-  BVH(vector<Object*> &objects);
+  BVH(vector<unique_ptr<Object>> &objects);
   IntersectionInfo findClosestObject(const Vector3D& origin, const Vector3D& direction);
   bool findAnyObject(const Vector3D& origin, const Vector3D& direction);
   int height();
@@ -54,5 +55,5 @@ private:
   int height(Node *node);
   double calculateSAH(Node *node, int axis, double position);
   Node *root;
-  vector<Object*> &objects;
+  vector<unique_ptr<Object>> &objects;
 };

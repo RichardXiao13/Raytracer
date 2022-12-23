@@ -3,7 +3,8 @@ EXE = raytracer
 
 # Add all object files needed for compiling:
 EXE_OBJ = main.o
-OBJS = main.o lodepng.o vector3d.o raytracer.o parser.o PNG.o BVH.o SafeQueue.o timer.o Objects.o math_utils.o SafeProgressBar.o
+OBJS = main.o lodepng.o vector3d.o raytracer.o parser.o PNG.o BVH.o SafeQueue.o timer.o Objects.o math_utils.o SafeProgressBar.o \
+materials/Material.o materials/Glass.o
 
 # Optimization level:
 OPT = -Ofast
@@ -41,6 +42,7 @@ $(EXE): output_msg $(patsubst %.o, $(OBJS_DIR)/%.o, $(OBJS))
 # Ensure .objs/ exists:
 $(OBJS_DIR):
 	@mkdir -p $(OBJS_DIR)
+	@mkdir -p $(OBJS_DIR)/materials
 
 # Rules for compiling source code.
 # - Every object file is required by $(EXE)
