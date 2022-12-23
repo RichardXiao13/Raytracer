@@ -9,6 +9,7 @@
 #include "BVH.h"
 #include "Objects.h"
 #include "SafeQueue.h"
+#include "SafeProgressBar.h"
 
 using namespace std;
 
@@ -33,7 +34,7 @@ public:
   void addPoint(double x, double y, double z);
   Vector3D &getPoint(int i);
   size_t getNumObjects();
-  PNG *render(void (Scene::* worker)(PNG *, SafeQueue<RenderTask> *), int numThreads);
+  PNG *render(void (Scene::* worker)(PNG *, SafeQueue<RenderTask> *, SafeProgressBar *), int numThreads);
   PNG *render(int numThreads=4, int seed=56);
   bool pointInShadow(const Vector3D& origin, const Vector3D& light);
   bool pointInShadow(const Vector3D& point, const Bulb *bulb);
@@ -43,11 +44,11 @@ public:
   /**
    * threadTaskDefault - default worker function for threads.
   */
-  void threadTaskDefault(PNG *img, SafeQueue<RenderTask> *tasks);
+  void threadTaskDefault(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBar *counter);
   /**
    * threadTaskFisheye - fisheye render worker function for threads.
   */
-  void threadTaskFisheye(PNG *img, SafeQueue<RenderTask> *tasks);
+  void threadTaskFisheye(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBar *counter);
 
   int width() {
     return width_;
@@ -118,5 +119,3 @@ private:
   bool fisheye = false;
   int globalIllumination = 0;
 };
-
-void displayRenderProgress(double progress, int barWidth=70);

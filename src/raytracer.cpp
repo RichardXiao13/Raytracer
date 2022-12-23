@@ -15,11 +15,12 @@
 #include "SafeQueue.h"
 #include "timer.h"
 #include "math_utils.h"
+#include "SafeProgressBar.h"
 
 using namespace std;
 using std::cout;
 
-void Scene::threadTaskDefault(PNG *img, SafeQueue<RenderTask> *tasks) {
+void Scene::threadTaskDefault(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBar *counter) {
   RenderTask task;
   mt19937 rng;
 
@@ -50,10 +51,11 @@ void Scene::threadTaskDefault(PNG *img, SafeQueue<RenderTask> *tasks) {
     avgColor.a = hits * invNumRays;
 
     img->getPixel(y, x) = avgColor;
+    counter->increment();
   }
 }
 
-void Scene::threadTaskFisheye(PNG *img, SafeQueue<RenderTask> *tasks) {
+void Scene::threadTaskFisheye(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBar *counter) {
   RenderTask task;
   mt19937 rng;
 
@@ -99,6 +101,7 @@ void Scene::threadTaskFisheye(PNG *img, SafeQueue<RenderTask> *tasks) {
     avgColor.a = hits * invNumRays;
 
     img->getPixel(y, x) = avgColor;
+    counter->increment();
   }
 }
 
@@ -269,21 +272,6 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
   return RGBAColor(0, 0, 0, 0);
 }
 
-void displayRenderProgress(double progress, int barWidth) {
-  // https://stackoverflow.com/questions/14539867/how-to-display-a-progress-indicator-in-pure-c-c-cout-printf
-  int pos = barWidth * progress;
-  cout << "[";
-
-  for (int i = 0; i < barWidth; ++i) {
-    if (i < pos) cout << "=";
-    else if (i == pos) cout << ">";
-    else cout << " ";
-  }
-
-  cout << "] " << fixed << setprecision(2) << progress * 100.0 << " % \r";
-  cout.flush();
-}
-
 void Scene::createBVH() {
   cout << "Creating BVH" << endl;
   auto start = std::chrono::system_clock::now();
@@ -296,18 +284,18 @@ void Scene::createBVH() {
   cout << "BVH creation time: " << elapsed_seconds.count() << "s" << endl;
 }
 
-PNG *Scene::render(void (Scene::* worker)(PNG *, SafeQueue<RenderTask> *), int numThreads) {
+PNG *Scene::render(void (Scene::* worker)(PNG *, SafeQueue<RenderTask> *, SafeProgressBar *), int numThreads) {
   int totalPixels = height_ * width_;
-  int finishedPixels = 0;
+  int update = max(4096.0, 0.01 * totalPixels);
 
   PNG *img = new PNG(width_, height_);
-  int tick = max(totalPixels * 0.01, 4096.0);
-
+\
   SafeQueue<RenderTask> tasks;
+  SafeProgressBar counter(70, totalPixels, update);
 
   vector<thread> threads;
   for (int i = 0; i < numThreads; ++i) {
-    threads.emplace_back(worker, this, img, &tasks);
+    threads.emplace_back(worker, this, img, &tasks, &counter);
   }
 
   auto start = std::chrono::system_clock::now();
