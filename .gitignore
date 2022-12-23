@@ -1,0 +1,15 @@
+# Ignore everything
+*
+
+!src/
+!src/*
+
+!example_scenes/
+!example_scenes/*
+
+!example_scenes/scene_files/*
+!example_scenes/scene_images/*
+
+!.gitignore
+!Makefile
+!README.md
