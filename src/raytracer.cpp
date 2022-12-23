@@ -320,6 +320,7 @@ PNG *Scene::render(void (Scene::* worker)(PNG *, SafeQueue<RenderTask> *, SafePr
   chrono::duration<double> elapsed_seconds = end - start;
   time_t end_time = chrono::system_clock::to_time_t(end);
   cout << "\nRaytracing elapsed time: " << elapsed_seconds.count() << "s" << endl;
+  cout << static_cast<double>(numRays) * totalPixels / elapsed_seconds.count() << " rays/s" << endl;
   return img;
 }
 
