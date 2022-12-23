@@ -1,3 +1,41 @@
+# Description
+This project uses Make and clang++ with C++17.
+
+I originally started this project as a fun exercise for myself following some guidelines from a 4 credit hour assignment in a class I took for 3 credit hours, UIUC CS 418: Interactive Computer Graphics.
+
+The format of the scene files can be found [here](https://cs418.cs.illinois.edu/website/hw-raytracer.html) on the course site.
+
+I plan to change the format into a more versatile one such as [PBRT's](https://www.pbrt.org/fileformat-v3).
+
+If you would like to play around with this project, use the following commands
+```
+git clone [this repository]
+cd [this repository]
+make
+./raytracer [-t numThreads] filepath
+```
+
+Any feedback or issues found are very much welcome, as well as additional contributors!
+
+# TODOs
+* Fix Global Illumination
+
+* Find a better file format or parse other formats into this format
+
+* Implement other materials (plastic, matte surfaces, metals, ...)
+
+* Add more benchmarking scenes (Gruesome... Unless a generous soul wants to do this by hand, I'll probably find a better file format and parse those instead)
+
+    * Need scenes with lots of primitives, dense, overlapping, or evenly distributed throughout the scene
+
+* Reduce memory footprint
+
+* Parallelize BVH construction
+
+* Document everything
+
+* Create a testing suite (Should've started with this but oh well... Who actually *tests* their code?? Right? *Right??* Just Kidding!)
+
 # Findings
 
 Naive implementation of finding closest object
