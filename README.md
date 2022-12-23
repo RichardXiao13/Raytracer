@@ -50,17 +50,35 @@ Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heur
 
 # Multi-threading Results Using Fastest Single Threaded Method
 
-4 threads: Takes 37.15 seconds on spiral.txt.
+    4 threads: Takes 40.69 seconds on tenthousand.txt.
 
-6 threads: Takes 31.62 seconds on spiral.txt.
+    6 threads: Takes 33.33 seconds on tenthousand.txt.
 
-8 threads: Takes 29.98 seconds on spiral.txt.
+    8 threads: Takes 29.95 seconds on tenthousand.txt.
 
-16 threads: Takes 29.06 seconds on spiral.txt.
+    16 threads: Takes 29.56 seconds on tenthousand.txt.
+
+    4 threads: Takes 84.21 seconds on redchair.txt.
+
+    6 threads: Takes 73.46 seconds on redchair.txt.
+
+    8 threads: Takes 66.05 seconds on redchair.txt.
+
+    16 threads: Takes 65.57 seconds on redchair.txt.
+
+    4 threads: Takes 37.15 seconds on spiral.txt.
+
+    6 threads: Takes 31.62 seconds on spiral.txt.
+
+    8 threads: Takes 29.98 seconds on spiral.txt.
+
+    16 threads: Takes 29.06 seconds on spiral.txt.
 
 # Bottlenecks
 
 findingClosestObject and findingAnyObject calls to the BVH. Given log(N) find time, each ray incurs 2log(N) cost, double a single call to the BVH. Need to improve intersection algorithm/data structure, or reduce calls.
+
+BVH building takes a very long time in scenes with many, many objects. This can be seen with tenthousand.txt where the fastest rendering method takes around 12 seconds to build the BVH. This becomes a very apparent bottleneck with multi-threading. The main thread builds the BVH in around 12 seconds, but rendering on many threads can take only around 30 seconds. A solution might be multi-threading the build process for the BVH. Will be difficult to do though...
 
 # Multi-threading strategies
 
