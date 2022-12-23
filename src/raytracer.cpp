@@ -221,8 +221,8 @@ bool Scene::pointInShadow(const Vector3D& point, const Vector3D& lightDirection)
 bool Scene::pointInShadow(const Vector3D& point, const Bulb *bulb) {
   double intersectToBulbDist = magnitude(bulb->center() - point);
   IntersectionInfo info = bvh->findClosestObject(point, bulb->getLightDirection(point));
-  double objectToBulbDist = magnitude(bulb->center() - info.point);
-  return info.obj != nullptr && objectToBulbDist < intersectToBulbDist;
+  double objectToIntersect = magnitude(point - info.point);
+  return info.obj != nullptr && objectToIntersect < intersectToBulbDist;
 }
 
 RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int depth, int giDepth) {

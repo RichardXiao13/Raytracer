@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
   if (infile) {
     scene = readDataFromStream(infile);
   } else {
-    cerr << "Couldn't open file " << argv[1] << endl;
+    cerr << "Couldn't open file " << argv[2] << endl;
     return 1;
   }
 
