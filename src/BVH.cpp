@@ -5,13 +5,18 @@
 #include <iostream>
 #include <stack>
 #include <memory>
+#include <thread>
+#include <future>
 
 #include "raytracer.h"
 #include "BVH.h"
+#include "SafeVector.h"
+
+#define INF_D numeric_limits<double>::infinity()
+#define MIN_THREAD_WORK 64
 
 using namespace std;
 
-#define INF_D numeric_limits<double>::infinity()
 
 BVH::~BVH() {
   recursiveDestructor(root);
@@ -25,6 +30,44 @@ void BVH::recursiveDestructor(Node *node) {
   recursiveDestructor(node->left);
   recursiveDestructor(node->right);
   delete node;
+}
+
+PartitionInfo BVH::parallelizeSAH(Node *node, int start, int end, int maxThreads) {
+  int workPerThread = max((end - start) / maxThreads, MIN_THREAD_WORK);
+  // Use futures as if they were threads. May not always be the case, but this is a nice abstraction
+  vector<future<PartitionInfo>> threads;
+  for (int i = start; i < end; i += workPerThread) {
+    threads.emplace_back(async(&BVH::threadPartitionTask, this, node, i, min(i + workPerThread, end)));
+  }
+  PartitionInfo bestInfo;
+  for (auto it = threads.begin(); it != threads.end(); ++it) {
+    PartitionInfo info = it->get();
+    if (info.bestCost < bestInfo.bestCost) {
+      bestInfo = info;
+    }
+  }
+  return bestInfo;
+}
+
+PartitionInfo BVH::threadPartitionTask(Node *node, int start, int end) {
+  int bestAxis = -1;
+  double bestPosition = 0;
+  double bestCost = INF_D;
+
+  for (int i = start; i < end; ++i) {
+    Vector3D centroid = objects.at(i)->centroid();
+    for (int axis = 0; axis < 3; ++axis) {
+      double possiblePosition = centroid[axis];
+      double cost = calculateSAH(node, axis, possiblePosition);
+      if (cost < bestCost) {
+        bestCost = cost;
+        bestAxis = axis;
+        bestPosition = possiblePosition;
+      }
+    }
+  }
+  
+  return { bestAxis, bestPosition, bestCost };
 }
 
 void Box::shrink(const Vector3D& minPoint) {
@@ -46,7 +89,7 @@ double Box::surfaceArea() {
   return 2 * (extent[0] * extent[1] + extent[1] * extent[2] + extent[0] * extent[2]);
 }
 
-BVH::BVH(vector<unique_ptr<Object>> &objects) : objects(objects) {
+BVH::BVH(vector<unique_ptr<Object>> &objects, int maxThreads) : objects(objects), maxThreads(maxThreads) {
   root = new Node();
   root->start = 0;
   root->numObjects = objects.size();
@@ -112,27 +155,16 @@ void BVH::partition(Node *node) {
   double bestCost = INF_D;
   int end = node->start + node->numObjects;
 
-  for (int i = node->start; i < end; ++i) {
-    Vector3D centroid = objects.at(i)->centroid();
-    for (int axis = 0; axis < 3; ++axis) {
-      double possiblePosition = centroid[axis];
-      double cost = calculateSAH(node, axis, possiblePosition);
-      if (cost < bestCost) {
-        bestCost = cost;
-        bestAxis = axis;
-        bestPosition = possiblePosition;
-      }
-    }
-  }
+  PartitionInfo info = parallelizeSAH(node, node->start, end, maxThreads);
 
   Box parentBox(node->aabbMin, node->aabbMax);
   double parentCost = parentBox.surfaceArea() * node->numObjects;
-  if (bestCost >= parentCost) {
+  if (info.bestCost >= parentCost) {
     return;
   }
 
-  int axis = bestAxis;
-  double splitPosition = bestPosition;
+  int axis = info.bestAxis;
+  double splitPosition = info.bestPosition;
   int i = node->start;
   int j = i + node->numObjects - 1;
   while (i <= j) {

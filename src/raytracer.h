@@ -39,7 +39,7 @@ public:
   bool pointInShadow(const Vector3D& point, const unique_ptr<Bulb>& bulb);
   void setExposure(double value);
   void setMaxBounces(int d);
-  void createBVH();
+  void createBVH(int numThreads);
 
   int width() {
     return width_;

@@ -301,11 +301,11 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
   return RGBAColor(0, 0, 0, 0);
 }
 
-void Scene::createBVH() {
+void Scene::createBVH(int numThreads) {
   cout << "Creating BVH" << endl;
   auto start = std::chrono::system_clock::now();
 
-  bvh = make_unique<BVH>(objects);
+  bvh = make_unique<BVH>(objects, numThreads);
 
   auto end = chrono::system_clock::now();
   chrono::duration<double> elapsed_seconds = end-start;
@@ -337,8 +337,8 @@ PNG *Scene::render(void (Scene::* worker)(PNG *, SafeQueue<RenderTask> *, SafePr
   for (int i = 0; i < numThreads; ++i) {
     tasks.enqueue({ -1, -1 });
   }
-  for (int i = 0; i < numThreads; ++i) {
-    threads.at(i).join();
+  for (auto it = threads.begin(); it != threads.end(); ++it) {
+    it->join();
   }
 
   displayRenderProgress(1.0);
@@ -354,7 +354,7 @@ PNG *Scene::render(void (Scene::* worker)(PNG *, SafeQueue<RenderTask> *, SafePr
 }
 
 PNG *Scene::render(int numThreads, int seed) {
-  createBVH();
+  createBVH(numThreads);
 
   if (fisheye) {
     cout << "Fisheye enabled." << endl;

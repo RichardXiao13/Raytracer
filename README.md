@@ -86,7 +86,7 @@ Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heur
 
     Takes 2 minutes 23 seconds on spiral.txt; BVH creation takes 2.32 seconds.
 
-# Multi-threading Results Using Fastest Single Threaded Method
+# Multi-threading Render Results Using Fastest Single Threaded Method
 
     4 threads: Takes 40.54 seconds on tenthousand.txt.
 
@@ -112,6 +112,24 @@ Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heur
 
     16 threads: Takes 29.06 seconds on spiral.txt.
 
+# Multi-threading BVH Construction Results Using Parallelized SAH loops
+
+    4 threads: Takes 3.69 seconds on tenthousand.txt.
+
+    6 threads: Takes 3.44 seconds on tenthousand.txt.
+
+    8 threads: Takes 2.99 seconds on tenthousand.txt.
+
+    16 threads: Takes 2.97 seconds on tenthousand.txt.
+
+    4 threads: Takes 0.68 seconds on spiral.txt.
+
+    6 threads: Takes 0.65 seconds on spiral.txt.
+
+    8 threads: Takes 0.60 seconds on spiral.txt.
+
+    16 threads: Takes 0.59 seconds on spiral.txt.
+
 # Bottlenecks
 
 findingClosestObject and findingAnyObject calls to the BVH. Given log(N) find time, each ray incurs 2log(N) cost, double a single call to the BVH. Need to improve intersection algorithm/data structure, or reduce calls.
@@ -135,6 +153,18 @@ Queue allows each thread to process dense locations uniformly.
 Scenes with evenly dispersed objects will take roughly the same time to finish rendering each pixel, and therefore, each chunk.
 
 This avoids incurring synchronization costs of a thread-safe queue.
+
+## Spawn new threads during BVH construction at each partition call
+
+### Idea: Naive Surface Area Heuristic has N^2log(N) complexity. New threads can theoretically bring this down to Nlog(N)
+
+In reality, this doesn't work as well, only achieving a 1 second improvement over a single threaded construction. This might be due to the initial partition call needing to view the entire scenes objects, at which point subsquent threads only see half, leading to not so significant improvements. Additionally, not all threads will be running at the beginning, leading to drastically lower improvements.
+
+## Parallelize loop over find best SAH during BVH construction
+
+### Idea: Divide the object search space into roughly even blocks for each thread to work on before consolidating
+
+In practice, this method works beautifully, since each thread has its own search space and can maximize their performance on it. This allows all threads to work simultaneously at any point in the construction, and even more so towards the beginning when the search space is still massive.
 
 # Difficulties
 
