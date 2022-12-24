@@ -10,7 +10,6 @@
 
 #include "raytracer.h"
 #include "BVH.h"
-#include "SafeVector.h"
 
 #define INF_D numeric_limits<double>::infinity()
 #define MIN_THREAD_WORK 64

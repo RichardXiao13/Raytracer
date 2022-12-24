@@ -5,7 +5,6 @@
 
 #include "raytracer.h"
 #include "vector3d.h"
-#include "SafeVector.h"
 
 #define INF_D numeric_limits<double>::infinity()
 
