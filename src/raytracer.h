@@ -123,7 +123,7 @@ private:
   double exposure = -1.0;
   int maxBounces = 4;
   int numRays = 1;
-  BVH *bvh;
+  unique_ptr<BVH> bvh;
   bool fisheye = false;
   int globalIllumination = 0;
   double focus_ = -1.0;

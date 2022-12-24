@@ -305,7 +305,7 @@ void Scene::createBVH() {
   cout << "Creating BVH" << endl;
   auto start = std::chrono::system_clock::now();
 
-  bvh = new BVH(objects);
+  bvh = make_unique<BVH>(objects);
 
   auto end = chrono::system_clock::now();
   chrono::duration<double> elapsed_seconds = end-start;

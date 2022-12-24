@@ -44,6 +44,7 @@ private:
 
 public:
   BVH(vector<unique_ptr<Object>> &objects);
+  ~BVH();
   IntersectionInfo findClosestObject(const Vector3D& origin, const Vector3D& direction);
   bool findAnyObject(const Vector3D& origin, const Vector3D& direction);
   int height();
@@ -54,6 +55,7 @@ private:
   double intersectAABB(const Vector3D& origin, const Vector3D& direction, const Vector3D& aabbMin, const Vector3D& aabbMax);
   int height(Node *node);
   double calculateSAH(Node *node, int axis, double position);
+  void recursiveDestructor(Node *node);
   Node *root;
   vector<unique_ptr<Object>> &objects;
 };

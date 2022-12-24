@@ -11,7 +11,21 @@
 
 using namespace std;
 
-const double inf = numeric_limits<double>::infinity();
+#define INF_D numeric_limits<double>::infinity()
+
+BVH::~BVH() {
+  recursiveDestructor(root);
+}
+
+void BVH::recursiveDestructor(Node *node) {
+  if (node->isLeaf()) {
+    delete node;
+    return;
+  }
+  recursiveDestructor(node->left);
+  recursiveDestructor(node->right);
+  delete node;
+}
 
 void Box::shrink(const Vector3D& minPoint) {
   minPoint_[0] = min(minPoint_[0], minPoint[0]);
@@ -41,8 +55,8 @@ BVH::BVH(vector<unique_ptr<Object>> &objects) : objects(objects) {
 }
 
 void BVH::updateNodeBounds(Node *node) {
-  node->aabbMin = Vector3D(inf, inf, inf);
-  node->aabbMax = Vector3D(-inf, -inf, -inf);
+  node->aabbMin = Vector3D(INF_D, INF_D, INF_D);
+  node->aabbMax = Vector3D(-INF_D, -INF_D, -INF_D);
   int end = node->start + node->numObjects;
   for (int i = node->start; i < end; ++i) {
     Vector3D aabbObjMin = objects.at(i)->aabbMin();
@@ -62,8 +76,8 @@ double BVH::calculateSAH(Node *node, int axis, double position) {
   int leftBoxCount = 0;
   int rightBoxCount = 0;
 
-  Box leftBox(Vector3D(inf, inf, inf), Vector3D(-inf, -inf, -inf));
-  Box rightBox(Vector3D(inf, inf, inf), Vector3D(-inf, -inf, -inf));
+  Box leftBox(Vector3D(INF_D, INF_D, INF_D), Vector3D(-INF_D, -INF_D, -INF_D));
+  Box rightBox(Vector3D(INF_D, INF_D, INF_D), Vector3D(-INF_D, -INF_D, -INF_D));
 
   int end = node->start + node->numObjects;
   for(int i = node->start; i < end; ++i) {
@@ -84,7 +98,7 @@ double BVH::calculateSAH(Node *node, int axis, double position) {
   if (cost > 0) {
     return cost;
   }
-  return inf;
+  return INF_D;
 }
 
 void BVH::partition(Node *node) {
@@ -95,8 +109,9 @@ void BVH::partition(Node *node) {
   
   int bestAxis = -1;
   double bestPosition = 0;
-  double bestCost = inf;
+  double bestCost = INF_D;
   int end = node->start + node->numObjects;
+
   for (int i = node->start; i < end; ++i) {
     Vector3D centroid = objects.at(i)->centroid();
     for (int axis = 0; axis < 3; ++axis) {
@@ -110,9 +125,8 @@ void BVH::partition(Node *node) {
     }
   }
 
-  Vector3D parentExtent = node->aabbMax - node->aabbMin;
-  double parentSurfaceArea = 2 * (parentExtent[0] * parentExtent[1] + parentExtent[1] * parentExtent[2] + parentExtent[0] * parentExtent[2]);
-  double parentCost = parentSurfaceArea * node->numObjects;
+  Box parentBox(node->aabbMin, node->aabbMax);
+  double parentCost = parentBox.surfaceArea() * node->numObjects;
   if (bestCost >= parentCost) {
     return;
   }
@@ -154,8 +168,8 @@ IntersectionInfo BVH::findClosestObject(const Vector3D& origin, const Vector3D& 
   stack<pair<double, Node*>, vector<pair<double, Node*>>> to_visit;
   to_visit.push({ intersectAABB(origin, direction, root->aabbMin, root->aabbMax), root });
 
-  double minDistance = inf;
-  IntersectionInfo closestInfo{ inf, {}, {}, nullptr };
+  double minDistance = INF_D;
+  IntersectionInfo closestInfo{ INF_D, {}, {}, nullptr };
 
   while (to_visit.empty() == false) {
     pair<double, Node*> pairing = to_visit.top();
@@ -193,7 +207,7 @@ bool BVH::findAnyObject(const Vector3D& origin, const Vector3D& direction) {
   stack<pair<double, Node*>, vector<pair<double, Node*>>> to_visit;
   to_visit.push({ intersectAABB(origin, direction, root->aabbMin, root->aabbMax), root });
 
-  double minDistance = inf;
+  double minDistance = INF_D;
 
   while (to_visit.empty() == false) {
     pair<double, Node*> pairing = to_visit.top();
@@ -242,7 +256,7 @@ double BVH::intersectAABB(const Vector3D& origin, const Vector3D& direction, con
   if (tmax >= tmin && tmax > 0) {
     return tmin;
   }
-  return inf;
+  return INF_D;
 }
 
 int BVH::height(Node *node) {
