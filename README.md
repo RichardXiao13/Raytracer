@@ -30,7 +30,7 @@ Any feedback or issues found are very much welcome, as well as additional contri
 
 * Reduce memory footprint
 
-* Parallelize BVH construction
+* Parallelize BVH construction - Done!!
 
 * Document everything
 
