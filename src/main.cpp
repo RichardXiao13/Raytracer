@@ -7,12 +7,10 @@
 #include "parser.h"
 #include "raytracer.h"
 
-using namespace std;
-
 int main(int argc, char **argv) {
-  unique_ptr<Scene> scene = nullptr;
+  std::unique_ptr<Scene> scene = nullptr;
   if (argc > 3) {
-    cerr << "usage: " << argv[0] << " [-t numThreads] filepath" << endl;
+    std::cerr << "usage: " << argv[0] << " [-t numThreads] filepath" << std::endl;
     return 1;
   }
 
@@ -24,16 +22,16 @@ int main(int argc, char **argv) {
         numThreads = atoi(optarg);
         break;
       default:
-        cerr << "usage: " << argv[0] << " [-t numThreads] filepath" << endl;
+        std::cerr << "usage: " << argv[0] << " [-t numThreads] filepath" << std::endl;
         return -1;
     }
   }
 
-  ifstream infile(argv[argc - 1]);
+  std::ifstream infile(argv[argc - 1]);
   if (infile) {
     scene = readDataFromStream(infile);
   } else {
-    cerr << "Couldn't open file " << argv[argc - 1] << endl;
+    std::cerr << "Couldn't open file " << argv[argc - 1] << std::endl;
     return 1;
   }
 

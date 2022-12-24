@@ -6,8 +6,6 @@
 #include "lodepng.h"
 #include "vector3d.h"
 
-using namespace std;
-
 double linearToGamma(double channel) {
   if (channel < 0.0031308) {
     return 12.92 * channel;
@@ -57,7 +55,12 @@ RGBAColor operator*(const RGBAColor& c, const Vector3D& v) {
 }
 
 RGBAColor clipColor(const RGBAColor& c) {
-  return RGBAColor(max(0.0, min(c.r, 1.0)), max(0.0, min(c.g, 1.0)), max(0.0, min(c.b, 1.0)), max(0.0, min(c.a, 1.0)));
+  return RGBAColor(
+    std::max(0.0, std::min(c.r, 1.0)),
+    std::max(0.0, std::min(c.g, 1.0)),
+    std::max(0.0, std::min(c.b, 1.0)),
+    std::max(0.0, std::min(c.a, 1.0))
+  );
 }
 
 RGBAColor &PNG::getPixel(int row, int col) {
@@ -77,7 +80,7 @@ std::ostream& operator<<(std::ostream& out, const RGBAColor& color) {
   return out;
 }
 
-bool PNG::saveToFile(const string& filename) {
+bool PNG::saveToFile(const std::string& filename) {
   unsigned char *byteData = new unsigned char[width_ * height_ * 4];
   for (int i = 0; i < width_ * height_; i++) {
     RGBAColor gammaCorrected = image_[i].toSRGB();
@@ -89,7 +92,7 @@ bool PNG::saveToFile(const string& filename) {
 
   unsigned error = lodepng::encode(filename, byteData, width_, height_);
   if (error) {
-    cerr << "PNG encoding error " << error << ": " << lodepng_error_text(error) << endl;
+    std::cerr << "PNG encoding error " << error << ": " << lodepng_error_text(error) << std::endl;
   }
   delete[] byteData;
   return (error == 0);

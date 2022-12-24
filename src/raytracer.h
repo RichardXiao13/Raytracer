@@ -11,8 +11,6 @@
 #include "SafeQueue.h"
 #include "SafeProgressBar.h"
 
-using namespace std;
-
 // A ray has origin 'eye' and direction 'forward' + Sx * 'right' + Sy * 'up'
 double getRayScaleX(double x, int w, int h);
 double getRayScaleY(double y, int w, int h);
@@ -24,19 +22,19 @@ struct RenderTask {
 
 class Scene {
 public: 
-  Scene(int w, int h, const string& file)
+  Scene(int w, int h, const std::string& file)
   : width_(w), height_(h), filename_(file), eye(0, 0, 0), forward(0, 0, -1), right(1, 0, 0), up(0, 1, 0) {};
-  void addObject(unique_ptr<Object> obj);
-  void addPlane(unique_ptr<Plane> plane);
-  void addLight(unique_ptr<Light> light);
-  void addBulb(unique_ptr<Bulb> bulb);
+  void addObject(std::unique_ptr<Object> obj);
+  void addPlane(std::unique_ptr<Plane> plane);
+  void addLight(std::unique_ptr<Light> light);
+  void addBulb(std::unique_ptr<Bulb> bulb);
   void addPoint(double x, double y, double z);
   Vector3D &getPoint(int i);
   size_t getNumObjects();
   PNG *render(void (Scene::* worker)(PNG *, SafeQueue<RenderTask> *, SafeProgressBar *), int numThreads);
   PNG *render(int numThreads=4, int seed=56);
   bool pointInShadow(const Vector3D& origin, const Vector3D& light);
-  bool pointInShadow(const Vector3D& point, const unique_ptr<Bulb>& bulb);
+  bool pointInShadow(const Vector3D& point, const std::unique_ptr<Bulb>& bulb);
   void setExposure(double value);
   void setMaxBounces(int d);
   void createBVH(int numThreads);
@@ -49,7 +47,7 @@ public:
     return height_;
   }
 
-  string filename() {
+  std::string filename() {
     return filename_;
   }
 
@@ -107,14 +105,14 @@ private:
   void threadTaskFisheye(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBar *counter);
   void threadTaskDOF(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBar *counter);
 
-  vector<unique_ptr<Object>> objects;
-  vector<unique_ptr<Plane>> planes;
-  vector<unique_ptr<Light>> lights;
-  vector<unique_ptr<Bulb>> bulbs;
-  vector<Vector3D> points;
+  std::vector<std::unique_ptr<Object>> objects;
+  std::vector<std::unique_ptr<Plane>> planes;
+  std::vector<std::unique_ptr<Light>> lights;
+  std::vector<std::unique_ptr<Bulb>> bulbs;
+  std::vector<Vector3D> points;
   int width_;
   int height_;
-  string filename_;
+  std::string filename_;
   Vector3D eye; // POINT; NOT NORMALIZED
   Vector3D forward; // NOT NORMALIZED; LONGER VECTOR FOR NARROWER FIELD OF VIEW
   Vector3D right; // NORMALIZED
@@ -123,7 +121,7 @@ private:
   double exposure = -1.0;
   int maxBounces = 4;
   int numRays = 1;
-  unique_ptr<BVH> bvh;
+  std::unique_ptr<BVH> bvh;
   bool fisheye = false;
   int globalIllumination = 0;
   double focus_ = -1.0;

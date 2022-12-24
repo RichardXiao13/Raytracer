@@ -7,8 +7,6 @@
 #include "PNG.h"
 #include "materials/Material.h"
 
-using namespace std;
-
 class Object;
 
 /**
@@ -67,11 +65,11 @@ public:
     return material_->getPerturbation();
   }
 
-  void setMaterial(unique_ptr<Material> mat) {
-    material_ = move(mat);
+  void setMaterial(std::unique_ptr<Material> mat) {
+    material_ = std::move(mat);
   }
 
-  const unique_ptr<Material>& material() {
+  const std::unique_ptr<Material>& material() {
     return material_;
   }
 
@@ -79,9 +77,9 @@ public:
 
 protected:
   RGBAColor color_;
-  unique_ptr<Material> material_;
-  mt19937 rng_;
-  uniform_real_distribution<> sampleDistribution;
+  std::unique_ptr<Material> material_;
+  std::mt19937 rng_;
+  std::uniform_real_distribution<> sampleDistribution;
   Vector3D aabbMin_;
   Vector3D aabbMax_;
   Vector3D centroid_;

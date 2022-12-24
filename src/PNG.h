@@ -4,8 +4,6 @@
 
 #include "vector3d.h"
 
-using namespace std;
-
 /**
  * RGBAColor class
  * 
@@ -52,7 +50,7 @@ public:
     return height_;
   }
 
-  bool saveToFile(const string& filename);
+  bool saveToFile(const std::string& filename);
 
 private:
   int width_;

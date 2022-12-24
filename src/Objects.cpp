@@ -2,10 +2,8 @@
 
 #include "Objects.h"
 
-using namespace std;
-
-const double ONE_THIRD = 1.0 / 3.0;
-const double inf = numeric_limits<double>::infinity();
+#define ONE_THIRD 1.0 / 3.0
+#define INF_D std::numeric_limits<double>::infinity()
 
 Vector3D Object::sampleRay() {
   double phi = sampleDistribution(rng_) * 2 * M_PI;
@@ -42,14 +40,14 @@ IntersectionInfo Sphere::intersect(const Vector3D& origin, const Vector3D& direc
   double tc = dot(distanceFromSphere, normalizedDirection);
   
   if (isInsideSphere == false && tc < 0) {
-    return { inf, Vector3D(), Vector3D(), nullptr };
+    return { INF_D, Vector3D(), Vector3D(), nullptr };
   }
 
   Vector3D d = origin + tc * normalizedDirection - center;
   double distanceSquared = dot(d, d);
 
   if (isInsideSphere == false && radiusSquared < distanceSquared) {
-    return { inf, Vector3D(), Vector3D(), nullptr };
+    return { INF_D, Vector3D(), Vector3D(), nullptr };
   }
 
   double tOffset = sqrt(radiusSquared - distanceSquared);
@@ -81,19 +79,19 @@ IntersectionInfo Plane::intersect(const Vector3D& origin, const Vector3D& direct
   double t = dot((point - origin), normal) / dot(normalizedDirection, normal);
 
   if (t < 0) {
-    return { inf, Vector3D(), Vector3D(), nullptr };
+    return { INF_D, Vector3D(), Vector3D(), nullptr };
   }
   return { t, t * normalizedDirection + origin, normal, this };
 }
 
 Triangle::Triangle(const Vector3D& p1, const Vector3D& p2, const Vector3D& p3)
   : p1(p1), p2(p2), p3(p3) {
-  aabbMin_[0] = min(min(p1[0], p2[0]), p3[0]);
-  aabbMin_[1] = min(min(p1[1], p2[1]), p3[1]);
-  aabbMin_[2] = min(min(p1[2], p2[2]), p3[2]);
-  aabbMax_[0] = max(max(p1[0], p2[0]), p3[0]);
-  aabbMax_[1] = max(max(p1[1], p2[1]), p3[1]);
-  aabbMax_[2] = max(max(p1[2], p2[2]), p3[2]);
+  aabbMin_[0] = std::min(std::min(p1[0], p2[0]), p3[0]);
+  aabbMin_[1] = std::min(std::min(p1[1], p2[1]), p3[1]);
+  aabbMin_[2] = std::min(std::min(p1[2], p2[2]), p3[2]);
+  aabbMax_[0] = std::max(std::max(p1[0], p2[0]), p3[0]);
+  aabbMax_[1] = std::max(std::max(p1[1], p2[1]), p3[1]);
+  aabbMax_[2] = std::max(std::max(p1[2], p2[2]), p3[2]);
   centroid_[0] = (p1[0] + p2[0] + p3[0]) * ONE_THIRD;
   centroid_[1] = (p1[1] + p2[1] + p3[1]) * ONE_THIRD;
   centroid_[2] = (p1[2] + p2[2] + p3[2]) * ONE_THIRD;
@@ -116,7 +114,7 @@ IntersectionInfo Triangle::intersect(const Vector3D& origin, const Vector3D& dir
   double t = dot((p1 - origin), normal) / dot(normalizedDirection, normal);
 
   if (t < 0) {
-    return { inf, Vector3D(), Vector3D(), nullptr };
+    return { INF_D, Vector3D(), Vector3D(), nullptr };
   }
 
   Vector3D intersectionPoint = t * normalizedDirection + origin;
@@ -126,7 +124,7 @@ IntersectionInfo Triangle::intersect(const Vector3D& origin, const Vector3D& dir
   double b1 = 1.0 - b3 - b2;
 
   if (b1 < 0 || b1 > 1 || b2 < 0 || b2 > 1 || b3 < 0 || b3 > 1) {
-    return { inf, Vector3D(), Vector3D(), nullptr };
+    return { INF_D, Vector3D(), Vector3D(), nullptr };
   }
 
   return { t, intersectionPoint, normal, this };

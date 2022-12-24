@@ -6,9 +6,7 @@
 #include "raytracer.h"
 #include "vector3d.h"
 
-#define INF_D numeric_limits<double>::infinity()
-
-using namespace std;
+#define INF_D std::numeric_limits<double>::infinity()
 
 class Object;
 struct IntersectionInfo;
@@ -51,7 +49,7 @@ private:
   };
 
 public:
-  BVH(vector<unique_ptr<Object>> &objects, int maxThreads=1);
+  BVH(std::vector<std::unique_ptr<Object>> &objects, int maxThreads=1);
   ~BVH();
   IntersectionInfo findClosestObject(const Vector3D& origin, const Vector3D& direction);
   bool findAnyObject(const Vector3D& origin, const Vector3D& direction);
@@ -67,6 +65,6 @@ private:
   PartitionInfo parallelizeSAH(Node *node, int start, int end, int maxThreads);
   PartitionInfo threadPartitionTask(Node *node, int start, int end);
   Node *root;
-  vector<unique_ptr<Object>> &objects;
+  std::vector<std::unique_ptr<Object>> &objects;
   int maxThreads;
 };

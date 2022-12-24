@@ -4,8 +4,6 @@
 
 #include <type_traits>
 #include <chrono>
-
-using namespace std;
  
 template <class Fn, class... Args>
 auto timer(Fn fn, Args && ... args)

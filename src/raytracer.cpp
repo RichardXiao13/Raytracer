@@ -17,16 +17,13 @@
 #include "math_utils.h"
 #include "SafeProgressBar.h"
 
-using namespace std;
-using std::cout;
-
 void Scene::threadTaskDefault(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBar *counter) {
   RenderTask task;
-  mt19937 rng;
+  std::mt19937 rng;
 
   double invNumRays = 1.0 / numRays;
-  int allowAntiAliasing = min(1, numRays - 1);
-  uniform_real_distribution<> rayDistribution = uniform_real_distribution<>(-0.5, 0.5);
+  int allowAntiAliasing = std::min(1, numRays - 1);
+  std::uniform_real_distribution<> rayDistribution = std::uniform_real_distribution<>(-0.5, 0.5);
 
   // hacky... but does the job
   while ((task = tasks->dequeue()).x != -1) {
@@ -57,10 +54,10 @@ void Scene::threadTaskDefault(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgre
 
 void Scene::threadTaskFisheye(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBar *counter) {
   RenderTask task;
-  mt19937 rng;
+  std::mt19937 rng;
 
   double invNumRays = 1.0 / numRays;
-  int allowAntiAliasing = min(1, numRays - 1);
+  int allowAntiAliasing = std::min(1, numRays - 1);
 
   double invForwardLength = 1.0 / magnitude(forward);
   Vector3D normalizedForward = normalized(forward);
@@ -68,7 +65,7 @@ void Scene::threadTaskFisheye(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgre
   // Avoid race condiiton
   Vector3D forwardCopy = forward;
 
-  uniform_real_distribution<> rayDistribution = uniform_real_distribution<>(-0.5, 0.5);
+  std::uniform_real_distribution<> rayDistribution = std::uniform_real_distribution<>(-0.5, 0.5);
 
   // hacky... but does the job
   while ((task = tasks->dequeue()).x != -1) {
@@ -107,12 +104,12 @@ void Scene::threadTaskFisheye(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgre
 
 void Scene::threadTaskDOF(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBar *counter) {
   RenderTask task;
-  mt19937 rng;
+  std::mt19937 rng;
 
   double invNumRays = 1.0 / numRays;
-  int allowAntiAliasing = min(1, numRays - 1);
-  uniform_real_distribution<> rayDistribution = uniform_real_distribution<>(-0.5, 0.5);
-  uniform_real_distribution<> lensDistribution = uniform_real_distribution<>(0, 2 * M_PI);
+  int allowAntiAliasing = std::min(1, numRays - 1);
+  std::uniform_real_distribution<> rayDistribution = std::uniform_real_distribution<>(-0.5, 0.5);
+  std::uniform_real_distribution<> lensDistribution = std::uniform_real_distribution<>(0, 2 * M_PI);
 
   // hacky... but does the job
   while ((task = tasks->dequeue()).x != -1) {
@@ -148,26 +145,26 @@ void Scene::threadTaskDOF(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBa
 }
 
 double getRayScaleX(double x, int w, int h) {
-  return (2 * x - w) / max(w, h);
+  return (2 * x - w) / std::max(w, h);
 }
 double getRayScaleY(double y, int w, int h) {
-  return (h - 2 * y) / max(w, h);
+  return (h - 2 * y) / std::max(w, h);
 }
 
-void Scene::addObject(unique_ptr<Object> obj) {
-  objects.push_back(move(obj));
+void Scene::addObject(std::unique_ptr<Object> obj) {
+  objects.push_back(std::move(obj));
 }
 
-void Scene::addPlane(unique_ptr<Plane> plane) {
-  planes.push_back(move(plane));
+void Scene::addPlane(std::unique_ptr<Plane> plane) {
+  planes.push_back(std::move(plane));
 }
 
-void Scene::addLight(unique_ptr<Light> light) {
-  lights.push_back(move(light));
+void Scene::addLight(std::unique_ptr<Light> light) {
+  lights.push_back(std::move(light));
 }
 
-void Scene::addBulb(unique_ptr<Bulb> bulb) {
-  bulbs.push_back(move(bulb));
+void Scene::addBulb(std::unique_ptr<Bulb> bulb) {
+  bulbs.push_back(std::move(bulb));
 }
 
 void Scene::addPoint(double x, double y, double z) {
@@ -247,7 +244,7 @@ bool Scene::pointInShadow(const Vector3D& point, const Vector3D& lightDirection)
   return bvh->findAnyObject(point, lightDirection);
 }
 
-bool Scene::pointInShadow(const Vector3D& point, const unique_ptr<Bulb>& bulb) {
+bool Scene::pointInShadow(const Vector3D& point, const std::unique_ptr<Bulb>& bulb) {
   double intersectToBulbDist = magnitude(bulb->center() - point);
   IntersectionInfo info = bvh->findClosestObject(point, bulb->getLightDirection(point));
   double objectToIntersect = magnitude(point - info.point);
@@ -302,27 +299,27 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
 }
 
 void Scene::createBVH(int numThreads) {
-  cout << "Creating BVH" << endl;
+  std::cout << "Creating BVH" << std::endl;
   auto start = std::chrono::system_clock::now();
 
-  bvh = make_unique<BVH>(objects, numThreads);
+  bvh = std::make_unique<BVH>(objects, numThreads);
 
-  auto end = chrono::system_clock::now();
-  chrono::duration<double> elapsed_seconds = end-start;
-  time_t end_time = chrono::system_clock::to_time_t(end);
-  cout << "BVH creation time: " << elapsed_seconds.count() << "s" << endl;
+  auto end = std::chrono::system_clock::now();
+  std::chrono::duration<double> elapsed_seconds = end-start;
+  time_t end_time = std::chrono::system_clock::to_time_t(end);
+  std::cout << "BVH creation time: " << elapsed_seconds.count() << "s" << std::endl;
 }
 
 PNG *Scene::render(void (Scene::* worker)(PNG *, SafeQueue<RenderTask> *, SafeProgressBar *), int numThreads) {
   int totalPixels = height_ * width_;
-  int update = max(4096.0, 0.01 * totalPixels);
+  int update = std::max(4096.0, 0.01 * totalPixels);
 
   PNG *img = new PNG(width_, height_);
 \
   SafeQueue<RenderTask> tasks;
   SafeProgressBar counter(70, totalPixels, update);
 
-  vector<thread> threads;
+  std::vector<std::thread> threads;
   for (int i = 0; i < numThreads; ++i) {
     threads.emplace_back(worker, this, img, &tasks, &counter);
   }
@@ -345,11 +342,11 @@ PNG *Scene::render(void (Scene::* worker)(PNG *, SafeQueue<RenderTask> *, SafePr
 
   expose(img);
 
-  auto end = chrono::system_clock::now();
-  chrono::duration<double> elapsed_seconds = end - start;
-  time_t end_time = chrono::system_clock::to_time_t(end);
-  cout << "\nRaytracing elapsed time: " << elapsed_seconds.count() << "s" << endl;
-  cout << static_cast<double>(numRays) * totalPixels / elapsed_seconds.count() << " rays/s" << endl;
+  auto end = std::chrono::system_clock::now();
+  std::chrono::duration<double> elapsed_seconds = end - start;
+  time_t end_time = std::chrono::system_clock::to_time_t(end);
+  std::cout << "\nRaytracing elapsed time: " << elapsed_seconds.count() << "s" << std::endl;
+  std::cout << static_cast<double>(numRays) * totalPixels / elapsed_seconds.count() << " rays/s" << std::endl;
   return img;
 }
 
@@ -357,13 +354,13 @@ PNG *Scene::render(int numThreads, int seed) {
   createBVH(numThreads);
 
   if (fisheye) {
-    cout << "Fisheye enabled." << endl;
+    std::cout << "Fisheye enabled." << std::endl;
     return render(&Scene::threadTaskFisheye, numThreads);
   } else if (focus_ > 0) {
-    cout << "Depth of Field enabled." << endl;
+    std::cout << "Depth of Field enabled." << std::endl;
     return render(&Scene::threadTaskDOF, numThreads);
   } else {
-    cout << "Default render." << endl;
+    std::cout << "Default render." << std::endl;
     return render(&Scene::threadTaskDefault, numThreads);
   }
 }
