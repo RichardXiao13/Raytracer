@@ -6,14 +6,14 @@
 #include "lodepng.h"
 #include "vector3d.h"
 
-double linearToGamma(double channel) {
+float linearToGamma(float channel) {
   if (channel < 0.0031308) {
     return 12.92 * channel;
   }
   return 1.055 * pow(channel, 1/2.4) - 0.055;
 }
 
-double exponentialExposure(double channel, double exposure) {
+float exponentialExposure(float channel, float exposure) {
   return 1.0 - exp(-1 * channel * exposure);
 }
 
@@ -21,14 +21,14 @@ RGBAColor RGBAColor::toSRGB() {
   return RGBAColor(linearToGamma(r), linearToGamma(g), linearToGamma(b), a);
 }
 
-RGBAColor operator*(double scalar, const RGBAColor& c) {
+RGBAColor operator*(float scalar, const RGBAColor& c) {
   return RGBAColor(scalar * c.r, scalar * c.g, scalar * c.b, c.a);
 }
-RGBAColor operator*(const RGBAColor& c, double scalar) {
+RGBAColor operator*(const RGBAColor& c, float scalar) {
   return RGBAColor(scalar * c.r, scalar * c.g, scalar * c.b, c.a);
 }
 
-RGBAColor &RGBAColor::operator*=(double scalar) {
+RGBAColor &RGBAColor::operator*=(float scalar) {
   r *= scalar;
   g *= scalar;
   b *= scalar;
@@ -56,10 +56,10 @@ RGBAColor operator*(const RGBAColor& c, const Vector3D& v) {
 
 RGBAColor clipColor(const RGBAColor& c) {
   return RGBAColor(
-    std::max(0.0, std::min(c.r, 1.0)),
-    std::max(0.0, std::min(c.g, 1.0)),
-    std::max(0.0, std::min(c.b, 1.0)),
-    std::max(0.0, std::min(c.a, 1.0))
+    std::max(0.0f, std::min(c.r, 1.0f)),
+    std::max(0.0f, std::min(c.g, 1.0f)),
+    std::max(0.0f, std::min(c.b, 1.0f)),
+    std::max(0.0f, std::min(c.a, 1.0f))
   );
 }
 

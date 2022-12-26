@@ -3,7 +3,7 @@
 
 #include "SafeProgressBar.h"
 
-void displayRenderProgress(double progress, int barWidth) {
+void displayRenderProgress(float progress, int barWidth) {
   // https://stackoverflow.com/questions/14539867/how-to-display-a-progress-indicator-in-pure-c-c-cout-printf
   int pos = barWidth * progress;
   std::cout << "[";

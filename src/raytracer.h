@@ -12,8 +12,8 @@
 #include "SafeProgressBar.h"
 
 // A ray has origin 'eye' and direction 'forward' + Sx * 'right' + Sy * 'up'
-double getRayScaleX(double x, int w, int h);
-double getRayScaleY(double y, int w, int h);
+float getRayScaleX(float x, int w, int h);
+float getRayScaleY(float y, int w, int h);
 
 struct RenderTask {
   int x;
@@ -28,7 +28,7 @@ public:
   void addPlane(std::unique_ptr<Plane> plane);
   void addLight(std::unique_ptr<Light> light);
   void addBulb(std::unique_ptr<Bulb> bulb);
-  void addPoint(double x, double y, double z);
+  void addPoint(float x, float y, float z);
   Vector3D &getPoint(int i);
   size_t getNumObjects();
   size_t getNumPoints();
@@ -36,7 +36,7 @@ public:
   PNG *render(int numThreads=4, int seed=56);
   bool pointInShadow(const Vector3D& origin, const Vector3D& light);
   bool pointInShadow(const Vector3D& point, const std::unique_ptr<Bulb>& bulb);
-  void setExposure(double value);
+  void setExposure(float value);
   void setMaxBounces(int d);
   void setFilename(const std::string& fname);
   void createBVH(int numThreads);
@@ -84,11 +84,11 @@ public:
     globalIllumination = gi;
   }
 
-  void setFocus(double f) {
+  void setFocus(float f) {
     focus_ = f;
   }
 
-  void setLens(double l) {
+  void setLens(float l) {
     lens_ = l;
   }
 
@@ -119,13 +119,13 @@ private:
   Vector3D forward; // NOT NORMALIZED; LONGER VECTOR FOR NARROWER FIELD OF VIEW
   Vector3D right; // NORMALIZED
   Vector3D up; // NORMALIZED
-  double bias_ = 1e-4;
-  double exposure = -1.0;
+  float bias_ = 1e-4;
+  float exposure = -1.0;
   int maxBounces = 4;
   int numRays = 1;
   std::unique_ptr<BVH> bvh;
   bool fisheye = false;
   int globalIllumination = 0;
-  double focus_ = -1.0;
-  double lens_ = 0;
+  float focus_ = -1.0;
+  float lens_ = 0;
 };

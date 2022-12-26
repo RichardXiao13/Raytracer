@@ -7,25 +7,25 @@
 /**
  * RGBAColor class
  * 
- * Save each component as a double to maintain bits of information across illumination.
+ * Save each component as a float to maintain bits of information across illumination.
 */
 class RGBAColor {
 public:
   RGBAColor() : r(0), g(0), b(0), a(1.0) {};
-  RGBAColor(double r1, double g1, double b1) : r(r1), g(g1), b(b1), a(1.0) {};
-  RGBAColor(double r1, double g1, double b1, double a1) : r(r1), g(g1), b(b1), a(a1) {};
+  RGBAColor(float r1, float g1, float b1) : r(r1), g(g1), b(b1), a(1.0) {};
+  RGBAColor(float r1, float g1, float b1, float a1) : r(r1), g(g1), b(b1), a(a1) {};
   RGBAColor toSRGB();
 
-  friend RGBAColor operator*(double scalar, const RGBAColor& c);
-  friend RGBAColor operator*(const RGBAColor& c, double scalar);
+  friend RGBAColor operator*(float scalar, const RGBAColor& c);
+  friend RGBAColor operator*(const RGBAColor& c, float scalar);
   RGBAColor operator+(const RGBAColor& other) const;
   RGBAColor &operator+=(const RGBAColor& other);
-  RGBAColor &operator*=(double scalar);
+  RGBAColor &operator*=(float scalar);
 
-  double r;
-  double g;
-  double b;
-  double a;
+  float r;
+  float g;
+  float b;
+  float a;
 };
 
 RGBAColor operator*(const Vector3D& v, const RGBAColor& c);
@@ -59,6 +59,6 @@ private:
 };
 
 std::ostream& operator<<(std::ostream& out, const RGBAColor& color);
-double linearToGamma(double channel);
-double exponentialExposure(double channel, double exposure);
+float linearToGamma(float channel);
+float exponentialExposure(float channel, float exposure);
 RGBAColor clipColor(const RGBAColor& c);

@@ -7,15 +7,15 @@
 #include "vector3d.h"
 #include "SafeProgressBar.h"
 
-#define INF_D std::numeric_limits<double>::infinity()
+#define INF_D std::numeric_limits<float>::infinity()
 
 class Object;
 struct IntersectionInfo;
 
 struct PartitionInfo {
   int bestAxis = -1;
-  double bestPosition = 0;
-  double bestCost = INF_D;
+  float bestPosition = 0;
+  float bestCost = INF_D;
 };
 
 class Box {
@@ -24,7 +24,7 @@ public:
   Box(const Vector3D& minPoint, const Vector3D& maxPoint) : minPoint_(minPoint), maxPoint_(maxPoint) {};
   void shrink(const Vector3D& minPoint);
   void expand(const Vector3D& maxPoint);
-  double surfaceArea();
+  float surfaceArea();
   Vector3D &minPoint() {
     return minPoint_;
   }
@@ -66,9 +66,9 @@ public:
 private:
   void updateNodeBounds(Node *node);
   void partition(Node *node);
-  double intersectAABB(const Vector3D& origin, const Vector3D& direction, const Vector3D& aabbMin, const Vector3D& aabbMax);
+  float intersectAABB(const Vector3D& origin, const Vector3D& direction, const Vector3D& aabbMin, const Vector3D& aabbMax);
   int height(Node *node);
-  double calculateSAH(Node *node, int axis, double position);
+  float calculateSAH(Node *node, int axis, float position);
   void recursiveDestructor(Node *node);
   PartitionInfo parallelizeSAH(Node *node, int start, int end, int maxThreads);
   PartitionInfo threadPartitionTask(Node *node, int start, int end);

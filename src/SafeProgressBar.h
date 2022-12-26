@@ -4,7 +4,7 @@
 #include <iostream>
 #include <iomanip>
 
-void displayRenderProgress(double progress, int barWidth=70);
+void displayRenderProgress(float progress, int barWidth=70);
 
 class SafeProgressBar {
 public:
@@ -14,7 +14,7 @@ public:
     std::lock_guard<std::mutex> lock(m);
     ++counter;
     if (counter % update == 0) {
-      displayRenderProgress(static_cast<double>(counter) / total, barWidth);
+      displayRenderProgress(static_cast<float>(counter) / total, barWidth);
     }
   }
 private:
@@ -32,7 +32,7 @@ public:
   void increment(int amount=1) {
     counter += amount;
     if (counter % update == 0) {
-      displayRenderProgress(static_cast<double>(counter) / total, barWidth);
+      displayRenderProgress(static_cast<float>(counter) / total, barWidth);
     }
   }
 private:

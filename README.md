@@ -169,7 +169,7 @@ Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heur
 
 # Bottlenecks
 
-findingClosestObject and findingAnyObject calls to the BVH. Given log(N) find time, each ray incurs 2log(N) cost, double a single call to the BVH. Need to improve intersection algorithm/data structure, or reduce calls.
+findingClosestObject and findingAnyObject calls to the BVH. Given log(N) find time, each ray incurs 2log(N) cost, float a single call to the BVH. Need to improve intersection algorithm/data structure, or reduce calls.
 
 SAH BVH building takes a very long time in scenes with many, many objects. This can be seen with tenthousand.txt where the fastest rendering method takes around 12 seconds to build the BVH. This becomes a very apparent bottleneck with multi-threading. The main thread builds the BVH in around 12 seconds, but rendering on many threads can take only around 30 seconds.
 

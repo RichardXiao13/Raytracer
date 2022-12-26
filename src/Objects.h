@@ -18,7 +18,7 @@ class Object;
  * obj - pointer to the Object being intersected with.
 */
 struct IntersectionInfo {
-  double t;
+  float t;
   Vector3D point;
   Vector3D normal;
   Object *obj;
@@ -57,11 +57,11 @@ public:
     return material_->transparency;
   }
 
-  double indexOfRefraction() {
+  float indexOfRefraction() {
     return material_->indexOfRefraction;
   }
 
-  double getPerturbation() {
+  float getPerturbation() {
     return material_->getPerturbation();
   }
 
@@ -87,7 +87,7 @@ protected:
 
 class Light {
 public:
-  Light(double x, double y, double z, const RGBAColor& color) : color_(color), direction_(x, y, z) {};
+  Light(float x, float y, float z, const RGBAColor& color) : color_(color), direction_(x, y, z) {};
   RGBAColor &color() {
     return color_;
   }
@@ -101,7 +101,7 @@ private:
 
 class Bulb {
 public:
-  Bulb(double x, double y, double z, const RGBAColor& color) : center_(x, y, z), color_(color) {};
+  Bulb(float x, float y, float z, const RGBAColor& color) : center_(x, y, z), color_(color) {};
   Vector3D getLightDirection(const Vector3D& point) const;
   RGBAColor &color() {
     return color_;
@@ -121,16 +121,16 @@ private:
 
 class Sphere : public Object {
 public:
-  Sphere(double x1, double y1, double z1, double r1);
+  Sphere(float x1, float y1, float z1, float r1);
   IntersectionInfo intersect(const Vector3D& origin, const Vector3D& direction);
 
   Vector3D center;
-  double r;
+  float r;
 };
 
 class Plane : public Object {
 public:
-  Plane(double A1, double B1, double C1, double D1);
+  Plane(float A1, float B1, float C1, float D1);
   IntersectionInfo intersect(const Vector3D& origin, const Vector3D& direction);
 
 private:

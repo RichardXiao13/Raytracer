@@ -46,12 +46,12 @@ std::unique_ptr<Scene> readOBJ(std::istream& in) {
   std::unique_ptr<Scene> scene = std::make_unique<Scene>(1024, 1024, "");
   std::unique_ptr<Material> currentMaterial = std::make_unique<Material>(Vector3D(0,0,0), Vector3D(0,0,0), 1.458, 0.0);
   RGBAColor currentColor(1, 1, 1, 1);
-  double minX = INF_D;
-  double minY = INF_D;
-  double minZ = INF_D;
-  double maxX = -INF_D;
-  double maxY = -INF_D;
-  double maxZ = -INF_D;
+  float minX = INF_D;
+  float minY = INF_D;
+  float minZ = INF_D;
+  float maxX = -INF_D;
+  float maxY = -INF_D;
+  float maxZ = -INF_D;
 
   for (; std::getline(in, line);) {
     lineInfo = split(line, ' ');
@@ -62,9 +62,9 @@ std::unique_ptr<Scene> readOBJ(std::istream& in) {
     std::string keyword = lineInfo.at(0);
 
     if (keyword == "v") {
-      double x = std::stod(lineInfo.at(1));
-      double y = std::stod(lineInfo.at(2));
-      double z = std::stod(lineInfo.at(3));
+      float x = std::stof(lineInfo.at(1));
+      float y = std::stof(lineInfo.at(2));
+      float z = std::stof(lineInfo.at(3));
       minX = std::min(x, minX);
       minY = std::min(y, minY);
       minZ = std::min(z, minZ);
@@ -100,7 +100,7 @@ std::unique_ptr<Scene> readOBJ(std::istream& in) {
   // All Stanford objs are centered at (0,0,0)
   // so set the eye behind the object and centered based on object's width and height
   std::cout << maxX - minX << ' ' <<  maxY - minY << ' ' << maxZ << std::endl;
-  double zExtent = std::max(maxZ,std::max(maxX-minX, maxY-minY));
+  float zExtent = std::max(maxZ,std::max(maxX-minX, maxY-minY));
   if (abs(zExtent - maxZ) < 1e-4) {
     zExtent *= 1.2;
   } else {
@@ -146,46 +146,46 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
     std::string keyword = lineInfo.at(0);
 
     if (keyword == "sphere") {
-      double x = std::stod(lineInfo.at(1));
-      double y = std::stod(lineInfo.at(2));
-      double z = std::stod(lineInfo.at(3));
-      double r = std::stod(lineInfo.at(4));
+      float x = std::stof(lineInfo.at(1));
+      float y = std::stof(lineInfo.at(2));
+      float z = std::stof(lineInfo.at(3));
+      float r = std::stof(lineInfo.at(4));
       std::unique_ptr<Sphere> newObject = std::make_unique<Sphere>(x, y, z, r);
       std::unique_ptr<Material> material = std::make_unique<Material>(*currentMaterial);
       newObject->setColor(currentColor);
       newObject->setMaterial(std::move(material));
       scene->addObject(std::move(newObject));
     } else if (keyword == "sun") {
-      double x = std::stod(lineInfo.at(1));
-      double y = std::stod(lineInfo.at(2));
-      double z = std::stod(lineInfo.at(3));
+      float x = std::stof(lineInfo.at(1));
+      float y = std::stof(lineInfo.at(2));
+      float z = std::stof(lineInfo.at(3));
       std::unique_ptr<Light> newLight = std::make_unique<Light>(x, y, z, currentColor);
       scene->addLight(std::move(newLight));
     } else if (keyword == "color") {
-      double r = std::stod(lineInfo.at(1));
-      double g = std::stod(lineInfo.at(2));
-      double b = std::stod(lineInfo.at(3));
+      float r = std::stof(lineInfo.at(1));
+      float g = std::stof(lineInfo.at(2));
+      float b = std::stof(lineInfo.at(3));
       currentColor = RGBAColor(r, g, b, 1);
     } else if (keyword == "plane") {
-      double A = std::stod(lineInfo.at(1));
-      double B = std::stod(lineInfo.at(2));
-      double C = std::stod(lineInfo.at(3));
-      double D = std::stod(lineInfo.at(4));
+      float A = std::stof(lineInfo.at(1));
+      float B = std::stof(lineInfo.at(2));
+      float C = std::stof(lineInfo.at(3));
+      float D = std::stof(lineInfo.at(4));
       std::unique_ptr<Plane> newObject = std::make_unique<Plane>(A, B, C, D);
       std::unique_ptr<Material> material = std::make_unique<Material>(*currentMaterial);
       newObject->setColor(currentColor);
       newObject->setMaterial(std::move(material));
       scene->addPlane(std::move(newObject));
     } else if (keyword == "bulb") {
-      double x = std::stod(lineInfo.at(1));
-      double y = std::stod(lineInfo.at(2));
-      double z = std::stod(lineInfo.at(3));
+      float x = std::stof(lineInfo.at(1));
+      float y = std::stof(lineInfo.at(2));
+      float z = std::stof(lineInfo.at(3));
       std::unique_ptr<Bulb> newBulb = std::make_unique<Bulb>(x, y, z, currentColor);
       scene->addBulb(std::move(newBulb));
     } else if (keyword == "xyz") {
-      double x = std::stod(lineInfo.at(1));
-      double y = std::stod(lineInfo.at(2));
-      double z = std::stod(lineInfo.at(3));
+      float x = std::stof(lineInfo.at(1));
+      float y = std::stof(lineInfo.at(2));
+      float z = std::stof(lineInfo.at(3));
       scene->addPoint(x, y, z);
     } else if (keyword == "trif") {
       int i = std::stoi(lineInfo.at(1)) - 1;
@@ -197,62 +197,62 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
       newObject->setMaterial(std::move(material));
       scene->addObject(std::move(newObject));
     } else if (keyword == "expose") {
-      double exposure = std::stod(lineInfo.at(1));
+      float exposure = std::stof(lineInfo.at(1));
       scene->setExposure(exposure);
     } else if (keyword == "shininess") {
-      double Sr = std::stod(lineInfo.at(1));
-      double Sg = Sr;
-      double Sb = Sr;
+      float Sr = std::stof(lineInfo.at(1));
+      float Sg = Sr;
+      float Sb = Sr;
       if (lineInfo.size() > 2) {
-        Sg = std::stod(lineInfo.at(2));
-        Sb = std::stod(lineInfo.at(3));
+        Sg = std::stof(lineInfo.at(2));
+        Sb = std::stof(lineInfo.at(3));
       }
       currentMaterial->shine = Vector3D(Sr, Sg, Sb);
     } else if (keyword == "bounces") {
-      double d = std::stoi(lineInfo.at(1));
+      float d = std::stoi(lineInfo.at(1));
       scene->setMaxBounces(d);
     } else if (keyword == "transparency") {
-      double Tr = std::stod(lineInfo.at(1));
-      double Tg = Tr;
-      double Tb = Tr;
+      float Tr = std::stof(lineInfo.at(1));
+      float Tg = Tr;
+      float Tb = Tr;
       if (lineInfo.size() > 2) {
-        Tg = std::stod(lineInfo.at(2));
-        Tb = std::stod(lineInfo.at(3));
+        Tg = std::stof(lineInfo.at(2));
+        Tb = std::stof(lineInfo.at(3));
       }
       currentMaterial->transparency = Vector3D(Tr, Tg, Tb);
     } else if (keyword == "aa") {
       int n = std::stoi(lineInfo.at(1));
       scene->setNumRays(n);
     } else if (keyword == "roughness") {
-      double roughness = std::stod(lineInfo.at(1));
+      float roughness = std::stof(lineInfo.at(1));
       currentMaterial->roughness = roughness;
       currentMaterial->roughnessDistribution = std::normal_distribution<>(0, roughness);
     } else if (keyword == "eye") {
-      double x = std::stod(lineInfo.at(1));
-      double y = std::stod(lineInfo.at(2));
-      double z = std::stod(lineInfo.at(3));
+      float x = std::stof(lineInfo.at(1));
+      float y = std::stof(lineInfo.at(2));
+      float z = std::stof(lineInfo.at(3));
       scene->setEye(Vector3D(x, y, z));
     } else if (keyword == "forward") {
-      double x = std::stod(lineInfo.at(1));
-      double y = std::stod(lineInfo.at(2));
-      double z = std::stod(lineInfo.at(3));
+      float x = std::stof(lineInfo.at(1));
+      float y = std::stof(lineInfo.at(2));
+      float z = std::stof(lineInfo.at(3));
       scene->setForward(Vector3D(x, y, z));
     } else if (keyword == "up") {
-      double x = std::stod(lineInfo.at(1));
-      double y = std::stod(lineInfo.at(2));
-      double z = std::stod(lineInfo.at(3));
+      float x = std::stof(lineInfo.at(1));
+      float y = std::stof(lineInfo.at(2));
+      float z = std::stof(lineInfo.at(3));
       scene->setUp(Vector3D(x, y, z));
     } else if (keyword == "fisheye") {
       scene->enableFisheye();
     } else if (keyword == "ior") {
-      double ior = std::stod(lineInfo.at(1));
+      float ior = std::stof(lineInfo.at(1));
       currentMaterial->indexOfRefraction = ior;
     } else if (keyword == "gi") {
       int gi = std::stoi(lineInfo.at(1));
       scene->setGlobalIllumination(gi);
     } else if (keyword == "dof") {
-      double focus = std::stod(lineInfo.at(1));
-      double lens = std::stod(lineInfo.at(2));
+      float focus = std::stof(lineInfo.at(1));
+      float lens = std::stof(lineInfo.at(2));
       scene->setFocus(focus);
       scene->setLens(lens);
     } else if (keyword == "glass") {

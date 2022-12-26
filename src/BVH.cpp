@@ -15,7 +15,7 @@
 #include "BVH.h"
 #include "SafeProgressBar.h"
 
-#define INF_D std::numeric_limits<double>::infinity()
+#define INF_D std::numeric_limits<float>::infinity()
 #define MIN_THREAD_WORK 64
 #define N_BUCKETS 10
 
@@ -69,14 +69,14 @@ PartitionInfo BVH::parallelizeSAH(Node *node, int start, int end, int maxThreads
 
 PartitionInfo BVH::threadPartitionTask(Node *node, int start, int end) {
   int bestAxis = -1;
-  double bestPosition = 0;
-  double bestCost = INF_D;
+  float bestPosition = 0;
+  float bestCost = INF_D;
 
   for (int i = start; i < end; ++i) {
     Vector3D centroid = objects.at(i)->centroid();
     for (int axis = 0; axis < 3; ++axis) {
-      double possiblePosition = centroid[axis];
-      double cost = calculateSAH(node, axis, possiblePosition);
+      float possiblePosition = centroid[axis];
+      float cost = calculateSAH(node, axis, possiblePosition);
       if (cost < bestCost) {
         bestCost = cost;
         bestAxis = axis;
@@ -90,8 +90,8 @@ PartitionInfo BVH::threadPartitionTask(Node *node, int start, int end) {
 
 PartitionInfo BVH::findBestBucketSplit(Node *node) {
   int bestAxis = -1;
-  double bestPosition = 0;
-  double bestCost = INF_D;
+  float bestPosition = 0;
+  float bestCost = INF_D;
 
   // Find centroid extent of node
   Box extent;
@@ -109,7 +109,7 @@ PartitionInfo BVH::findBestBucketSplit(Node *node) {
     Box buckets[N_BUCKETS];
     // hold number of objects in each bucket
     int bucketCount[N_BUCKETS] = {0};
-    double scale = N_BUCKETS / (maxPoint[axis] - minPoint[axis]);
+    float scale = N_BUCKETS / (maxPoint[axis] - minPoint[axis]);
     for(int i = node->start; i < end; ++i) {
       std::unique_ptr<Object> &obj = objects.at(i);
       // Use min to fix case where centroid is the max extent
@@ -121,8 +121,8 @@ PartitionInfo BVH::findBestBucketSplit(Node *node) {
 
     int    leftBoxCount[N_BUCKETS - 1] = {0};
     int   rightBoxCount[N_BUCKETS - 1] = {0};
-    double  leftBoxArea[N_BUCKETS - 1] = {0};
-    double rightBoxArea[N_BUCKETS - 1] = {0};
+    float  leftBoxArea[N_BUCKETS - 1] = {0};
+    float rightBoxArea[N_BUCKETS - 1] = {0};
     int leftCount = 0;
     int rightCount = 0;
     Box leftBox;
@@ -146,7 +146,7 @@ PartitionInfo BVH::findBestBucketSplit(Node *node) {
     scale = (maxPoint[axis] - minPoint[axis]) / N_BUCKETS;
     for (int i = 0; i < N_BUCKETS - 1; ++i) {
       // cost is left box area * left box count + right box area * right box count
-      double cost = leftBoxArea[i] * leftBoxCount[i] + rightBoxArea[i] * rightBoxCount[i];
+      float cost = leftBoxArea[i] * leftBoxCount[i] + rightBoxArea[i] * rightBoxCount[i];
       if (cost < bestCost) {
         bestCost = cost;
         bestAxis = axis;
@@ -170,7 +170,7 @@ void Box::expand(const Vector3D& maxPoint) {
   maxPoint_[2] = std::max(maxPoint_[2], maxPoint[2]);
 }
 
-double Box::surfaceArea() {
+float Box::surfaceArea() {
   Vector3D extent = maxPoint_ - minPoint_;
   // Cost uses surface area of a box, but don't need to multiply by 2 since everything is multiplied by 2 in the heuristic
   // Can remove multiply if desired
@@ -210,7 +210,7 @@ void BVH::updateNodeBounds(Node *node) {
   }
 }
 
-double BVH::calculateSAH(Node *node, int axis, double position) {
+float BVH::calculateSAH(Node *node, int axis, float position) {
   int leftBoxCount = 0;
   int rightBoxCount = 0;
 
@@ -232,7 +232,7 @@ double BVH::calculateSAH(Node *node, int axis, double position) {
     }
   }
 
-  double cost = leftBoxCount * leftBox.surfaceArea() + rightBoxCount * rightBox.surfaceArea();
+  float cost = leftBoxCount * leftBox.surfaceArea() + rightBoxCount * rightBox.surfaceArea();
   if (cost > 0) {
     return cost;
   }
@@ -247,22 +247,22 @@ void BVH::partition(Node *node) {
   }
   
   int bestAxis = -1;
-  double bestPosition = 0;
-  double bestCost = INF_D;
+  float bestPosition = 0;
+  float bestCost = INF_D;
   int end = node->start + node->numObjects;
 
   // PartitionInfo info = parallelizeSAH(node, node->start, end, maxThreads);
   PartitionInfo info = findBestBucketSplit(node);
 
   Box parentBox(node->aabbMin, node->aabbMax);
-  double parentCost = parentBox.surfaceArea() * node->numObjects;
+  float parentCost = parentBox.surfaceArea() * node->numObjects;
   if (info.bestCost >= parentCost) {
     progress.increment(node->numObjects);
     return;
   }
 
   int axis = info.bestAxis;
-  double splitPosition = info.bestPosition;
+  float splitPosition = info.bestPosition;
   int i = node->start;
   int j = i + node->numObjects;
   
@@ -295,15 +295,15 @@ void BVH::partition(Node *node) {
 IntersectionInfo BVH::findClosestObject(const Vector3D& origin, const Vector3D& direction) {
   // Use vector as the underlying container
   // Better/faster for operations on the top of the stack, which is all this function does
-  std::stack<std::pair<double, Node*>, std::vector<std::pair<double, Node*>>> to_visit;
+  std::stack<std::pair<float, Node*>, std::vector<std::pair<float, Node*>>> to_visit;
   to_visit.push({ intersectAABB(origin, direction, root->aabbMin, root->aabbMax), root });
 
-  double minDistance = INF_D;
+  float minDistance = INF_D;
   IntersectionInfo closestInfo{ INF_D, {}, {}, nullptr };
 
   while (to_visit.empty() == false) {
-    std::pair<double, Node*> pairing = to_visit.top();
-    double dist = pairing.first;
+    std::pair<float, Node*> pairing = to_visit.top();
+    float dist = pairing.first;
     Node *subtree = pairing.second;
     to_visit.pop();
     if (dist < minDistance) {
@@ -317,8 +317,8 @@ IntersectionInfo BVH::findClosestObject(const Vector3D& origin, const Vector3D& 
           }
         }
       } else {
-        double leftDistance = intersectAABB(origin, direction, subtree->left->aabbMin, subtree->left->aabbMax);
-        double rightDistance = intersectAABB(origin, direction, subtree->right->aabbMin, subtree->right->aabbMax);
+        float leftDistance = intersectAABB(origin, direction, subtree->left->aabbMin, subtree->left->aabbMax);
+        float rightDistance = intersectAABB(origin, direction, subtree->right->aabbMin, subtree->right->aabbMax);
         if (leftDistance < rightDistance) {
           to_visit.push({ rightDistance, subtree->right });
           to_visit.push({ leftDistance, subtree->left });
@@ -334,14 +334,14 @@ IntersectionInfo BVH::findClosestObject(const Vector3D& origin, const Vector3D& 
 }
 
 bool BVH::findAnyObject(const Vector3D& origin, const Vector3D& direction) {
-  std::stack<std::pair<double, Node*>, std::vector<std::pair<double, Node*>>> to_visit;
+  std::stack<std::pair<float, Node*>, std::vector<std::pair<float, Node*>>> to_visit;
   to_visit.push({ intersectAABB(origin, direction, root->aabbMin, root->aabbMax), root });
 
-  double minDistance = INF_D;
+  float minDistance = INF_D;
 
   while (to_visit.empty() == false) {
-    std::pair<double, Node*> pairing = to_visit.top();
-    double dist = pairing.first;
+    std::pair<float, Node*> pairing = to_visit.top();
+    float dist = pairing.first;
     Node *subtree = pairing.second;
     to_visit.pop();
     if (dist < minDistance) {
@@ -354,8 +354,8 @@ bool BVH::findAnyObject(const Vector3D& origin, const Vector3D& direction) {
           }
         }
       } else {
-        double leftDistance = intersectAABB(origin, direction, subtree->left->aabbMin, subtree->left->aabbMax);
-        double rightDistance = intersectAABB(origin, direction, subtree->right->aabbMin, subtree->right->aabbMax);
+        float leftDistance = intersectAABB(origin, direction, subtree->left->aabbMin, subtree->left->aabbMax);
+        float rightDistance = intersectAABB(origin, direction, subtree->right->aabbMin, subtree->right->aabbMax);
         if (leftDistance < rightDistance) {
           to_visit.push({ rightDistance, subtree->right });
           to_visit.push({ leftDistance, subtree->left });
@@ -370,17 +370,17 @@ bool BVH::findAnyObject(const Vector3D& origin, const Vector3D& direction) {
   return false;
 }
 
-double BVH::intersectAABB(const Vector3D& origin, const Vector3D& direction, const Vector3D& aabbMin, const Vector3D& aabbMax) {
-  double tx_near = (aabbMin[0] - origin[0]) / direction[0];
-  double tx_far = (aabbMax[0] - origin[0]) / direction[0];
-  double tmin = std::min(tx_near, tx_far);
-  double tmax = std::max(tx_near, tx_far);
-  double ty_near = (aabbMin[1] - origin[1]) / direction[1];
-  double ty_far = (aabbMax[1] - origin[1]) / direction[1];
+float BVH::intersectAABB(const Vector3D& origin, const Vector3D& direction, const Vector3D& aabbMin, const Vector3D& aabbMax) {
+  float tx_near = (aabbMin[0] - origin[0]) / direction[0];
+  float tx_far = (aabbMax[0] - origin[0]) / direction[0];
+  float tmin = std::min(tx_near, tx_far);
+  float tmax = std::max(tx_near, tx_far);
+  float ty_near = (aabbMin[1] - origin[1]) / direction[1];
+  float ty_far = (aabbMax[1] - origin[1]) / direction[1];
   tmin = std::max(tmin, std::min(ty_near, ty_far));
   tmax = std::min(tmax, std::max(ty_near, ty_far));
-  double tz_near = (aabbMin[2] - origin[2]) / direction[2];
-  double tz_far = (aabbMax[2] - origin[2]) / direction[2];
+  float tz_near = (aabbMin[2] - origin[2]) / direction[2];
+  float tz_far = (aabbMax[2] - origin[2]) / direction[2];
   tmin = std::max(tmin, std::min(tz_near, tz_far));
   tmax = std::min(tmax, std::max(tz_near, tz_far));
   if (tmax >= tmin && tmax > 0) {

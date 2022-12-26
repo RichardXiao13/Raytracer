@@ -9,8 +9,8 @@ public:
   Material(
     Vector3D shine,
     Vector3D transparency,
-    double indexOfRefraction,
-    double roughness
+    float indexOfRefraction,
+    float roughness
   ) :
     shine(shine),
     transparency(transparency),
@@ -18,14 +18,14 @@ public:
     roughness(roughness),
     roughnessDistribution(0, roughness) {};
   
-  double getPerturbation() {
+  float getPerturbation() {
     return roughnessDistribution(rng);
   }
 
   Vector3D shine;
   Vector3D transparency;
-  double indexOfRefraction;
-  double roughness;
+  float indexOfRefraction;
+  float roughness;
   std::mt19937 rng;
   std::normal_distribution<> roughnessDistribution;
 };

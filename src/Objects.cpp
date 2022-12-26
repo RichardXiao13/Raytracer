@@ -3,15 +3,15 @@
 #include "Objects.h"
 
 #define ONE_THIRD 1.0 / 3.0
-#define INF_D std::numeric_limits<double>::infinity()
+#define INF_D std::numeric_limits<float>::infinity()
 
 Vector3D Object::sampleRay() {
-  double phi = sampleDistribution(rng_) * 2 * M_PI;
-  double costheta = (sampleDistribution(rng_) - 0.5) * 2;
-  double u = sampleDistribution(rng_);
-  double R = sampleDistribution(rng_);
-  double theta = acos(costheta);
-  double r = R * cbrt(u);
+  float phi = sampleDistribution(rng_) * 2 * M_PI;
+  float costheta = (sampleDistribution(rng_) - 0.5) * 2;
+  float u = sampleDistribution(rng_);
+  float R = sampleDistribution(rng_);
+  float theta = acos(costheta);
+  float r = R * cbrt(u);
   return Vector3D(r * sin(theta) * cos(phi), r * sin(theta) * sin(phi), r * cos(theta));
 }
 
@@ -19,7 +19,7 @@ Vector3D Bulb::getLightDirection(const Vector3D& point) const {
   return center_ - point;
 }
 
-Sphere::Sphere(double x1, double y1, double z1, double r1) : center(x1, y1, z1), r(r1) {
+Sphere::Sphere(float x1, float y1, float z1, float r1) : center(x1, y1, z1), r(r1) {
   aabbMin_[0] = x1 - r1;
   aabbMin_[1] = y1 - r1;
   aabbMin_[2] = z1 - r1;
@@ -32,26 +32,26 @@ Sphere::Sphere(double x1, double y1, double z1, double r1) : center(x1, y1, z1),
 }
 
 IntersectionInfo Sphere::intersect(const Vector3D& origin, const Vector3D& direction) {
-  double radiusSquared = r * r;
+  float radiusSquared = r * r;
   Vector3D distanceFromSphere = center - origin;
   bool isInsideSphere = dot(distanceFromSphere, distanceFromSphere) < radiusSquared;
 
   Vector3D normalizedDirection = normalized(direction);
-  double tc = dot(distanceFromSphere, normalizedDirection);
+  float tc = dot(distanceFromSphere, normalizedDirection);
   
   if (isInsideSphere == false && tc < 0) {
     return { INF_D, Vector3D(), Vector3D(), nullptr };
   }
 
   Vector3D d = origin + tc * normalizedDirection - center;
-  double distanceSquared = dot(d, d);
+  float distanceSquared = dot(d, d);
 
   if (isInsideSphere == false && radiusSquared < distanceSquared) {
     return { INF_D, Vector3D(), Vector3D(), nullptr };
   }
 
-  double tOffset = sqrt(radiusSquared - distanceSquared);
-  double t = 0;
+  float tOffset = sqrt(radiusSquared - distanceSquared);
+  float t = 0;
 
   if (isInsideSphere) {
     t = tc + tOffset;
@@ -63,7 +63,7 @@ IntersectionInfo Sphere::intersect(const Vector3D& origin, const Vector3D& direc
   return { t, intersectionPoint, intersectionPoint - center, this };
 }
 
-Plane::Plane(double A, double B, double C, double D) : normal(A, B, C) {
+Plane::Plane(float A, float B, float C, float D) : normal(A, B, C) {
   if (A != 0) {
     point[0] = -D/A;
   } else if (B != 0) {
@@ -76,7 +76,7 @@ Plane::Plane(double A, double B, double C, double D) : normal(A, B, C) {
 IntersectionInfo Plane::intersect(const Vector3D& origin, const Vector3D& direction) {
   Vector3D normalizedDirection = normalized(direction);
 
-  double t = dot((point - origin), normal) / dot(normalizedDirection, normal);
+  float t = dot((point - origin), normal) / dot(normalizedDirection, normal);
 
   if (t < 0) {
     return { INF_D, Vector3D(), Vector3D(), nullptr };
@@ -111,7 +111,7 @@ Triangle::Triangle(const Vector3D& p1, const Vector3D& p2, const Vector3D& p3)
 IntersectionInfo Triangle::intersect(const Vector3D& origin, const Vector3D& direction) {
   Vector3D normalizedDirection = normalized(direction);
 
-  double t = dot((p1 - origin), normal) / dot(normalizedDirection, normal);
+  float t = dot((p1 - origin), normal) / dot(normalizedDirection, normal);
 
   if (t < 0) {
     return { INF_D, Vector3D(), Vector3D(), nullptr };
@@ -119,9 +119,9 @@ IntersectionInfo Triangle::intersect(const Vector3D& origin, const Vector3D& dir
 
   Vector3D intersectionPoint = t * normalizedDirection + origin;
 
-  double b2 = dot(e1, intersectionPoint - p1);
-  double b3 = dot(e2, intersectionPoint - p1);
-  double b1 = 1.0 - b3 - b2;
+  float b2 = dot(e1, intersectionPoint - p1);
+  float b3 = dot(e2, intersectionPoint - p1);
+  float b1 = 1.0 - b3 - b2;
 
   if (b1 < 0 || b1 > 1 || b2 < 0 || b2 > 1 || b3 < 0 || b3 > 1) {
     return { INF_D, Vector3D(), Vector3D(), nullptr };

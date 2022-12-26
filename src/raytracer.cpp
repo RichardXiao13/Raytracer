@@ -21,7 +21,7 @@ void Scene::threadTaskDefault(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgre
   RenderTask task;
   std::mt19937 rng;
 
-  double invNumRays = 1.0 / numRays;
+  float invNumRays = 1.0 / numRays;
   int allowAntiAliasing = std::min(1, numRays - 1);
   std::uniform_real_distribution<> rayDistribution = std::uniform_real_distribution<>(-0.5, 0.5);
 
@@ -34,8 +34,8 @@ void Scene::threadTaskDefault(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgre
     int hits = 0;
 
     for (int i = 0; i < numRays; ++i) {
-      double Sx = getRayScaleX(x + rayDistribution(rng) * allowAntiAliasing, width_, height_);
-      double Sy = getRayScaleY(y + rayDistribution(rng) * allowAntiAliasing, width_, height_);
+      float Sx = getRayScaleX(x + rayDistribution(rng) * allowAntiAliasing, width_, height_);
+      float Sy = getRayScaleY(y + rayDistribution(rng) * allowAntiAliasing, width_, height_);
 
       RGBAColor color = clipColor(raytrace(eye, forward + Sx * right + Sy * up, 0, 0));
       if (color.a != 0) {
@@ -56,10 +56,10 @@ void Scene::threadTaskFisheye(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgre
   RenderTask task;
   std::mt19937 rng;
 
-  double invNumRays = 1.0 / numRays;
+  float invNumRays = 1.0 / numRays;
   int allowAntiAliasing = std::min(1, numRays - 1);
 
-  double invForwardLength = 1.0 / magnitude(forward);
+  float invForwardLength = 1.0 / magnitude(forward);
   Vector3D normalizedForward = normalized(forward);
 
   // Avoid race condiiton
@@ -76,12 +76,12 @@ void Scene::threadTaskFisheye(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgre
     int hits = 0;
 
     for (int i = 0; i < numRays; ++i) {
-      double Sx = getRayScaleX(x + rayDistribution(rng) * allowAntiAliasing, width_, height_);
-      double Sy = getRayScaleY(y + rayDistribution(rng) * allowAntiAliasing, width_, height_);
+      float Sx = getRayScaleX(x + rayDistribution(rng) * allowAntiAliasing, width_, height_);
+      float Sy = getRayScaleY(y + rayDistribution(rng) * allowAntiAliasing, width_, height_);
 
       Sx *= invForwardLength;
       Sy *= invForwardLength;
-      double r_2 = Sx * Sx + Sy * Sy;
+      float r_2 = Sx * Sx + Sy * Sy;
       if (r_2 > 1) {
         continue;
       }
@@ -106,7 +106,7 @@ void Scene::threadTaskDOF(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBa
   RenderTask task;
   std::mt19937 rng;
 
-  double invNumRays = 1.0 / numRays;
+  float invNumRays = 1.0 / numRays;
   int allowAntiAliasing = std::min(1, numRays - 1);
   std::uniform_real_distribution<> rayDistribution = std::uniform_real_distribution<>(-0.5, 0.5);
   std::uniform_real_distribution<> lensDistribution = std::uniform_real_distribution<>(0, 2 * M_PI);
@@ -120,12 +120,12 @@ void Scene::threadTaskDOF(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBa
     int hits = 0;
 
     for (int i = 0; i < numRays; ++i) {
-      double Sx = getRayScaleX(x + rayDistribution(rng) * allowAntiAliasing, width_, height_);
-      double Sy = getRayScaleY(y + rayDistribution(rng) * allowAntiAliasing, width_, height_);
+      float Sx = getRayScaleX(x + rayDistribution(rng) * allowAntiAliasing, width_, height_);
+      float Sy = getRayScaleY(y + rayDistribution(rng) * allowAntiAliasing, width_, height_);
       Vector3D rayDirection = forward + Sx * right + Sy * up;
       Vector3D intersectionPoint = focus_ / magnitude(rayDirection) * rayDirection + eye;
-      double weight = lensDistribution(rng);
-      double r = rayDistribution(rng) + 0.5;
+      float weight = lensDistribution(rng);
+      float r = rayDistribution(rng) + 0.5;
       Vector3D origin = r * cos(weight) * lens_ / magnitude(right) * right + r * sin(weight) * lens_ / magnitude(up) * up + eye;
       rayDirection = intersectionPoint - origin;
 
@@ -144,10 +144,10 @@ void Scene::threadTaskDOF(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBa
   }
 }
 
-double getRayScaleX(double x, int w, int h) {
+float getRayScaleX(float x, int w, int h) {
   return (2 * x - w) / std::max(w, h);
 }
-double getRayScaleY(double y, int w, int h) {
+float getRayScaleY(float y, int w, int h) {
   return (h - 2 * y) / std::max(w, h);
 }
 
@@ -167,7 +167,7 @@ void Scene::addBulb(std::unique_ptr<Bulb> bulb) {
   bulbs.push_back(std::move(bulb));
 }
 
-void Scene::addPoint(double x, double y, double z) {
+void Scene::addPoint(float x, float y, float z) {
   points.push_back(Vector3D(x, y, z));
 }
 
@@ -190,7 +190,7 @@ void Scene::setFilename(const std::string& fname) {
   filename_ = fname;
 }
 
-void Scene::setExposure(double value) {
+void Scene::setExposure(float value) {
   exposure = value;
 }
 
@@ -222,7 +222,7 @@ RGBAColor Scene::illuminate(const IntersectionInfo& info, int giDepth) {
       continue;
     }
 
-    double reflectance = std::max(0.0, dot(surfaceNormal, normalizedLightDirection));
+    float reflectance = std::max(0.0f, dot(surfaceNormal, normalizedLightDirection));
     newColor += (*it)->color() * reflectance;
   }
 
@@ -232,15 +232,15 @@ RGBAColor Scene::illuminate(const IntersectionInfo& info, int giDepth) {
       continue;
     }
     
-    double distance = magnitude((*it)->center() - intersectionPoint);
-    double reflectance = std::max(0.0, dot(surfaceNormal, normalizedLightDirection)) / (distance * distance);
+    float distance = magnitude((*it)->center() - intersectionPoint);
+    float reflectance = std::max(0.0f, dot(surfaceNormal, normalizedLightDirection)) / (distance * distance);
 
     newColor += (*it)->color() * reflectance;
   }
 
   if (giDepth < globalIllumination) {
     Vector3D globalIlluminationDirection = normalized(surfaceNormal + info.obj->sampleRay());
-    double gi =  std::max(0.0, dot(surfaceNormal, globalIlluminationDirection));
+    float gi =  std::max(0.0f, dot(surfaceNormal, globalIlluminationDirection));
     RGBAColor giColor = raytrace(intersectionPoint + bias_ * surfaceNormal, globalIlluminationDirection, 0, giDepth + 1);
     newColor += giColor * gi;
   }
@@ -253,9 +253,9 @@ bool Scene::pointInShadow(const Vector3D& point, const Vector3D& lightDirection)
 }
 
 bool Scene::pointInShadow(const Vector3D& point, const std::unique_ptr<Bulb>& bulb) {
-  double intersectToBulbDist = magnitude(bulb->center() - point);
+  float intersectToBulbDist = magnitude(bulb->center() - point);
   IntersectionInfo info = bvh->findClosestObject(point, bulb->getLightDirection(point));
-  double objectToIntersect = magnitude(point - info.point);
+  float objectToIntersect = magnitude(point - info.point);
   return info.obj != nullptr && objectToIntersect < intersectToBulbDist;
 }
 
@@ -265,7 +265,7 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
   
   if (intersectInfo.obj != nullptr && depth < maxBounces) {
     intersectInfo.normal = normalized(intersectInfo.normal);
-    double ior = intersectInfo.obj->indexOfRefraction();
+    float ior = intersectInfo.obj->indexOfRefraction();
 
     if (intersectInfo.obj->material()->roughness > 0) {
       for (int i = 0; i < 3; ++i) {
@@ -313,7 +313,7 @@ void Scene::createBVH(int numThreads) {
   bvh = std::make_unique<BVH>(objects, numThreads);
 
   auto end = std::chrono::system_clock::now();
-  std::chrono::duration<double> elapsed_seconds = end-start;
+  std::chrono::duration<float> elapsed_seconds = end-start;
   time_t end_time = std::chrono::system_clock::to_time_t(end);
   std::cout << "BVH creation time: " << elapsed_seconds.count() << "s" << std::endl;
 }
@@ -351,10 +351,10 @@ PNG *Scene::render(void (Scene::* worker)(PNG *, SafeQueue<RenderTask> *, SafePr
   expose(img);
 
   auto end = std::chrono::system_clock::now();
-  std::chrono::duration<double> elapsed_seconds = end - start;
+  std::chrono::duration<float> elapsed_seconds = end - start;
   time_t end_time = std::chrono::system_clock::to_time_t(end);
   std::cout << "\nRaytracing elapsed time: " << elapsed_seconds.count() << "s" << std::endl;
-  std::cout << static_cast<double>(numRays) * totalPixels / elapsed_seconds.count() << " rays/s" << std::endl;
+  std::cout << static_cast<float>(numRays) * totalPixels / elapsed_seconds.count() << " rays/s" << std::endl;
   return img;
 }
 
