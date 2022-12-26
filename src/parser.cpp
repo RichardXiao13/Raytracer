@@ -43,7 +43,7 @@ std::unique_ptr<Scene> readOBJ(std::istream& in) {
   std::vector<std::string> lineInfo = split(line, ' ');
 
   // Will set scene filename later
-  std::unique_ptr<Scene> scene = std::make_unique<Scene>(512, 512, "");
+  std::unique_ptr<Scene> scene = std::make_unique<Scene>(1024, 1024, "");
   std::unique_ptr<Material> currentMaterial = std::make_unique<Material>(Vector3D(0,0,0), Vector3D(0,0,0), 1.458, 0.0);
   RGBAColor currentColor(1, 1, 1, 1);
   double minX = INF_D;

@@ -222,7 +222,7 @@ RGBAColor Scene::illuminate(const IntersectionInfo& info, int giDepth) {
       continue;
     }
 
-    double reflectance = fabs(dot(surfaceNormal, normalizedLightDirection));
+    double reflectance = std::max(0.0, dot(surfaceNormal, normalizedLightDirection));
     newColor += (*it)->color() * reflectance;
   }
 
@@ -233,14 +233,14 @@ RGBAColor Scene::illuminate(const IntersectionInfo& info, int giDepth) {
     }
     
     double distance = magnitude((*it)->center() - intersectionPoint);
-    double reflectance = fabs(dot(surfaceNormal, normalizedLightDirection)) / (distance * distance);
+    double reflectance = std::max(0.0, dot(surfaceNormal, normalizedLightDirection)) / (distance * distance);
 
     newColor += (*it)->color() * reflectance;
   }
 
   if (giDepth < globalIllumination) {
     Vector3D globalIlluminationDirection = normalized(surfaceNormal + info.obj->sampleRay());
-    double gi = fabs(dot(surfaceNormal, globalIlluminationDirection));
+    double gi =  std::max(0.0, dot(surfaceNormal, globalIlluminationDirection));
     RGBAColor giColor = raytrace(intersectionPoint + bias_ * surfaceNormal, globalIlluminationDirection, 0, giDepth + 1);
     newColor += giColor * gi;
   }

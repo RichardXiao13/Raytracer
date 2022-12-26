@@ -17,6 +17,7 @@
 
 #define INF_D std::numeric_limits<double>::infinity()
 #define MIN_THREAD_WORK 64
+#define N_BUCKETS 10
 
 void parallelFor(int start, int end, int maxThreads, std::function<void (int)> func) {
   int workPerThread = std::max((end - start) / maxThreads, MIN_THREAD_WORK);
@@ -87,6 +88,76 @@ PartitionInfo BVH::threadPartitionTask(Node *node, int start, int end) {
   return { bestAxis, bestPosition, bestCost };
 }
 
+PartitionInfo BVH::findBestBucketSplit(Node *node) {
+  int bestAxis = -1;
+  double bestPosition = 0;
+  double bestCost = INF_D;
+
+  // Find centroid extent of node
+  Box extent;
+  int end = node->start + node->numObjects;
+  for(int i = node->start; i < end; ++i) {
+    extent.expand(objects.at(i)->centroid());
+    extent.shrink(objects.at(i)->centroid());
+  }
+
+  const Vector3D &maxPoint = extent.maxPoint();
+  const Vector3D &minPoint = extent.minPoint();
+
+  for (int axis = 0; axis < 3; ++axis) {
+    // hold extent of each bucket
+    Box buckets[N_BUCKETS];
+    // hold number of objects in each bucket
+    int bucketCount[N_BUCKETS] = {0};
+    double scale = N_BUCKETS / (maxPoint[axis] - minPoint[axis]);
+    for(int i = node->start; i < end; ++i) {
+      std::unique_ptr<Object> &obj = objects.at(i);
+      // Use min to fix case where centroid is the max extent
+      int bucketIdx = std::min(N_BUCKETS - 1, static_cast<int>((obj->centroid()[axis] - minPoint[axis]) * scale));
+      buckets[bucketIdx].shrink(obj->aabbMin());
+      buckets[bucketIdx].expand(obj->aabbMax());
+      bucketCount[bucketIdx]++;
+    }
+
+    int    leftBoxCount[N_BUCKETS - 1] = {0};
+    int   rightBoxCount[N_BUCKETS - 1] = {0};
+    double  leftBoxArea[N_BUCKETS - 1] = {0};
+    double rightBoxArea[N_BUCKETS - 1] = {0};
+    int leftCount = 0;
+    int rightCount = 0;
+    Box leftBox;
+    Box rightBox;
+    // compute box counts using prefix and suffix sums
+    for (int i = 0; i < N_BUCKETS - 1; ++i) {
+      leftCount += bucketCount[i];
+      leftBoxCount[i] = leftCount;
+      rightCount += bucketCount[N_BUCKETS - i - 1];
+      rightBoxCount[N_BUCKETS - i - 2] = rightCount;
+      
+      leftBox.expand(buckets[i].maxPoint());
+      leftBox.shrink(buckets[i].minPoint());
+      leftBoxArea[i] = leftBox.surfaceArea();
+
+      rightBox.expand(buckets[N_BUCKETS - i - 1].maxPoint());
+      rightBox.shrink(buckets[N_BUCKETS - i - 1].minPoint());
+      rightBoxArea[N_BUCKETS - i - 2] = rightBox.surfaceArea();
+    }
+
+    scale = (maxPoint[axis] - minPoint[axis]) / N_BUCKETS;
+    for (int i = 0; i < N_BUCKETS - 1; ++i) {
+      // cost is left box area * left box count + right box area * right box count
+      double cost = leftBoxArea[i] * leftBoxCount[i] + rightBoxArea[i] * rightBoxCount[i];
+      if (cost < bestCost) {
+        bestCost = cost;
+        bestAxis = axis;
+        bestPosition = minPoint[axis] + (i + 1) * scale;
+      }
+    }
+  }
+  
+  return { bestAxis, bestPosition, bestCost };
+}
+
 void Box::shrink(const Vector3D& minPoint) {
   minPoint_[0] = std::min(minPoint_[0], minPoint[0]);
   minPoint_[1] = std::min(minPoint_[1], minPoint[1]);
@@ -113,11 +184,12 @@ BVH::BVH(std::vector<std::unique_ptr<Object>> &objects, int maxThreads)
   root->start = 0;
   root->numObjects = objects.size();
   updateNodeBounds(root);
-  
+
   displayRenderProgress(0.0);
   partition(root);
   displayRenderProgress(1.0);
   std::cout << std::endl;
+  std::cout << this->maxThreads << std::endl;
 }
 
 void BVH::updateNodeBounds(Node *node) {
@@ -142,8 +214,8 @@ double BVH::calculateSAH(Node *node, int axis, double position) {
   int leftBoxCount = 0;
   int rightBoxCount = 0;
 
-  Box leftBox(Vector3D(INF_D, INF_D, INF_D), Vector3D(-INF_D, -INF_D, -INF_D));
-  Box rightBox(Vector3D(INF_D, INF_D, INF_D), Vector3D(-INF_D, -INF_D, -INF_D));
+  Box leftBox;
+  Box rightBox;
 
   int end = node->start + node->numObjects;
   for(int i = node->start; i < end; ++i) {
@@ -179,7 +251,8 @@ void BVH::partition(Node *node) {
   double bestCost = INF_D;
   int end = node->start + node->numObjects;
 
-  PartitionInfo info = parallelizeSAH(node, node->start, end, maxThreads);
+  // PartitionInfo info = parallelizeSAH(node, node->start, end, maxThreads);
+  PartitionInfo info = findBestBucketSplit(node);
 
   Box parentBox(node->aabbMin, node->aabbMax);
   double parentCost = parentBox.surfaceArea() * node->numObjects;

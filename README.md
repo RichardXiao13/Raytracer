@@ -101,7 +101,7 @@ Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heur
 
     6 threads: Takes 73.46 seconds on redchair.txt.
 
-    8 threads: Takes 66.05 seconds on redchair.txt.
+    8 threads: Takes 65.41 seconds on redchair.txt.
 
     16 threads: Takes 65.57 seconds on redchair.txt.
 
@@ -109,9 +109,17 @@ Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heur
 
     6 threads: Takes 31.62 seconds on spiral.txt.
 
-    8 threads: Takes 29.98 seconds on spiral.txt.
+    8 threads: Takes 23.24 seconds on spiral.txt.
 
-    16 threads: Takes 29.06 seconds on spiral.txt.
+    16 threads: Takes 23.17 seconds on spiral.txt.
+
+# Multi-threading Render Results Using Fastest Single Threaded Method and Singled-threaded Binned SAH BVH
+
+    8 threads: Takes 31.82 seconds on tenthousand.txt; BVH creation takes 0.02 seconds.
+
+    8 threads: Takes 62.34 seconds on redchair.txt; BVH creation takes 0.01 seconds.
+
+    8 threads: Takes 24.07 seconds on spiral.txt; BVH creation takes 0.01 seconds.
 
 # Multi-threading BVH Construction Results Using Parallelized SAH loops
 
@@ -145,11 +153,25 @@ Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heur
 
     Did not test on dragon.obj (Estimated around 11 hours); 871414 objects.
 
+# BVH Construction Results Using Binned SAH with 1 Thread and 10 Buckets; Construction has O(NlogN)
+
+    Takes < 0.00 seconds on suzanne.obj; 968 objects.
+
+    Takes 0.01 seconds on teapot.obj; 2256 objects.
+
+    Takes 0.01 seconds on cow.obj; 5804 objects.
+
+    Takes 0.15 seconds on bunny.obj; 69451 objects.
+
+    Takes 0.22 seconds on lucy.obj; 99970 objects.
+
+    Takes 2.74 seconds dragon.obj; 871414 objects.
+
 # Bottlenecks
 
 findingClosestObject and findingAnyObject calls to the BVH. Given log(N) find time, each ray incurs 2log(N) cost, double a single call to the BVH. Need to improve intersection algorithm/data structure, or reduce calls.
 
-BVH building takes a very long time in scenes with many, many objects. This can be seen with tenthousand.txt where the fastest rendering method takes around 12 seconds to build the BVH. This becomes a very apparent bottleneck with multi-threading. The main thread builds the BVH in around 12 seconds, but rendering on many threads can take only around 30 seconds. A solution might be multi-threading the build process for the BVH. Will be difficult to do though...
+SAH BVH building takes a very long time in scenes with many, many objects. This can be seen with tenthousand.txt where the fastest rendering method takes around 12 seconds to build the BVH. This becomes a very apparent bottleneck with multi-threading. The main thread builds the BVH in around 12 seconds, but rendering on many threads can take only around 30 seconds.
 
 # Multi-threading strategies
 
