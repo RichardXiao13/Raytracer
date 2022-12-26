@@ -30,8 +30,8 @@ Any feedback or issues found are very much welcome, as well as additional contri
 
 * Reduce memory footprint
 
-* Parallelize BVH construction - Done!!
-    * Need even faster, so update BVH with binning. Then parallelize that if possible
+* Parallelize SAH BVH construction - Done!!
+    * Need even faster, so update BVH with binning - DONE!! Then parallelize that if possible
 
 * Document everything
 
