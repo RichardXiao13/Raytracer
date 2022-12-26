@@ -13,6 +13,7 @@
 
 #include "raytracer.h"
 #include "BVH.h"
+#include "SafeProgressBar.h"
 
 #define INF_D std::numeric_limits<double>::infinity()
 #define MIN_THREAD_WORK 64
@@ -105,12 +106,18 @@ double Box::surfaceArea() {
   return 2 * (extent[0] * extent[1] + extent[1] * extent[2] + extent[0] * extent[2]);
 }
 
-BVH::BVH(std::vector<std::unique_ptr<Object>> &objects, int maxThreads) : objects(objects), maxThreads(maxThreads) {
+BVH::BVH(std::vector<std::unique_ptr<Object>> &objects, int maxThreads)
+  : objects(objects), maxThreads(maxThreads),
+    progress(70, objects.size(), std::max(1024.0, objects.size() * 0.01)) {
   root = new Node();
   root->start = 0;
   root->numObjects = objects.size();
   updateNodeBounds(root);
+  
+  displayRenderProgress(0.0);
   partition(root);
+  displayRenderProgress(1.0);
+  std::cout << std::endl;
 }
 
 void BVH::updateNodeBounds(Node *node) {
@@ -163,6 +170,7 @@ double BVH::calculateSAH(Node *node, int axis, double position) {
 void BVH::partition(Node *node) {
   // Base case: allow a max of 4 objects for a node before becoming a leaf
   if (node->numObjects <= 4) {
+    progress.increment(node->numObjects);
     return;
   }
   
@@ -176,6 +184,7 @@ void BVH::partition(Node *node) {
   Box parentBox(node->aabbMin, node->aabbMax);
   double parentCost = parentBox.surfaceArea() * node->numObjects;
   if (info.bestCost >= parentCost) {
+    progress.increment(node->numObjects);
     return;
   }
 
@@ -191,7 +200,10 @@ void BVH::partition(Node *node) {
 
   // abort split if one of the sides is empty
   int leftNumObjects = std::distance(objects.begin() + i, middle);
-  if (leftNumObjects == 0 || leftNumObjects == node->numObjects) return;
+  if (leftNumObjects == 0 || leftNumObjects == node->numObjects) {
+    progress.increment(node->numObjects);
+    return;
+  }
   // create child nodes
   node->left = new Node();
   node->right = new Node();

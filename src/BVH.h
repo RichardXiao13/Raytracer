@@ -5,6 +5,7 @@
 
 #include "raytracer.h"
 #include "vector3d.h"
+#include "SafeProgressBar.h"
 
 #define INF_D std::numeric_limits<double>::infinity()
 
@@ -67,4 +68,5 @@ private:
   Node *root;
   std::vector<std::unique_ptr<Object>> &objects;
   int maxThreads;
+  ProgressBar progress;
 };

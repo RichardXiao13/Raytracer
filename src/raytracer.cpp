@@ -333,7 +333,8 @@ PNG *Scene::render(void (Scene::* worker)(PNG *, SafeQueue<RenderTask> *, SafePr
   }
 
   auto start = std::chrono::system_clock::now();
-
+  
+  displayRenderProgress(0.0);
   for (int y = 0; y < height_; ++y) {
     for (int x = 0; x < width_; ++x) {
       tasks.enqueue({ x, y });
@@ -345,7 +346,6 @@ PNG *Scene::render(void (Scene::* worker)(PNG *, SafeQueue<RenderTask> *, SafePr
   for (auto it = threads.begin(); it != threads.end(); ++it) {
     it->join();
   }
-
   displayRenderProgress(1.0);
 
   expose(img);
