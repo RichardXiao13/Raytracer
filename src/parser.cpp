@@ -13,6 +13,7 @@
 #include "Objects.h"
 #include "materials/Material.h"
 #include "materials/Glass.h"
+#include "materials/Plastic.h"
 
 // From StackOverflow https://stackoverflow.com/questions/874134/find-out-if-string-ends-with-another-string-in-c
 inline bool ends_with(std::string const & value, std::string const & ending) {
@@ -257,6 +258,8 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
       scene->setLens(lens);
     } else if (keyword == "glass") {
       currentMaterial = std::make_unique<Glass>();
+    } else if (keyword == "plastic") {
+      currentMaterial = std::make_unique<Plastic>();
     } else if (keyword == "none") {
       currentMaterial = std::make_unique<Material>(Vector3D(0,0,0), Vector3D(0,0,0), 1.458, 0.0);
     }
