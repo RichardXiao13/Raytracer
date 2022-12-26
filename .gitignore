@@ -8,6 +8,7 @@
 
 !test_objs/
 !test_objs/*
+!test_objs/.DS_Store
 
 !example_scenes/
 !example_scenes/*
