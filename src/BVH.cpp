@@ -9,12 +9,28 @@
 #include <future>
 #include <algorithm>
 #include <iterator>
+#include <cmath>
 
 #include "raytracer.h"
 #include "BVH.h"
 
 #define INF_D std::numeric_limits<double>::infinity()
 #define MIN_THREAD_WORK 64
+
+void parallelFor(int start, int end, int maxThreads, std::function<void (int)> func) {
+  int workPerThread = std::max((end - start) / maxThreads, MIN_THREAD_WORK);
+  std::vector<std::thread> threads;
+  for (int i = start; i < end; i += workPerThread) {
+    threads.emplace_back([&](int loopStart, int loopEnd) {
+      for (; loopStart < loopEnd; ++loopStart) {
+        func(loopStart);
+      }
+    }, i, std::min(i + workPerThread, end));
+  }
+  for (size_t i = 0; i < threads.size(); ++i) {
+    threads.at(i).join();
+  }
+}
 
 BVH::~BVH() {
   recursiveDestructor(root);
@@ -40,8 +56,8 @@ PartitionInfo BVH::parallelizeSAH(Node *node, int start, int end, int maxThreads
     );
   }
   PartitionInfo bestInfo;
-  for (auto it = threads.begin(); it != threads.end(); ++it) {
-    PartitionInfo info = it->get();
+  for (size_t i = 0; i < threads.size(); ++i) {
+    PartitionInfo info = threads.at(i).get();
     if (info.bestCost < bestInfo.bestCost) {
       bestInfo = info;
     }
@@ -167,7 +183,7 @@ void BVH::partition(Node *node) {
   double splitPosition = info.bestPosition;
   int i = node->start;
   int j = i + node->numObjects;
-
+  
   auto middle = std::partition(objects.begin() + i, objects.begin() + j,
   [axis, splitPosition](const std::unique_ptr<Object>& em) {
     return em->centroid()[axis] < splitPosition;

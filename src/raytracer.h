@@ -31,12 +31,14 @@ public:
   void addPoint(double x, double y, double z);
   Vector3D &getPoint(int i);
   size_t getNumObjects();
+  size_t getNumPoints();
   PNG *render(void (Scene::* worker)(PNG *, SafeQueue<RenderTask> *, SafeProgressBar *), int numThreads);
   PNG *render(int numThreads=4, int seed=56);
   bool pointInShadow(const Vector3D& origin, const Vector3D& light);
   bool pointInShadow(const Vector3D& point, const std::unique_ptr<Bulb>& bulb);
   void setExposure(double value);
   void setMaxBounces(int d);
+  void setFilename(const std::string& fname);
   void createBVH(int numThreads);
 
   int width() {

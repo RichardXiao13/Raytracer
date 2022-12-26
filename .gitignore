@@ -6,6 +6,9 @@
 !src/materials
 !src/materials/*
 
+!test_objs/
+!test_objs/*
+
 !example_scenes/
 !example_scenes/*
 

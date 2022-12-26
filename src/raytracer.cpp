@@ -182,6 +182,14 @@ size_t Scene::getNumObjects() {
   return objects.size();
 }
 
+size_t Scene::getNumPoints() {
+  return points.size();
+}
+
+void Scene::setFilename(const std::string& fname) {
+  filename_ = fname;
+}
+
 void Scene::setExposure(double value) {
   exposure = value;
 }

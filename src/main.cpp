@@ -8,7 +8,6 @@
 #include "raytracer.h"
 
 int main(int argc, char **argv) {
-  std::unique_ptr<Scene> scene = nullptr;
   if (argc > 3) {
     std::cerr << "usage: " << argv[0] << " [-t numThreads] filepath" << std::endl;
     return 1;
@@ -27,11 +26,8 @@ int main(int argc, char **argv) {
     }
   }
 
-  std::ifstream infile(argv[argc - 1]);
-  if (infile) {
-    scene = readDataFromStream(infile);
-  } else {
-    std::cerr << "Couldn't open file " << argv[argc - 1] << std::endl;
+  std::unique_ptr<Scene> scene = readFromFile(argv[argc - 1]);
+  if (!scene) {
     return 1;
   }
 

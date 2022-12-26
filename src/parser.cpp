@@ -14,6 +14,12 @@
 #include "materials/Material.h"
 #include "materials/Glass.h"
 
+// From StackOverflow https://stackoverflow.com/questions/874134/find-out-if-string-ends-with-another-string-in-c
+inline bool ends_with(std::string const & value, std::string const & ending) {
+  if (ending.size() > value.size()) return false;
+  return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
+}
+
 template <typename Out>
 void split(const std::string &s, char delim, Out result) {
   std::istringstream iss(s);
@@ -29,6 +35,49 @@ std::vector<std::string> split(const std::string &s, char delim) {
   std::vector<std::string> elems;
   split(s, delim, std::back_inserter(elems));
   return elems;
+}
+
+std::unique_ptr<Scene> readOBJ(std::istream& in) {
+  std::string line;
+  std::getline(in, line);
+  std::vector<std::string> lineInfo = split(line, ' ');
+
+  // Will set scene filename later
+  std::unique_ptr<Scene> scene = std::make_unique<Scene>(512, 512, "");
+  std::unique_ptr<Material> currentMaterial = std::make_unique<Material>(Vector3D(0,0,0), Vector3D(0,0,0), 1.458, 0.0);
+  RGBAColor currentColor(1, 1, 1, 1);
+
+  for (; std::getline(in, line);) {
+    lineInfo = split(line, ' ');
+    if (lineInfo.size() == 0) {
+      continue;
+    }
+
+    std::string keyword = lineInfo.at(0);
+
+    if (keyword == "v") {
+      double x = std::stod(lineInfo.at(1));
+      double y = std::stod(lineInfo.at(2));
+      double z = std::stod(lineInfo.at(3));
+      scene->addPoint(x, y, z);
+    } else if (keyword == "f") {
+      int i = std::stoi(lineInfo.at(1)) - 1;
+      int j = std::stoi(lineInfo.at(2)) - 1;
+      int k = std::stoi(lineInfo.at(3)) - 1;
+      std::unique_ptr<Triangle> newObject = std::make_unique<Triangle>(scene->getPoint(i), scene->getPoint(j), scene->getPoint(k));
+      std::unique_ptr<Material> material = std::make_unique<Material>(*currentMaterial);
+      newObject->setColor(currentColor);
+      newObject->setMaterial(std::move(material));
+      scene->addObject(std::move(newObject));
+    }
+  }
+  
+  scene->addLight(std::make_unique<Light>(1, 1, 1, currentColor));
+  // All Stanford objs are centered at (0,0,0) so set the eye behind the object
+  scene->setEye({0, 0, 10});
+  std::cout << "Scanned " << scene->getNumObjects() << " objects" << std::endl;
+
+  return scene;
 }
 
 std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
@@ -180,4 +229,23 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
   }
 
   return scene;
+}
+
+std::unique_ptr<Scene> readFromFile(const std::string& filename) {
+  std::ifstream infile(filename);
+  if (!infile) {
+    std::cerr << "Couldn't open file " << filename << std::endl;
+    return nullptr;
+  }
+  if (ends_with(filename, ".txt")) {
+    return readDataFromStream(infile);
+  } else if (ends_with(filename, ".obj")) {
+    std::unique_ptr<Scene> scene = readOBJ(infile);
+    std::string pngFilename = filename.substr(0, filename.size() - 3) + "png";
+    scene->setFilename(pngFilename);
+    return scene;
+  } else {
+    std::cerr << "Unrecognized file format " << filename << std::endl;
+    return nullptr;
+  }
 }
