@@ -107,7 +107,7 @@ std::unique_ptr<Scene> readOBJ(std::istream& in) {
   scene->setEye({(minX + maxX) / 2, (minY + maxY) / 2, zDir});
   scene->setNumRays(20);
   // scene->setEye({(minX + maxX) / 2, (minY + maxY) / 2, 6});
-  std::cout << "Scanned " << scene->getNumPoints() << " and " << scene->getNumObjects() << " objects" << std::endl;
+  std::cout << "Scanned " << scene->getNumPoints() << " points and " << scene->getNumObjects() << " objects" << std::endl;
 
   return scene;
 }
