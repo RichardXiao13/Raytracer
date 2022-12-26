@@ -24,6 +24,8 @@ Any feedback or issues found are very much welcome, as well as additional contri
 
 * Implement other materials (plastic, matte surfaces, metals, ...)
 
+    * Need interface for glossy reflections (Phong?)
+
 * Add more benchmarking scenes (Gruesome... Unless a generous soul wants to do this by hand, I'll probably find a better file format and parse those instead)
     * Need scenes with lots of primitives, dense, overlapping, or evenly distributed throughout the scene
         * Parsed some .obj files from Stanford's 3D Repo [here](https://github.com/alecjacobson/common-3d-test-models); Format of the files was funky so I used MeshLab to convert the objs to plys and back to objs rather than figure out the parsing, I think?
