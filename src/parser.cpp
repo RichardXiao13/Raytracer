@@ -75,20 +75,24 @@ std::unique_ptr<Scene> readOBJ(std::istream& in) {
     } else if (keyword == "f") {
       int numPoints = scene->getNumPoints();
       int i = std::stoi(lineInfo.at(1)) - 1;
-      int j = std::stoi(lineInfo.at(2)) - 1;
-      int k = std::stoi(lineInfo.at(3)) - 1;
-      // Try skipping invalid indices?
-      if (i >= numPoints || j >= numPoints || k >= numPoints) {
-        std::cout << "Indices out of range: " << i << ' ' << j << ' ' << k << std::endl;
-        continue;
+      int j;
+      int k;
+      for (size_t idx = 2; idx < lineInfo.size() - 1; ++idx) {
+        j = std::stoi(lineInfo.at(idx)) - 1;
+        k = std::stoi(lineInfo.at(idx + 1)) - 1;
+        // Try skipping invalid indices?
+        if (i >= numPoints || j >= numPoints || k >= numPoints) {
+          std::cout << "Indices out of range: " << i << ' ' << j << ' ' << k << std::endl;
+          continue;
+        }
+        std::unique_ptr<Triangle> newObject = std::make_unique<Triangle>(scene->getPoint(i), scene->getPoint(j), scene->getPoint(k));
+        std::unique_ptr<Material> material = std::make_unique<Material>(*currentMaterial);
+        newObject->setColor(currentColor);
+        newObject->setMaterial(std::move(material));
+        scene->addObject(std::move(newObject));
       }
-      std::unique_ptr<Triangle> newObject = std::make_unique<Triangle>(scene->getPoint(i), scene->getPoint(j), scene->getPoint(k));
-      std::unique_ptr<Material> material = std::make_unique<Material>(*currentMaterial);
-      newObject->setColor(currentColor);
-      newObject->setMaterial(std::move(material));
-      scene->addObject(std::move(newObject));
     } else {
-      std::cout << "Unknown keyword " << keyword << std::endl;
+      // std::cout << "Unknown keyword " << keyword << std::endl;
     }
   }
   
@@ -96,9 +100,14 @@ std::unique_ptr<Scene> readOBJ(std::istream& in) {
   // All Stanford objs are centered at (0,0,0)
   // so set the eye behind the object and centered based on object's width and height
   std::cout << maxX - minX << ' ' <<  maxY - minY << ' ' << maxZ << std::endl;
-  scene->setEye({(minX + maxX) / 2, (minY + maxY) / 2, std::max(maxZ - minZ, std::max(maxX - minX, maxY - minY))});
+  double zDir = ceil(std::max(maxZ, std::max(maxX - minX, maxY - minY)));
+  if (zDir == ceil(maxZ)) {
+    ++zDir;
+  }
+  scene->setEye({(minX + maxX) / 2, (minY + maxY) / 2, zDir});
   scene->setNumRays(20);
-  std::cout << "Scanned " << scene->getNumObjects() << " objects" << std::endl;
+  // scene->setEye({(minX + maxX) / 2, (minY + maxY) / 2, 6});
+  std::cout << "Scanned " << scene->getNumPoints() << " and " << scene->getNumObjects() << " objects" << std::endl;
 
   return scene;
 }
