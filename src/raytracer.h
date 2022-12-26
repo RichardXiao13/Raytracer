@@ -3,6 +3,7 @@
 #include <vector>
 #include <utility>
 #include <random>
+#include <functional>
 
 #include "PNG.h"
 #include "vector3d.h"
@@ -32,7 +33,6 @@ public:
   Vector3D &getPoint(int i);
   size_t getNumObjects();
   size_t getNumPoints();
-  PNG *render(void (Scene::* worker)(PNG *, SafeQueue<RenderTask> *, SafeProgressBar *), int numThreads);
   PNG *render(int numThreads=4, int seed=56);
   bool pointInShadow(const Vector3D& origin, const Vector3D& light);
   bool pointInShadow(const Vector3D& point, const std::unique_ptr<Bulb>& bulb);
@@ -106,6 +106,7 @@ private:
   */
   void threadTaskFisheye(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBar *counter);
   void threadTaskDOF(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBar *counter);
+  PNG *render(std::function<void (Scene *, PNG *, SafeQueue<RenderTask> *, SafeProgressBar *)> worker, int numThreads);
 
   std::vector<std::unique_ptr<Object>> objects;
   std::vector<std::unique_ptr<Plane>> planes;

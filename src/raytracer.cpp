@@ -318,7 +318,7 @@ void Scene::createBVH(int numThreads) {
   std::cout << "BVH creation time: " << elapsed_seconds.count() << "s" << std::endl;
 }
 
-PNG *Scene::render(void (Scene::* worker)(PNG *, SafeQueue<RenderTask> *, SafeProgressBar *), int numThreads) {
+PNG *Scene::render(std::function<void (Scene *, PNG *, SafeQueue<RenderTask> *, SafeProgressBar *)> worker, int numThreads) {
   int totalPixels = height_ * width_;
   int update = std::max(4096.0, 0.01 * totalPixels);
 
