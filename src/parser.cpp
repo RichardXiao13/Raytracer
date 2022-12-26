@@ -46,6 +46,12 @@ std::unique_ptr<Scene> readOBJ(std::istream& in) {
   std::unique_ptr<Scene> scene = std::make_unique<Scene>(512, 512, "");
   std::unique_ptr<Material> currentMaterial = std::make_unique<Material>(Vector3D(0,0,0), Vector3D(0,0,0), 1.458, 0.0);
   RGBAColor currentColor(1, 1, 1, 1);
+  double minX = INF_D;
+  double minY = INF_D;
+  double minZ = INF_D;
+  double maxX = -INF_D;
+  double maxY = -INF_D;
+  double maxZ = -INF_D;
 
   for (; std::getline(in, line);) {
     lineInfo = split(line, ' ');
@@ -59,22 +65,39 @@ std::unique_ptr<Scene> readOBJ(std::istream& in) {
       double x = std::stod(lineInfo.at(1));
       double y = std::stod(lineInfo.at(2));
       double z = std::stod(lineInfo.at(3));
+      minX = std::min(x, minX);
+      minY = std::min(y, minY);
+      minZ = std::min(z, minZ);
+      maxX = std::max(x, maxX);
+      maxY = std::max(y, maxY);
+      maxZ = std::max(z, maxZ);
       scene->addPoint(x, y, z);
     } else if (keyword == "f") {
+      int numPoints = scene->getNumPoints();
       int i = std::stoi(lineInfo.at(1)) - 1;
       int j = std::stoi(lineInfo.at(2)) - 1;
       int k = std::stoi(lineInfo.at(3)) - 1;
+      // Try skipping invalid indices?
+      if (i >= numPoints || j >= numPoints || k >= numPoints) {
+        std::cout << "Indices out of range: " << i << ' ' << j << ' ' << k << std::endl;
+        continue;
+      }
       std::unique_ptr<Triangle> newObject = std::make_unique<Triangle>(scene->getPoint(i), scene->getPoint(j), scene->getPoint(k));
       std::unique_ptr<Material> material = std::make_unique<Material>(*currentMaterial);
       newObject->setColor(currentColor);
       newObject->setMaterial(std::move(material));
       scene->addObject(std::move(newObject));
+    } else {
+      std::cout << "Unknown keyword " << keyword << std::endl;
     }
   }
   
   scene->addLight(std::make_unique<Light>(1, 1, 1, currentColor));
-  // All Stanford objs are centered at (0,0,0) so set the eye behind the object
-  scene->setEye({0, 0, 10});
+  // All Stanford objs are centered at (0,0,0)
+  // so set the eye behind the object and centered based on object's width and height
+  std::cout << maxX - minX << ' ' <<  maxY - minY << ' ' << maxZ << std::endl;
+  scene->setEye({(minX + maxX) / 2, (minY + maxY) / 2, std::max(maxZ - minZ, std::max(maxX - minX, maxY - minY))});
+  scene->setNumRays(20);
   std::cout << "Scanned " << scene->getNumObjects() << " objects" << std::endl;
 
   return scene;
