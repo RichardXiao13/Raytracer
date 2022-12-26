@@ -131,6 +131,20 @@ Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heur
 
     16 threads: Takes 0.59 seconds on spiral.txt.
 
+# BVH Construction Results Using Parallelized SAH loops with 8 Threads; Construction has O(N<sup>2</sup>logN)
+
+    Takes 0.06 seconds on suzanne.obj; 968 objects.
+
+    Takes 0.16 seconds on teapot.obj; 2256 objects.
+
+    Takes 0.91 seconds on teapot.obj; 5804 objects.
+
+    Takes 3 minutes 19 seconds on bunny.obj; 69451 objects.
+
+    Takes 7 minutes 57 seconds on lucy.obj; 99970 objects.
+
+    Did not test on dragon.obj (Estimated around 11 hours); 871414 objects.
+
 # Bottlenecks
 
 findingClosestObject and findingAnyObject calls to the BVH. Given log(N) find time, each ray incurs 2log(N) cost, double a single call to the BVH. Need to improve intersection algorithm/data structure, or reduce calls.
