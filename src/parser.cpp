@@ -100,11 +100,13 @@ std::unique_ptr<Scene> readOBJ(std::istream& in) {
   // All Stanford objs are centered at (0,0,0)
   // so set the eye behind the object and centered based on object's width and height
   std::cout << maxX - minX << ' ' <<  maxY - minY << ' ' << maxZ << std::endl;
-  double zDir = ceil(std::max(maxZ, std::max(maxX - minX, maxY - minY)));
-  if (zDir == ceil(maxZ)) {
-    ++zDir;
+  double zExtent = std::max(maxZ,std::max(maxX-minX, maxY-minY));
+  if (abs(zExtent - maxZ) < 1e-4) {
+    zExtent *= 1.2;
+  } else {
+    zExtent = maxZ + zExtent/2;
   }
-  scene->setEye({(minX + maxX) / 2, (minY + maxY) / 2, zDir});
+  scene->setEye({(minX + maxX) / 2, (minY + maxY) / 2, zExtent});
   scene->setNumRays(20);
   // scene->setEye({(minX + maxX) / 2, (minY + maxY) / 2, 6});
   std::cout << "Scanned " << scene->getNumPoints() << " points and " << scene->getNumObjects() << " objects" << std::endl;
