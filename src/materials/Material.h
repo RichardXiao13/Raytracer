@@ -18,7 +18,7 @@ public:
     roughness(roughness),
     roughnessDistribution(0, roughness) {};
   
-  float getPerturbation() {
+  float getPerturbation(std::mt19937 &rng) {
     return roughnessDistribution(rng);
   }
 
@@ -26,6 +26,5 @@ public:
   Vector3D transparency;
   float indexOfRefraction;
   float roughness;
-  std::mt19937 rng;
   std::normal_distribution<> roughnessDistribution;
 };

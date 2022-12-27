@@ -63,8 +63,8 @@ public:
     return material_->indexOfRefraction;
   }
 
-  float getPerturbation() {
-    return material_->getPerturbation();
+  float getPerturbation(std::mt19937 &rng) {
+    return material_->getPerturbation(rng);
   }
 
   void setMaterial(std::unique_ptr<Material> mat) {

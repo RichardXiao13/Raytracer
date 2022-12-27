@@ -36,9 +36,11 @@ Any feedback or issues found are very much welcome, as well as additional contri
 * Reduce memory footprint
     * Flatten BVH. Should improve memory and performance since memory allocation is unneeded and better cache coherence - DONE!!
     
-    * Also consider referencing points in the scene rather than make copies for triangles. Should help since there are ~2x as many triangles than vertices
+    * Also consider referencing points in the scene rather than make copies for triangles. Should help since there are ~2x as many triangles than vertices - DONE!!
 
     * Refactor Object class to not need independent distributions - DONE!!
+
+    * Refactor Material class to have a supplied rng state rather than keep track of its own - DONE!!
 
 * Might need to replace int with size_t in BVH nodes if there are lots of objects
 
@@ -169,17 +171,19 @@ Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heur
 
 # BVH Construction Results Using Binned SAH with 1 Thread and 10 Buckets and Flattening; Construction has O(NlogN)
 
-    Takes < 0.00 seconds on suzanne.obj; 968 objects; 28.4 MB memory used.
+    Takes < 0.00 seconds on suzanne.obj; 968 objects; 25.4 MB memory used.
 
-    Takes 0.01 seconds on teapot.obj; 2256 objects; 30.2 MB memory used.
+    Takes 0.01 seconds on teapot.obj; 2256 objects; 25.8 MB memory used.
 
-    Takes 0.01 seconds on cow.obj; 5804 objects; 41.6 MB memory used.
+    Takes 0.01 seconds on cow.obj; 5804 objects; 26.8 MB memory used.
 
-    Takes 0.11 seconds on bunny.obj; 69451 objects; 243.3 MB memory used.
+    Takes 0.11 seconds on bunny.obj; 69451 objects; 43.4 MB memory used.
 
-    Takes 0.16 seconds on lucy.obj; 99970 objects; 338.2 MB memory used.
+    Takes 0.16 seconds on lucy.obj; 99970 objects; 52.5 MB memory used.
 
-    Takes 1.66 seconds on dragon.obj; 871414 objects; 2.68 GB memory used.
+    Takes 1.66 seconds on dragon.obj; 871414 objects; 230.9 MB memory used.
+
+    Takes 14.94 seconds on dragon.obj; 7219045 objects; 1.77 GB memory used.
 
 # Bottlenecks
 

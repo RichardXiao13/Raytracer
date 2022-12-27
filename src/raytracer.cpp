@@ -260,7 +260,7 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
 
     if (intersectInfo.obj->material()->roughness > 0) {
       for (int i = 0; i < 3; ++i) {
-        intersectInfo.normal[i] += intersectInfo.obj->getPerturbation();
+        intersectInfo.normal[i] += intersectInfo.obj->getPerturbation(rngInfo.rng);
       }
       intersectInfo.normal = normalized(intersectInfo.normal);
     }
