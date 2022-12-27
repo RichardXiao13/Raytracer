@@ -42,7 +42,6 @@ public:
   void setExposure(float value);
   void setMaxBounces(int d);
   void setFilename(const std::string& fname);
-  void createBVH(int numThreads);
 
   int width() {
     return width_;

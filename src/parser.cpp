@@ -14,6 +14,7 @@
 #include "materials/Material.h"
 #include "materials/Glass.h"
 #include "materials/Plastic.h"
+#include "Profiler.h"
 
 // From StackOverflow https://stackoverflow.com/questions/874134/find-out-if-string-ends-with-another-string-in-c
 inline bool ends_with(std::string const & value, std::string const & ending) {
@@ -280,6 +281,8 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
 }
 
 std::unique_ptr<Scene> readFromFile(const std::string& filename) {
+  Profiler p(Funcs::SceneConstruction);
+
   std::ifstream infile(filename);
   if (!infile) {
     std::cerr << "Couldn't open file " << filename << std::endl;

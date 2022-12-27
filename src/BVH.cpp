@@ -14,6 +14,7 @@
 #include "raytracer.h"
 #include "BVH.h"
 #include "SafeProgressBar.h"
+#include "Profiler.h"
 
 #define INF_D std::numeric_limits<float>::infinity()
 #define MIN_THREAD_WORK 64
@@ -164,21 +165,20 @@ float Box::surfaceArea() {
 }
 
 BVH::BVH(std::vector<std::unique_ptr<Object>> &objects, int maxThreads)
-  : objects(objects), maxThreads(maxThreads),
-    progress(70, objects.size(), std::max(1024.0, objects.size() * 0.01)) {
+  : objects(objects), maxThreads(maxThreads), progress(70, objects.size(), std::max(1024.0, objects.size() * 0.01)) {
+  Profiler p(Funcs::BVHConstruction);
+
   Node *root = new Node();
   root->start = 0;
   root->numObjects = objects.size();
   updateNodeBounds(root);
 
-  displayRenderProgress(0.0);
   int numNodes = partition(root);
-  displayRenderProgress(1.0);
-  std::cout << "\nFlattening BVH with " << numNodes << " nodes" << std::endl;
+  std::cout << "Flattening BVH with " << numNodes << " nodes" << std::endl;
   int idx = 0;
   nodes.reserve(numNodes);
   flatten(root, idx);
-  std::cout << this->maxThreads << std::endl;
+  this->maxThreads += 0;
 }
 
 void BVH::updateNodeBounds(Node *node) {

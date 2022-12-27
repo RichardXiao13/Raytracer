@@ -16,6 +16,7 @@
 #include "timer.h"
 #include "math_utils.h"
 #include "SafeProgressBar.h"
+#include "Profiler.h"
 
 void Scene::threadTaskDefault(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBar *counter) {
   RenderTask task;
@@ -297,19 +298,9 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
   return RGBAColor(0, 0, 0, 0);
 }
 
-void Scene::createBVH(int numThreads) {
-  std::cout << "Creating BVH" << std::endl;
-  auto start = std::chrono::system_clock::now();
-
-  bvh = std::make_unique<BVH>(objects, numThreads);
-
-  auto end = std::chrono::system_clock::now();
-  std::chrono::duration<float> elapsed_seconds = end-start;
-  time_t end_time = std::chrono::system_clock::to_time_t(end);
-  std::cout << "BVH creation time: " << elapsed_seconds.count() << "s" << std::endl;
-}
-
 PNG *Scene::render(std::function<void (Scene *, PNG *, SafeQueue<RenderTask> *, SafeProgressBar *)> worker, int numThreads) {
+  Profiler p(Funcs::Render);
+
   int totalPixels = height_ * width_;
   int update = std::max(4096.0, 0.01 * totalPixels);
 
@@ -322,10 +313,7 @@ PNG *Scene::render(std::function<void (Scene *, PNG *, SafeQueue<RenderTask> *, 
   for (int i = 0; i < numThreads; ++i) {
     threads.emplace_back(worker, this, img, &tasks, &counter);
   }
-
-  auto start = std::chrono::system_clock::now();
   
-  displayRenderProgress(0.0);
   for (int y = 0; y < height_; ++y) {
     for (int x = 0; x < width_; ++x) {
       tasks.enqueue({ x, y });
@@ -337,20 +325,12 @@ PNG *Scene::render(std::function<void (Scene *, PNG *, SafeQueue<RenderTask> *, 
   for (auto it = threads.begin(); it != threads.end(); ++it) {
     it->join();
   }
-  displayRenderProgress(1.0);
-
   expose(img);
-
-  auto end = std::chrono::system_clock::now();
-  std::chrono::duration<float> elapsed_seconds = end - start;
-  time_t end_time = std::chrono::system_clock::to_time_t(end);
-  std::cout << "\nRaytracing elapsed time: " << elapsed_seconds.count() << "s" << std::endl;
-  std::cout << static_cast<float>(numRays) * totalPixels / elapsed_seconds.count() << " rays/s" << std::endl;
   return img;
 }
 
 PNG *Scene::render(int numThreads, int seed) {
-  createBVH(numThreads);
+  bvh = std::make_unique<BVH>(objects, numThreads);
 
   if (fisheye) {
     std::cout << "Fisheye enabled." << std::endl;

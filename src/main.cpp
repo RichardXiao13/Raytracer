@@ -6,6 +6,7 @@
 #include "vector3d.h"
 #include "parser.h"
 #include "raytracer.h"
+#include "Profiler.h"
 
 int main(int argc, char **argv) {
   if (argc > 3) {
@@ -33,7 +34,7 @@ int main(int argc, char **argv) {
 
   PNG *renderedScene = scene->render(numThreads);
   renderedScene->saveToFile(scene->filename());
-
+  printStats();
   delete renderedScene;
   return 0;
 }
