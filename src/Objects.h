@@ -142,7 +142,7 @@ public:
   IntersectionInfo intersect(const Vector3D& origin, const Vector3D& direction);
 
 private:
-  const Vector3D &p1;
+  Vector3D p1;
   Vector3D normal;
   Vector3D e1;
   Vector3D e2;
