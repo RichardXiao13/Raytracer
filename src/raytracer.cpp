@@ -23,8 +23,8 @@ void Scene::threadTaskDefault(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgre
 
   float invNumRays = 1.0 / numRays;
   int allowAntiAliasing = std::min(1, numRays - 1);
-  std::uniform_real_distribution<> rayDistribution = std::uniform_real_distribution<>(-0.5, 0.5);
-  std::uniform_real_distribution<> sampleDistribution = std::uniform_real_distribution<>(0, 1.0);
+  std::uniform_real_distribution<float> rayDistribution = std::uniform_real_distribution<float>(-0.5, 0.5);
+  std::uniform_real_distribution<float> sampleDistribution = std::uniform_real_distribution<float>(0, 1.0);
   UniformRNGInfo rngInfo(rng, sampleDistribution);
 
   // hacky... but does the job
@@ -67,8 +67,8 @@ void Scene::threadTaskFisheye(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgre
   // Avoid race condiiton
   Vector3D forwardCopy = forward;
 
-  std::uniform_real_distribution<> rayDistribution = std::uniform_real_distribution<>(-0.5, 0.5);
-  std::uniform_real_distribution<> sampleDistribution = std::uniform_real_distribution<>(0, 1.0);
+  std::uniform_real_distribution<float> rayDistribution = std::uniform_real_distribution<float>(-0.5, 0.5);
+  std::uniform_real_distribution<float> sampleDistribution = std::uniform_real_distribution<float>(0, 1.0);
   UniformRNGInfo rngInfo(rng, sampleDistribution);
 
   // hacky... but does the job
@@ -112,9 +112,9 @@ void Scene::threadTaskDOF(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBa
 
   float invNumRays = 1.0 / numRays;
   int allowAntiAliasing = std::min(1, numRays - 1);
-  std::uniform_real_distribution<> rayDistribution = std::uniform_real_distribution<>(-0.5, 0.5);
-  std::uniform_real_distribution<> lensDistribution = std::uniform_real_distribution<>(0, 2 * M_PI);
-  std::uniform_real_distribution<> sampleDistribution = std::uniform_real_distribution<>(0, 1.0);
+  std::uniform_real_distribution<float> rayDistribution = std::uniform_real_distribution<float>(-0.5, 0.5);
+  std::uniform_real_distribution<float> lensDistribution = std::uniform_real_distribution<float>(0, 2 * M_PI);
+  std::uniform_real_distribution<float> sampleDistribution = std::uniform_real_distribution<float>(0, 1.0);
   UniformRNGInfo rngInfo(rng, sampleDistribution);
 
   // hacky... but does the job

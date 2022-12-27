@@ -22,9 +22,9 @@ struct RenderTask {
 };
 
 struct UniformRNGInfo {
-  UniformRNGInfo(std::mt19937 &rng, std::uniform_real_distribution<> &distribution) : rng(rng), distribution(distribution) {};
+  UniformRNGInfo(std::mt19937 &rng, std::uniform_real_distribution<float> &distribution) : rng(rng), distribution(distribution) {};
   std::mt19937 &rng;
-  std::uniform_real_distribution<> &distribution;
+  std::uniform_real_distribution<float> &distribution;
 };
 
 class Scene {

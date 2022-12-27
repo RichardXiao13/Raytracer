@@ -26,5 +26,5 @@ public:
   Vector3D transparency;
   float indexOfRefraction;
   float roughness;
-  std::normal_distribution<> roughnessDistribution;
+  std::normal_distribution<float> roughnessDistribution;
 };

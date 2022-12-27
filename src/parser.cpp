@@ -238,7 +238,7 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
     } else if (keyword == "roughness") {
       float roughness = std::stof(lineInfo.at(1));
       currentMaterial->roughness = roughness;
-      currentMaterial->roughnessDistribution = std::normal_distribution<>(0, roughness);
+      currentMaterial->roughnessDistribution = std::normal_distribution<float>(0, roughness);
     } else if (keyword == "eye") {
       float x = std::stof(lineInfo.at(1));
       float y = std::stof(lineInfo.at(2));
