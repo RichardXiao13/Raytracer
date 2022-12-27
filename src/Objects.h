@@ -73,13 +73,11 @@ public:
     return material_;
   }
 
-  virtual Vector3D sampleRay();
+  virtual Vector3D sampleRay(std::mt19937 &rng, std::uniform_real_distribution<> &sampleDistribution);
 
 protected:
   RGBAColor color_;
   std::unique_ptr<Material> material_;
-  std::mt19937 rng_;
-  std::uniform_real_distribution<> sampleDistribution;
   Vector3D aabbMin_;
   Vector3D aabbMax_;
   Vector3D centroid_;

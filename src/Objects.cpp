@@ -5,11 +5,11 @@
 #define ONE_THIRD 1.0 / 3.0
 #define INF_D std::numeric_limits<float>::infinity()
 
-Vector3D Object::sampleRay() {
-  float phi = sampleDistribution(rng_) * 2 * M_PI;
-  float costheta = (sampleDistribution(rng_) - 0.5) * 2;
-  float u = sampleDistribution(rng_);
-  float R = sampleDistribution(rng_);
+Vector3D Object::sampleRay(std::mt19937 &rng, std::uniform_real_distribution<> &sampleDistribution) {
+  float phi = sampleDistribution(rng) * 2 * M_PI;
+  float costheta = (sampleDistribution(rng) - 0.5) * 2;
+  float u = sampleDistribution(rng);
+  float R = sampleDistribution(rng);
   float theta = acos(costheta);
   float r = R * cbrt(u);
   return Vector3D(r * sin(theta) * cos(phi), r * sin(theta) * sin(phi), r * cos(theta));
