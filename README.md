@@ -183,7 +183,7 @@ Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heur
 
     Takes 1.66 seconds on dragon.obj; 871414 objects; 230.9 MB memory used.
 
-    Takes 14.94 seconds on dragon.obj; 7219045 objects; 1.77 GB memory used.
+    Takes 14.94 seconds on xyzrgb_dragon.obj; 7219045 objects; 1.77 GB memory used.
 
 # Bottlenecks
 
