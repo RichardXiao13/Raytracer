@@ -64,7 +64,7 @@ private:
     int start;
     int numObjects;
 
-    bool isLeaf() const {
+    inline bool isLeaf() const {
       return numObjects > 0;
     }
   };

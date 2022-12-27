@@ -13,7 +13,8 @@ enum class Funcs {
   Raytrace,
   Illumination,
 
-  BVHIntersect
+  BVHIntersectClosest,
+  BVHIntersectAny
 };
 
 static const char * FuncNames[] = {
@@ -21,7 +22,9 @@ static const char * FuncNames[] = {
   "BVH construction",
   "Rendering",
   "Raytracing",
-  "Scene illumination"
+  "Scene illumination",
+  "BVH::findClosestObject",
+  "BVH::findAnyObject",
 };
 
 class Stats {

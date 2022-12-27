@@ -252,50 +252,51 @@ bool Scene::pointInShadow(const Vector3D& point, const std::unique_ptr<Bulb>& bu
 }
 
 RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int depth, int giDepth, UniformRNGInfo &rngInfo) {
+  if (depth >= maxBounces) return RGBAColor(0, 0, 0, 0);
+  
   Vector3D normalizedDirection = normalized(direction);
   IntersectionInfo intersectInfo = findClosestObject(origin, normalizedDirection);
   
-  if (intersectInfo.obj != nullptr && depth < maxBounces) {
+  if (intersectInfo.obj == nullptr) return RGBAColor(0, 0, 0, 0);
+
+  intersectInfo.normal = normalized(intersectInfo.normal);
+  float ior = intersectInfo.obj->indexOfRefraction();
+
+  if (intersectInfo.obj->material()->roughness > 0) {
+    for (int i = 0; i < 3; ++i) {
+      intersectInfo.normal[i] += intersectInfo.obj->getPerturbation(rngInfo.rng);
+    }
     intersectInfo.normal = normalized(intersectInfo.normal);
-    float ior = intersectInfo.obj->indexOfRefraction();
-
-    if (intersectInfo.obj->material()->roughness > 0) {
-      for (int i = 0; i < 3; ++i) {
-        intersectInfo.normal[i] += intersectInfo.obj->getPerturbation(rngInfo.rng);
-      }
-      intersectInfo.normal = normalized(intersectInfo.normal);
-    }
-
-    // Make normals point away from incident ray
-    if (dot(intersectInfo.normal, direction) > 0) {
-      intersectInfo.normal = -1 * intersectInfo.normal;
-    } else {
-      ior = 1 / ior;
-    }
-    
-    Vector3D &reflectance = intersectInfo.obj->shine();
-    Vector3D &transparency = intersectInfo.obj->transparency();
-    Vector3D refraction = (1.0 - reflectance) * transparency;
-    Vector3D diffuse = 1.0 - refraction - reflectance;
-    RGBAColor color = diffuse * illuminate(intersectInfo, giDepth, rngInfo);
-
-    if (transparency[0] > 0 || transparency[1] > 0 || transparency[2] > 0) {
-      Vector3D normalizedSurfaceNormal = intersectInfo.normal;
-      Vector3D point = intersectInfo.point;
-
-      Vector3D refractedDirection = refract(normalizedDirection, normalizedSurfaceNormal, ior, point, bias_);
-      RGBAColor refractedColor = refraction * raytrace(point, refractedDirection, depth + 1, giDepth, rngInfo);
-      color += refractedColor;
-    }
-    if (reflectance[0] > 0 || reflectance[1] > 0 || reflectance[2] > 0) {
-      Vector3D reflectedDirection = reflect(normalizedDirection, intersectInfo.normal);
-      RGBAColor reflectedColor = reflectance * raytrace(intersectInfo.point + bias_ * intersectInfo.normal, reflectedDirection, depth + 1, giDepth, rngInfo);
-      color += reflectedColor;
-    }
-    
-    return color;
   }
-  return RGBAColor(0, 0, 0, 0);
+
+  // Make normals point away from incident ray
+  if (dot(intersectInfo.normal, direction) > 0) {
+    intersectInfo.normal = -1 * intersectInfo.normal;
+  } else {
+    ior = 1 / ior;
+  }
+  
+  Vector3D &reflectance = intersectInfo.obj->shine();
+  Vector3D &transparency = intersectInfo.obj->transparency();
+  Vector3D refraction = (1.0 - reflectance) * transparency;
+  Vector3D diffuse = 1.0 - refraction - reflectance;
+  RGBAColor color = diffuse * illuminate(intersectInfo, giDepth, rngInfo);
+
+  if (transparency[0] > 0 || transparency[1] > 0 || transparency[2] > 0) {
+    Vector3D normalizedSurfaceNormal = intersectInfo.normal;
+    Vector3D point = intersectInfo.point;
+
+    Vector3D refractedDirection = refract(normalizedDirection, normalizedSurfaceNormal, ior, point, bias_);
+    RGBAColor refractedColor = refraction * raytrace(point, refractedDirection, depth + 1, giDepth, rngInfo);
+    color += refractedColor;
+  }
+  if (reflectance[0] > 0 || reflectance[1] > 0 || reflectance[2] > 0) {
+    Vector3D reflectedDirection = reflect(normalizedDirection, intersectInfo.normal);
+    RGBAColor reflectedColor = reflectance * raytrace(intersectInfo.point + bias_ * intersectInfo.normal, reflectedDirection, depth + 1, giDepth, rngInfo);
+    color += reflectedColor;
+  }
+  
+  return color;
 }
 
 PNG *Scene::render(std::function<void (Scene *, PNG *, SafeQueue<RenderTask> *, SafeProgressBar *)> worker, int numThreads) {
