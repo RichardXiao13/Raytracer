@@ -19,6 +19,7 @@ Any feedback or issues found are very much welcome, as well as additional contri
 
 # TODOs
 * Fix Global Illumination
+    * Now samples correctly but still looks too dark
 
 * Check if random number generator is thread safe; if not... uh oh - Unnecessary due to refactoring Object class - DONE!!
 
@@ -114,7 +115,7 @@ Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heur
 
     6 threads: Takes 73.46 seconds on redchair.txt.
 
-    8 threads: Takes 65.41 seconds on redchair.txt.
+    8 threads: Takes 2 minutes seconds on redchair.txt.
 
     16 threads: Takes 65.57 seconds on redchair.txt.
 
@@ -130,7 +131,7 @@ Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heur
 
     8 threads: Takes 31.82 seconds on tenthousand.txt; BVH creation takes 0.02 seconds.
 
-    8 threads: Takes 62.34 seconds on redchair.txt; BVH creation takes 0.01 seconds.
+    8 threads: Takes 2 minutes on redchair.txt; BVH creation takes 0.01 seconds.
 
     8 threads: Takes 24.07 seconds on spiral.txt; BVH creation takes 0.01 seconds.
 

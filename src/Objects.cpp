@@ -9,9 +9,8 @@ Vector3D Object::sampleRay(std::mt19937 &rng, std::uniform_real_distribution<> &
   float phi = sampleDistribution(rng) * 2 * M_PI;
   float costheta = (sampleDistribution(rng) - 0.5) * 2;
   float u = sampleDistribution(rng);
-  float R = sampleDistribution(rng);
   float theta = acos(costheta);
-  float r = R * cbrt(u);
+  float r = cbrt(u);
   return Vector3D(r * sin(theta) * cos(phi), r * sin(theta) * sin(phi), r * cos(theta));
 }
 

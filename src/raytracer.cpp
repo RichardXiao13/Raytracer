@@ -228,8 +228,8 @@ RGBAColor Scene::illuminate(const IntersectionInfo& info, int giDepth, std::mt19
 
   if (giDepth < globalIllumination) {
     Vector3D globalIlluminationDirection = normalized(surfaceNormal + info.obj->sampleRay(rng, sampleDistribution));
-    float gi =  std::max(0.0f, dot(surfaceNormal, globalIlluminationDirection));
-    RGBAColor giColor = raytrace(intersectionPoint + bias_ * surfaceNormal, globalIlluminationDirection, 0, giDepth + 1, rng, sampleDistribution);
+    float gi = std::max(0.0f, dot(surfaceNormal, globalIlluminationDirection));
+    RGBAColor giColor = raytrace(intersectionPoint, globalIlluminationDirection, 0, giDepth + 1, rng, sampleDistribution);
     newColor += giColor * gi;
   }
 
