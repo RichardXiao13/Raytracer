@@ -2,9 +2,7 @@
 
 #include "raytracer.h"
 #include "Objects.h"
-
-#define ONE_THIRD 1.0 / 3.0
-#define INF_D std::numeric_limits<float>::infinity()
+#include "macros.h"
 
 Vector3D Object::sampleRay(UniformRNGInfo &rngInfo) {
   float phi = rngInfo.distribution(rngInfo.rng) * 2 * M_PI;

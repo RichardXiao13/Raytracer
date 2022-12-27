@@ -17,6 +17,7 @@
 #include "math_utils.h"
 #include "SafeProgressBar.h"
 #include "Profiler.h"
+#include "macros.h"
 
 void Scene::threadTaskDefault(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBar *counter) {
   RenderTask task;

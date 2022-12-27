@@ -15,8 +15,8 @@
 #include "BVH.h"
 #include "SafeProgressBar.h"
 #include "Profiler.h"
+#include "macros.h"
 
-#define INF_D std::numeric_limits<float>::infinity()
 #define MIN_THREAD_WORK 64
 #define N_BUCKETS 10
 #define STACK_SIZE 64
@@ -373,6 +373,8 @@ bool BVH::findAnyObject(const Vector3D& origin, const Vector3D& direction) {
 }
 
 float BVH::intersectAABB(const Vector3D& origin, const Vector3D& direction, const Vector3D& aabbMin, const Vector3D& aabbMax) {
+  Profiler p(Funcs::BVHIntersectAABB);
+
   float tx_near = (aabbMin[0] - origin[0]) / direction[0];
   float tx_far = (aabbMax[0] - origin[0]) / direction[0];
   float tmin = std::min(tx_near, tx_far);

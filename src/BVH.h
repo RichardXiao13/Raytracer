@@ -6,8 +6,7 @@
 #include "raytracer.h"
 #include "vector3d.h"
 #include "SafeProgressBar.h"
-
-#define INF_D std::numeric_limits<float>::infinity()
+#include "macros.h"
 
 class Object;
 struct IntersectionInfo;
