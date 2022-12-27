@@ -6,8 +6,10 @@
 #include "vector3d.h"
 #include "PNG.h"
 #include "materials/Material.h"
+#include "raytracer.h"
 
 class Object;
+struct UniformRNGInfo;
 
 /**
  * IntersectInfo struct
@@ -73,7 +75,7 @@ public:
     return material_;
   }
 
-  virtual Vector3D sampleRay(std::mt19937 &rng, std::uniform_real_distribution<> &sampleDistribution);
+  virtual Vector3D sampleRay(UniformRNGInfo &rngInfo);
 
 protected:
   RGBAColor color_;

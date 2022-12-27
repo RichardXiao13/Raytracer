@@ -25,6 +25,7 @@ void Scene::threadTaskDefault(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgre
   int allowAntiAliasing = std::min(1, numRays - 1);
   std::uniform_real_distribution<> rayDistribution = std::uniform_real_distribution<>(-0.5, 0.5);
   std::uniform_real_distribution<> sampleDistribution = std::uniform_real_distribution<>(0, 1.0);
+  UniformRNGInfo rngInfo(rng, sampleDistribution);
 
   // hacky... but does the job
   while ((task = tasks->dequeue()).x != -1) {
@@ -38,7 +39,7 @@ void Scene::threadTaskDefault(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgre
       float Sx = getRayScaleX(x + rayDistribution(rng) * allowAntiAliasing, width_, height_);
       float Sy = getRayScaleY(y + rayDistribution(rng) * allowAntiAliasing, width_, height_);
 
-      RGBAColor color = clipColor(raytrace(eye, forward + Sx * right + Sy * up, 0, 0, rng, sampleDistribution));
+      RGBAColor color = clipColor(raytrace(eye, forward + Sx * right + Sy * up, 0, 0, rngInfo));
       if (color.a != 0) {
         avgColor += color;
         ++hits;
@@ -68,6 +69,7 @@ void Scene::threadTaskFisheye(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgre
 
   std::uniform_real_distribution<> rayDistribution = std::uniform_real_distribution<>(-0.5, 0.5);
   std::uniform_real_distribution<> sampleDistribution = std::uniform_real_distribution<>(0, 1.0);
+  UniformRNGInfo rngInfo(rng, sampleDistribution);
 
   // hacky... but does the job
   while ((task = tasks->dequeue()).x != -1) {
@@ -89,7 +91,7 @@ void Scene::threadTaskFisheye(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgre
       }
       forwardCopy = sqrt(1 - r_2) * normalizedForward;
 
-      RGBAColor color = clipColor(raytrace(eye, forwardCopy + Sx * right + Sy * up, 0, 0, rng, sampleDistribution));
+      RGBAColor color = clipColor(raytrace(eye, forwardCopy + Sx * right + Sy * up, 0, 0, rngInfo));
       if (color.a != 0) {
         avgColor += color;
         ++hits;
@@ -113,6 +115,7 @@ void Scene::threadTaskDOF(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBa
   std::uniform_real_distribution<> rayDistribution = std::uniform_real_distribution<>(-0.5, 0.5);
   std::uniform_real_distribution<> lensDistribution = std::uniform_real_distribution<>(0, 2 * M_PI);
   std::uniform_real_distribution<> sampleDistribution = std::uniform_real_distribution<>(0, 1.0);
+  UniformRNGInfo rngInfo(rng, sampleDistribution);
 
   // hacky... but does the job
   while ((task = tasks->dequeue()).x != -1) {
@@ -132,7 +135,7 @@ void Scene::threadTaskDOF(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBa
       Vector3D origin = r * cos(weight) * lens_ / magnitude(right) * right + r * sin(weight) * lens_ / magnitude(up) * up + eye;
       rayDirection = intersectionPoint - origin;
 
-      RGBAColor color = clipColor(raytrace(origin, rayDirection, 0, 0, rng, sampleDistribution));
+      RGBAColor color = clipColor(raytrace(origin, rayDirection, 0, 0, rngInfo));
       if (color.a != 0) {
         avgColor += color;
         ++hits;
@@ -198,7 +201,7 @@ IntersectionInfo Scene::findClosestObject(const Vector3D& origin, const Vector3D
   return closestInfo;
 }
 
-RGBAColor Scene::illuminate(const IntersectionInfo& info, int giDepth, std::mt19937 &rng, std::uniform_real_distribution<> &sampleDistribution) {
+RGBAColor Scene::illuminate(const IntersectionInfo& info, int giDepth, UniformRNGInfo &rngInfo) {
   const RGBAColor& objectColor = info.obj->color();
   const Vector3D& surfaceNormal = info.normal;
   const Vector3D& intersectionPoint = info.point + bias_ * surfaceNormal;
@@ -227,9 +230,9 @@ RGBAColor Scene::illuminate(const IntersectionInfo& info, int giDepth, std::mt19
   }
 
   if (giDepth < globalIllumination) {
-    Vector3D globalIlluminationDirection = normalized(surfaceNormal + info.obj->sampleRay(rng, sampleDistribution));
+    Vector3D globalIlluminationDirection = normalized(surfaceNormal + info.obj->sampleRay(rngInfo));
     float gi = std::max(0.0f, dot(surfaceNormal, globalIlluminationDirection));
-    RGBAColor giColor = raytrace(intersectionPoint, globalIlluminationDirection, 0, giDepth + 1, rng, sampleDistribution);
+    RGBAColor giColor = raytrace(intersectionPoint, globalIlluminationDirection, 0, giDepth + 1, rngInfo);
     newColor += giColor * gi;
   }
 
@@ -247,7 +250,7 @@ bool Scene::pointInShadow(const Vector3D& point, const std::unique_ptr<Bulb>& bu
   return info.obj != nullptr && objectToIntersect < intersectToBulbDist;
 }
 
-RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int depth, int giDepth, std::mt19937 &rng, std::uniform_real_distribution<> &sampleDistribution) {
+RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int depth, int giDepth, UniformRNGInfo &rngInfo) {
   Vector3D normalizedDirection = normalized(direction);
   IntersectionInfo intersectInfo = findClosestObject(origin, normalizedDirection);
   
@@ -273,19 +276,19 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
     Vector3D &transparency = intersectInfo.obj->transparency();
     Vector3D refraction = (1.0 - reflectance) * transparency;
     Vector3D diffuse = 1.0 - refraction - reflectance;
-    RGBAColor color = diffuse * illuminate(intersectInfo, giDepth, rng, sampleDistribution);
+    RGBAColor color = diffuse * illuminate(intersectInfo, giDepth, rngInfo);
 
     if (transparency[0] > 0 || transparency[1] > 0 || transparency[2] > 0) {
       Vector3D normalizedSurfaceNormal = intersectInfo.normal;
       Vector3D point = intersectInfo.point;
 
       Vector3D refractedDirection = refract(normalizedDirection, normalizedSurfaceNormal, ior, point, bias_);
-      RGBAColor refractedColor = refraction * raytrace(point, refractedDirection, depth + 1, giDepth, rng, sampleDistribution);
+      RGBAColor refractedColor = refraction * raytrace(point, refractedDirection, depth + 1, giDepth, rngInfo);
       color += refractedColor;
     }
     if (reflectance[0] > 0 || reflectance[1] > 0 || reflectance[2] > 0) {
       Vector3D reflectedDirection = reflect(normalizedDirection, intersectInfo.normal);
-      RGBAColor reflectedColor = reflectance * raytrace(intersectInfo.point + bias_ * intersectInfo.normal, reflectedDirection, depth + 1, giDepth, rng, sampleDistribution);
+      RGBAColor reflectedColor = reflectance * raytrace(intersectInfo.point + bias_ * intersectInfo.normal, reflectedDirection, depth + 1, giDepth, rngInfo);
       color += reflectedColor;
     }
     

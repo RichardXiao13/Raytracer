@@ -1,14 +1,15 @@
 #include <limits>
 
+#include "raytracer.h"
 #include "Objects.h"
 
 #define ONE_THIRD 1.0 / 3.0
 #define INF_D std::numeric_limits<float>::infinity()
 
-Vector3D Object::sampleRay(std::mt19937 &rng, std::uniform_real_distribution<> &sampleDistribution) {
-  float phi = sampleDistribution(rng) * 2 * M_PI;
-  float costheta = (sampleDistribution(rng) - 0.5) * 2;
-  float u = sampleDistribution(rng);
+Vector3D Object::sampleRay(UniformRNGInfo &rngInfo) {
+  float phi = rngInfo.distribution(rngInfo.rng) * 2 * M_PI;
+  float costheta = (rngInfo.distribution(rngInfo.rng) - 0.5) * 2;
+  float u = rngInfo.distribution(rngInfo.rng);
   float theta = acos(costheta);
   float r = cbrt(u);
   return Vector3D(r * sin(theta) * cos(phi), r * sin(theta) * sin(phi), r * cos(theta));

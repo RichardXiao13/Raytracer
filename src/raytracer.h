@@ -21,6 +21,12 @@ struct RenderTask {
   int y;
 };
 
+struct UniformRNGInfo {
+  UniformRNGInfo(std::mt19937 &rng, std::uniform_real_distribution<> &distribution) : rng(rng), distribution(distribution) {};
+  std::mt19937 &rng;
+  std::uniform_real_distribution<> &distribution;
+};
+
 class Scene {
 public: 
   Scene(int w, int h, const std::string& file)
@@ -90,8 +96,8 @@ public:
   }
 
 private:
-  RGBAColor illuminate(const IntersectionInfo& info, int giDepth, std::mt19937 &rng, std::uniform_real_distribution<> &sampleDistribution);
-  RGBAColor raytrace(const Vector3D& origin, const Vector3D& direction, int depth, int giDepth, std::mt19937 &rng, std::uniform_real_distribution<> &sampleDistribution);
+  RGBAColor illuminate(const IntersectionInfo& info, int giDepth, UniformRNGInfo &rngInfo);
+  RGBAColor raytrace(const Vector3D& origin, const Vector3D& direction, int depth, int giDepth, UniformRNGInfo &rngInfo);
   IntersectionInfo findClosestObject(const Vector3D& origin, const Vector3D& direction);
   void expose(PNG *img);
   /**
