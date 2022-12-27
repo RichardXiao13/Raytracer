@@ -29,10 +29,7 @@ public:
   void addPlane(std::unique_ptr<Plane> plane);
   void addLight(std::unique_ptr<Light> light);
   void addBulb(std::unique_ptr<Bulb> bulb);
-  void addPoint(float x, float y, float z);
-  Vector3D &getPoint(int i);
   size_t getNumObjects();
-  size_t getNumPoints();
   PNG *render(int numThreads=4, int seed=56);
   bool pointInShadow(const Vector3D& origin, const Vector3D& light);
   bool pointInShadow(const Vector3D& point, const std::unique_ptr<Bulb>& bulb);
@@ -112,7 +109,7 @@ private:
   std::vector<std::unique_ptr<Plane>> planes;
   std::vector<std::unique_ptr<Light>> lights;
   std::vector<std::unique_ptr<Bulb>> bulbs;
-  std::vector<Vector3D> points;
+  
   int width_;
   int height_;
   std::string filename_;

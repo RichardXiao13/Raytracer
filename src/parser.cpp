@@ -45,6 +45,7 @@ std::unique_ptr<Scene> readOBJ(std::istream& in) {
 
   // Will set scene filename later
   std::unique_ptr<Scene> scene = std::make_unique<Scene>(1024, 1024, "");
+  std::vector<Vector3D> points;
   std::unique_ptr<Material> currentMaterial = std::make_unique<Material>(Vector3D(0,0,0), Vector3D(0,0,0), 1.458, 0.0);
   RGBAColor currentColor(1, 1, 1, 1);
   float minX = INF_D;
@@ -72,9 +73,10 @@ std::unique_ptr<Scene> readOBJ(std::istream& in) {
       maxX = std::max(x, maxX);
       maxY = std::max(y, maxY);
       maxZ = std::max(z, maxZ);
-      scene->addPoint(x, y, z);
+      points.emplace_back(x, y, z);
     } else if (keyword == "f") {
-      int numPoints = scene->getNumPoints();
+      // didn't deal with negative indices yet
+      int numPoints = points.size();
       int i = std::stoi(lineInfo.at(1)) - 1;
       int j;
       int k;
@@ -86,7 +88,7 @@ std::unique_ptr<Scene> readOBJ(std::istream& in) {
           std::cout << "Indices out of range: " << i << ' ' << j << ' ' << k << std::endl;
           continue;
         }
-        std::unique_ptr<Triangle> newObject = std::make_unique<Triangle>(scene->getPoint(i), scene->getPoint(j), scene->getPoint(k));
+        std::unique_ptr<Triangle> newObject = std::make_unique<Triangle>(points.at(i), points.at(j), points.at(k));
         std::unique_ptr<Material> material = std::make_unique<Material>(*currentMaterial);
         newObject->setColor(currentColor);
         newObject->setMaterial(std::move(material));
@@ -110,7 +112,7 @@ std::unique_ptr<Scene> readOBJ(std::istream& in) {
   scene->setEye({(minX + maxX) / 2, (minY + maxY) / 2, zExtent});
   scene->setNumRays(20);
   // scene->setEye({(minX + maxX) / 2, (minY + maxY) / 2, 6});
-  std::cout << "Scanned " << scene->getNumPoints() << " points and " << scene->getNumObjects() << " objects" << std::endl;
+  std::cout << "Scanned " << points.size() << " points and " << scene->getNumObjects() << " objects" << std::endl;
 
   return scene;
 }
@@ -135,6 +137,7 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
   int height = std::stoi(lineInfo.at(2));
   std::string filename = lineInfo.at(3);
   std::unique_ptr<Scene> scene = std::make_unique<Scene>(width, height, filename);
+  std::vector<Vector3D> points;
   std::unique_ptr<Material> currentMaterial = std::make_unique<Material>(Vector3D(0,0,0), Vector3D(0,0,0), 1.458, 0.0);
   RGBAColor currentColor(1, 1, 1, 1);
 
@@ -187,12 +190,21 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
       float x = std::stof(lineInfo.at(1));
       float y = std::stof(lineInfo.at(2));
       float z = std::stof(lineInfo.at(3));
-      scene->addPoint(x, y, z);
+      points.emplace_back(x, y, z);
     } else if (keyword == "trif") {
       int i = std::stoi(lineInfo.at(1)) - 1;
       int j = std::stoi(lineInfo.at(2)) - 1;
       int k = std::stoi(lineInfo.at(3)) - 1;
-      std::unique_ptr<Triangle> newObject = std::make_unique<Triangle>(scene->getPoint(i), scene->getPoint(j), scene->getPoint(k));
+      if (i < 0) {
+        i += points.size() + 1;
+      }
+      if (j < 0) {
+        j += points.size() + 1;
+      }
+      if (k < 0) {
+        k += points.size() + 1;
+      }
+      std::unique_ptr<Triangle> newObject = std::make_unique<Triangle>(points.at(i), points.at(j), points.at(k));
       std::unique_ptr<Material> material = std::make_unique<Material>(*currentMaterial);
       newObject->setColor(currentColor);
       newObject->setMaterial(std::move(material));

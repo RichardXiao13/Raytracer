@@ -170,23 +170,8 @@ void Scene::addBulb(std::unique_ptr<Bulb> bulb) {
   bulbs.push_back(std::move(bulb));
 }
 
-void Scene::addPoint(float x, float y, float z) {
-  points.push_back(Vector3D(x, y, z));
-}
-
-Vector3D &Scene::getPoint(int i) {
-  if (i < 0) {
-    i += points.size() + 1;
-  }
-  return points.at(i);
-}
-
 size_t Scene::getNumObjects() {
   return objects.size();
-}
-
-size_t Scene::getNumPoints() {
-  return points.size();
 }
 
 void Scene::setFilename(const std::string& fname) {
