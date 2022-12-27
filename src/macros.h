@@ -1,5 +1,7 @@
 #pragma once
 
+#include <limits>
+
 #define DEBUG
 
 #define INF_D std::numeric_limits<float>::infinity()

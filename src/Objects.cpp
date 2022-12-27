@@ -1,5 +1,3 @@
-#include <limits>
-
 #include "raytracer.h"
 #include "Objects.h"
 #include "macros.h"
