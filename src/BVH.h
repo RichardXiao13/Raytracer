@@ -56,25 +56,36 @@ private:
     }
   };
 
+  struct FlattenedNode {
+    Vector3D aabbMin;
+    Vector3D aabbMax;
+    int left;
+    int right;
+    int start;
+    int numObjects;
+
+    bool isLeaf() const {
+      return numObjects > 0;
+    }
+  };
+
 public:
   BVH(std::vector<std::unique_ptr<Object>> &objects, int maxThreads=1);
-  ~BVH();
   IntersectionInfo findClosestObject(const Vector3D& origin, const Vector3D& direction);
   bool findAnyObject(const Vector3D& origin, const Vector3D& direction);
-  int height();
+  int size();
 
 private:
   void updateNodeBounds(Node *node);
-  void partition(Node *node);
+  int partition(Node *node);
   float intersectAABB(const Vector3D& origin, const Vector3D& direction, const Vector3D& aabbMin, const Vector3D& aabbMax);
-  int height(Node *node);
   float calculateSAH(Node *node, int axis, float position);
-  void recursiveDestructor(Node *node);
   PartitionInfo parallelizeSAH(Node *node, int start, int end, int maxThreads);
   PartitionInfo threadPartitionTask(Node *node, int start, int end);
   PartitionInfo findBestBucketSplit(Node *node);
-  Node *root;
+  void flatten(Node *node, int &idx);
   std::vector<std::unique_ptr<Object>> &objects;
+  std::vector<FlattenedNode> nodes;
   int maxThreads;
   ProgressBar progress;
 };

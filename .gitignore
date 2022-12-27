@@ -9,6 +9,7 @@
 !test_objs/
 !test_objs/*
 .DS_Store
+xyzrgb_dragon.obj
 
 !example_scenes/
 !example_scenes/*

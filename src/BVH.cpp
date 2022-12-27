@@ -34,20 +34,6 @@ void parallelFor(int start, int end, int maxThreads, std::function<void (int)> f
   }
 }
 
-BVH::~BVH() {
-  recursiveDestructor(root);
-}
-
-void BVH::recursiveDestructor(Node *node) {
-  if (node->isLeaf()) {
-    delete node;
-    return;
-  }
-  recursiveDestructor(node->left);
-  recursiveDestructor(node->right);
-  delete node;
-}
-
 PartitionInfo BVH::parallelizeSAH(Node *node, int start, int end, int maxThreads) {
   int workPerThread = std::max((end - start) / maxThreads, MIN_THREAD_WORK);
   // Use futures as if they were threads. May not always be the case, but this is a nice abstraction
@@ -180,15 +166,18 @@ float Box::surfaceArea() {
 BVH::BVH(std::vector<std::unique_ptr<Object>> &objects, int maxThreads)
   : objects(objects), maxThreads(maxThreads),
     progress(70, objects.size(), std::max(1024.0, objects.size() * 0.01)) {
-  root = new Node();
+  Node *root = new Node();
   root->start = 0;
   root->numObjects = objects.size();
   updateNodeBounds(root);
 
   displayRenderProgress(0.0);
-  partition(root);
+  int numNodes = partition(root);
   displayRenderProgress(1.0);
-  std::cout << std::endl;
+  std::cout << "\nFlattening BVH with " << numNodes << " nodes" << std::endl;
+  int idx = 0;
+  nodes.reserve(numNodes);
+  flatten(root, idx);
   std::cout << this->maxThreads << std::endl;
 }
 
@@ -239,11 +228,11 @@ float BVH::calculateSAH(Node *node, int axis, float position) {
   return INF_D;
 }
 
-void BVH::partition(Node *node) {
+int BVH::partition(Node *node) {
   // Base case: allow a max of 4 objects for a node before becoming a leaf
   if (node->numObjects <= 4) {
     progress.increment(node->numObjects);
-    return;
+    return 1;
   }
   
   int bestAxis = -1;
@@ -258,7 +247,7 @@ void BVH::partition(Node *node) {
   float parentCost = parentBox.surfaceArea() * node->numObjects;
   if (info.bestCost >= parentCost) {
     progress.increment(node->numObjects);
-    return;
+    return 1;
   }
 
   int axis = info.bestAxis;
@@ -275,7 +264,7 @@ void BVH::partition(Node *node) {
   int leftNumObjects = std::distance(objects.begin() + i, middle);
   if (leftNumObjects == 0 || leftNumObjects == node->numObjects) {
     progress.increment(node->numObjects);
-    return;
+    return 1;
   }
   // create child nodes
   node->left = new Node();
@@ -288,28 +277,27 @@ void BVH::partition(Node *node) {
   updateNodeBounds(node->left);
   updateNodeBounds(node->right);
 
-  partition(node->left);
-  partition(node->right);
+  return partition(node->left) + partition(node->right) + 1;
 }
 
 IntersectionInfo BVH::findClosestObject(const Vector3D& origin, const Vector3D& direction) {
   // Use vector as the underlying container
   // Better/faster for operations on the top of the stack, which is all this function does
-  std::stack<std::pair<float, Node*>, std::vector<std::pair<float, Node*>>> to_visit;
-  to_visit.push({ intersectAABB(origin, direction, root->aabbMin, root->aabbMax), root });
+  std::stack<std::pair<float, int>, std::vector<std::pair<float, int>>> to_visit;
+  to_visit.push({ intersectAABB(origin, direction, nodes.at(0).aabbMin, nodes.at(0).aabbMax), 0 });
 
   float minDistance = INF_D;
   IntersectionInfo closestInfo{ INF_D, {}, {}, nullptr };
 
   while (to_visit.empty() == false) {
-    std::pair<float, Node*> pairing = to_visit.top();
+    std::pair<float, int> pairing = to_visit.top();
     float dist = pairing.first;
-    Node *subtree = pairing.second;
+    FlattenedNode &subtree = nodes.at(pairing.second);
     to_visit.pop();
     if (dist < minDistance) {
-      if (subtree->isLeaf()) {
-        int end = subtree->start + subtree->numObjects;
-        for (int i = subtree->start; i < end; ++i) {
+      if (subtree.isLeaf()) {
+        int end = subtree.start + subtree.numObjects;
+        for (int i = subtree.start; i < end; ++i) {
           IntersectionInfo info = objects.at(i)->intersect(origin, direction);
           if (info.t < minDistance) {
             minDistance = info.t;
@@ -317,14 +305,16 @@ IntersectionInfo BVH::findClosestObject(const Vector3D& origin, const Vector3D& 
           }
         }
       } else {
-        float leftDistance = intersectAABB(origin, direction, subtree->left->aabbMin, subtree->left->aabbMax);
-        float rightDistance = intersectAABB(origin, direction, subtree->right->aabbMin, subtree->right->aabbMax);
+        FlattenedNode &left = nodes.at(subtree.left);
+        FlattenedNode &right = nodes.at(subtree.right);
+        float leftDistance = intersectAABB(origin, direction, left.aabbMin, left.aabbMax);
+        float rightDistance = intersectAABB(origin, direction, right.aabbMin, right.aabbMax);
         if (leftDistance < rightDistance) {
-          to_visit.push({ rightDistance, subtree->right });
-          to_visit.push({ leftDistance, subtree->left });
+          to_visit.push({ rightDistance, subtree.right });
+          to_visit.push({ leftDistance, subtree.left });
         } else {
-          to_visit.push({ leftDistance, subtree->left });
-          to_visit.push({ rightDistance, subtree->right });
+          to_visit.push({ leftDistance, subtree.left });
+          to_visit.push({ rightDistance, subtree.right });
         }
       }
     }
@@ -334,34 +324,36 @@ IntersectionInfo BVH::findClosestObject(const Vector3D& origin, const Vector3D& 
 }
 
 bool BVH::findAnyObject(const Vector3D& origin, const Vector3D& direction) {
-  std::stack<std::pair<float, Node*>, std::vector<std::pair<float, Node*>>> to_visit;
-  to_visit.push({ intersectAABB(origin, direction, root->aabbMin, root->aabbMax), root });
+  std::stack<std::pair<float, int>, std::vector<std::pair<float, int>>> to_visit;
+  to_visit.push({ intersectAABB(origin, direction, nodes.at(0).aabbMin, nodes.at(0).aabbMax), 0 });
 
   float minDistance = INF_D;
 
   while (to_visit.empty() == false) {
-    std::pair<float, Node*> pairing = to_visit.top();
+    std::pair<float, int> pairing = to_visit.top();
     float dist = pairing.first;
-    Node *subtree = pairing.second;
+    FlattenedNode &subtree = nodes.at(pairing.second);
     to_visit.pop();
     if (dist < minDistance) {
-      if (subtree->isLeaf()) {
-        int end = subtree->start + subtree->numObjects;
-        for (int i = subtree->start; i < end; ++i) {
+      if (subtree.isLeaf()) {
+        int end = subtree.start + subtree.numObjects;
+        for (int i = subtree.start; i < end; ++i) {
           IntersectionInfo info = objects.at(i)->intersect(origin, direction);
           if (info.obj != nullptr) {
             return true;
           }
         }
       } else {
-        float leftDistance = intersectAABB(origin, direction, subtree->left->aabbMin, subtree->left->aabbMax);
-        float rightDistance = intersectAABB(origin, direction, subtree->right->aabbMin, subtree->right->aabbMax);
+        FlattenedNode &left = nodes.at(subtree.left);
+        FlattenedNode &right = nodes.at(subtree.right);
+        float leftDistance = intersectAABB(origin, direction, left.aabbMin, left.aabbMax);
+        float rightDistance = intersectAABB(origin, direction, right.aabbMin, right.aabbMax);
         if (leftDistance < rightDistance) {
-          to_visit.push({ rightDistance, subtree->right });
-          to_visit.push({ leftDistance, subtree->left });
+          to_visit.push({ rightDistance, subtree.right });
+          to_visit.push({ leftDistance, subtree.left });
         } else {
-          to_visit.push({ leftDistance, subtree->left });
-          to_visit.push({ rightDistance, subtree->right });
+          to_visit.push({ leftDistance, subtree.left });
+          to_visit.push({ rightDistance, subtree.right });
         }
       }
     }
@@ -389,13 +381,21 @@ float BVH::intersectAABB(const Vector3D& origin, const Vector3D& direction, cons
   return INF_D;
 }
 
-int BVH::height(Node *node) {
-  if (node->isLeaf()) {
-    return 1;
-  }
-  return std::max(height(node->left), height(node->right)) + 1;
+int BVH::size() {
+  return nodes.size();
 }
 
-int BVH::height() {
-  return height(root);
+void BVH::flatten(Node *node, int &idx) {
+  // i is index of current node in the array
+  int i = idx;
+  ++idx;
+  nodes.push_back({node->aabbMin, node->aabbMax, idx, 0, node->start, node->numObjects});
+  if (node->isLeaf()) {
+    delete node;
+    return;
+  }
+  flatten(node->left, idx);
+  nodes.at(i).right = idx;
+  flatten(node->right, idx);
+  delete node;
 }

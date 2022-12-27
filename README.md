@@ -20,6 +20,8 @@ Any feedback or issues found are very much welcome, as well as additional contri
 # TODOs
 * Fix Global Illumination
 
+* Check if random number generator is thread safe; if not... uh oh
+
 * Find a better file format or parse other formats into this format
 
 * Implement other materials (plastic, matte surfaces, metals, ...)
@@ -31,6 +33,11 @@ Any feedback or issues found are very much welcome, as well as additional contri
         * Parsed some .obj files from Stanford's 3D Repo [here](https://github.com/alecjacobson/common-3d-test-models); Format of the files was funky so I used MeshLab to convert the objs to plys and back to objs rather than figure out the parsing, I think?
 
 * Reduce memory footprint
+    * Flatten BVH. Should improve memory and performance since memory allocation is unneeded and better cache coherence - DONE!!
+    
+    * Also consider referencing points in the scene rather than make copies for triangles. Should help since there are ~2x as many triangles than vertices
+
+* Might need to replace int with size_t in BVH nodes if there are lots of objects
 
 * Parallelize SAH BVH construction - Done!!
     * Need even faster, so update BVH with binning - DONE!! Then parallelize that if possible
@@ -155,19 +162,19 @@ Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heur
 
     Did not test on dragon.obj (Estimated around 11 hours); 871414 objects.
 
-# BVH Construction Results Using Binned SAH with 1 Thread and 10 Buckets; Construction has O(NlogN)
+# BVH Construction Results Using Binned SAH with 1 Thread and 10 Buckets and Flattening; Construction has O(NlogN)
 
-    Takes < 0.00 seconds on suzanne.obj; 968 objects.
+    Takes < 0.00 seconds on suzanne.obj; 968 objects; 30.5 MB memory used.
 
-    Takes 0.01 seconds on teapot.obj; 2256 objects.
+    Takes 0.01 seconds on teapot.obj; 2256 objects; 36.9 MB memory used.
 
-    Takes 0.01 seconds on cow.obj; 5804 objects.
+    Takes 0.01 seconds on cow.obj; 5804 objects; 58.1 MB memory used.
 
-    Takes 0.15 seconds on bunny.obj; 69451 objects.
+    Takes 0.15 seconds on bunny.obj; 69451 objects; 412.6 MB memory used.
 
-    Takes 0.22 seconds on lucy.obj; 99970 objects.
+    Takes 0.22 seconds on lucy.obj; 99970 objects; 621.5 MB memory used.
 
-    Takes 2.74 seconds dragon.obj; 871414 objects.
+    Takes 2.74 seconds on dragon.obj; 871414 objects; 5.05 GB memory used.
 
 # Bottlenecks
 
