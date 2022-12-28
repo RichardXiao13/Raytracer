@@ -33,7 +33,7 @@ void Scene::threadTaskDefault(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgre
     int x = task.x;
     int y = task.y;
 
-    RGBAColor avgColor(0, 0, 0, 1);
+    RGBAColor avgColor(0, 0, 0, 0);
     int hits = 0;
 
     for (int i = 0; i < numRays; ++i) {
@@ -47,8 +47,10 @@ void Scene::threadTaskDefault(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgre
       }
     }
 
-    avgColor *= invNumRays;
-    avgColor.a = hits * invNumRays;
+    if (hits != 0) {
+      avgColor *= (1.0f/hits);
+      avgColor.a = hits * invNumRays;
+    }
 
     img->getPixel(y, x) = avgColor;
     counter->increment();
@@ -99,8 +101,10 @@ void Scene::threadTaskFisheye(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgre
       }
     }
 
-    avgColor *= invNumRays;
-    avgColor.a = hits * invNumRays;
+    if (hits != 0) {
+      avgColor *= (1.0f/hits);
+      avgColor.a = hits * invNumRays;
+    }
 
     img->getPixel(y, x) = avgColor;
     counter->increment();
@@ -143,8 +147,10 @@ void Scene::threadTaskDOF(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBa
       }
     }
 
-    avgColor *= invNumRays;
-    avgColor.a = hits * invNumRays;
+    if (hits != 0) {
+      avgColor *= (1.0f/hits);
+      avgColor.a = hits * invNumRays;
+    }
 
     img->getPixel(y, x) = avgColor;
     counter->increment();
@@ -232,7 +238,7 @@ RGBAColor Scene::illuminate(const IntersectionInfo& info, int giDepth, UniformRN
 
   if (giDepth < globalIllumination) {
     Vector3D globalIlluminationDirection = normalized(surfaceNormal + info.obj->sampleRay(rngInfo));
-    float intensity = std::max(0.0f, dot(surfaceNormal, globalIlluminationDirection));
+    float intensity = 1;std::max(0.0f, dot(surfaceNormal, globalIlluminationDirection));
     if (intensity > 1e-4) {
       RGBAColor giColor = raytrace(intersectionPoint, globalIlluminationDirection, 0, giDepth + 1, rngInfo);
       newColor += giColor * intensity;
