@@ -58,9 +58,10 @@ private:
   struct FlattenedNode {
     Vector3D aabbMin;
     Vector3D aabbMax;
-    int left;
-    int right;
-    int start;
+    union {
+      int right;
+      int start;
+    };
     int numObjects;
 
     inline bool isLeaf() const {
@@ -70,9 +71,9 @@ private:
 
 public:
   BVH(std::vector<std::unique_ptr<Object>> &objects, int maxThreads=1);
+  ~BVH();
   IntersectionInfo findClosestObject(const Vector3D& origin, const Vector3D& direction);
   bool findAnyObject(const Vector3D& origin, const Vector3D& direction);
-  int size();
 
 private:
   void updateNodeBounds(Node *node);
@@ -83,9 +84,8 @@ private:
   PartitionInfo threadPartitionTask(Node *node, int start, int end);
   PartitionInfo findBestBucketSplit(Node *node);
   void flatten(Node *node, int &idx);
-  int height(Node *node);
   std::vector<std::unique_ptr<Object>> &objects;
-  std::vector<FlattenedNode> nodes;
+  FlattenedNode *nodes;
   int maxThreads;
   SafeProgressBar progress;
 };

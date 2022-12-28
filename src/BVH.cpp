@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <iterator>
 #include <cmath>
+#include <stdlib.h>
 
 #include "raytracer.h"
 #include "BVH.h"
@@ -19,6 +20,10 @@
 #define MIN_THREAD_WORK 64
 #define N_BUCKETS 10
 #define STACK_SIZE 64
+
+BVH::~BVH() {
+  free(nodes);
+}
 
 void parallelFor(int start, int end, int maxThreads, std::function<void (int)> func) {
   int workPerThread = std::max((end - start) / maxThreads, MIN_THREAD_WORK);
@@ -174,8 +179,10 @@ BVH::BVH(std::vector<std::unique_ptr<Object>> &objects, int maxThreads)
   updateNodeBounds(root);
   int numNodes = partition(root);
   int idx = 0;
-  nodes.reserve(numNodes);
+  // Allocate array of 32 byte blocks and align array to 32 byte address for cache performance
+  nodes = (FlattenedNode *) aligned_alloc(32, 32 * numNodes);
   flatten(root, idx);
+  std::cout << "BVH created with " << numNodes << " nodes on " << objects.size() << " objects." << std::endl;
   this->maxThreads += 0;
 }
 
@@ -286,7 +293,7 @@ IntersectionInfo BVH::findClosestObject(const Vector3D& origin, const Vector3D& 
   // Better/faster for operations on the top of the stack, which is all this function does
   std::stack<std::pair<float, int>, std::vector<std::pair<float, int>>> to_visit;
   Vector3D invDirection = 1.0f / direction;
-  to_visit.push({ intersectAABB(origin, invDirection, nodes.at(0).aabbMin, nodes.at(0).aabbMax), 0 });
+  to_visit.push({ intersectAABB(origin, invDirection, nodes[0].aabbMin, nodes[0].aabbMax), 0 });
 
   float minDistance = INF_D;
   IntersectionInfo closestInfo{ INF_D, {}, {}, nullptr };
@@ -307,7 +314,7 @@ IntersectionInfo BVH::findClosestObject(const Vector3D& origin, const Vector3D& 
           }
         }
       } else {
-        int leftIdx = subtree.left;
+        int leftIdx = pairing.second + 1;
         int rightIdx = subtree.right;
         FlattenedNode &left = nodes[leftIdx];
         FlattenedNode &right = nodes[rightIdx];
@@ -338,7 +345,7 @@ bool BVH::findAnyObject(const Vector3D& origin, const Vector3D& direction) {
   // Better/faster for operations on the top of the stack, which is all this function does
   std::stack<std::pair<float, int>, std::vector<std::pair<float, int>>> to_visit;
   Vector3D invDirection = 1.0f / direction;
-  to_visit.push({ intersectAABB(origin, direction, nodes.at(0).aabbMin, nodes.at(0).aabbMax), 0 });
+  to_visit.push({ intersectAABB(origin, direction, nodes[0].aabbMin, nodes[0].aabbMax), 0 });
 
   float minDistance = INF_D;
 
@@ -357,7 +364,7 @@ bool BVH::findAnyObject(const Vector3D& origin, const Vector3D& direction) {
           }
         }
       } else {
-        int leftIdx = subtree.left;
+        int leftIdx = pairing.second + 1;
         int rightIdx = subtree.right;
         FlattenedNode &left = nodes[leftIdx];
         FlattenedNode &right = nodes[rightIdx];
@@ -401,28 +408,21 @@ float BVH::intersectAABB(const Vector3D& origin, const Vector3D& invDirection, c
   return INF_D;
 }
 
-int BVH::size() {
-  return nodes.size();
-}
-
 void BVH::flatten(Node *node, int &idx) {
   // i is index of current node in the array
   int i = idx;
   ++idx;
-  nodes.push_back({node->aabbMin, node->aabbMax, idx, 0, node->start, node->numObjects});
+  FlattenedNode &flatNode = nodes[i];
+  flatNode.aabbMin = node->aabbMin;
+  flatNode.aabbMax = node->aabbMax;
+  flatNode.numObjects = node->numObjects;
   if (node->isLeaf()) {
+    flatNode.start = node->start;
     delete node;
     return;
   }
   flatten(node->left, idx);
-  nodes.at(i).right = idx;
+  flatNode.right = idx;
   flatten(node->right, idx);
   delete node;
-}
-
-int BVH::height(Node *node) {
-  if (node->isLeaf()) {
-    return 1;
-  }
-  return std::max(height(node->left), height(node->right)) + 1;
 }
