@@ -195,7 +195,7 @@ IntersectionInfo Scene::findClosestObject(const Vector3D& origin, const Vector3D
 
   for (auto it = planes.begin(); it != planes.end(); ++it) {
     IntersectionInfo info = (*it)->intersect(origin, direction);
-    if (info.t >= 0 && (closestInfo.obj == nullptr || info.t < closestInfo.t)) {
+    if (info.t < closestInfo.t) {
       closestInfo = info;
     }
   }
@@ -233,8 +233,10 @@ RGBAColor Scene::illuminate(const IntersectionInfo& info, int giDepth, UniformRN
   if (giDepth < globalIllumination) {
     Vector3D globalIlluminationDirection = normalized(surfaceNormal + info.obj->sampleRay(rngInfo));
     float intensity = std::max(0.0f, dot(surfaceNormal, globalIlluminationDirection));
-    RGBAColor giColor = raytrace(intersectionPoint, globalIlluminationDirection, 0, giDepth + 1, rngInfo);
-    newColor += giColor * intensity;
+    if (intensity > 1e-4) {
+      RGBAColor giColor = raytrace(intersectionPoint, globalIlluminationDirection, 0, giDepth + 1, rngInfo);
+      newColor += giColor * intensity;
+    }
   }
 
   return RGBAColor(objectColor.r * newColor.r, objectColor.g * newColor.g, objectColor.b * newColor.b, objectColor.a);
@@ -262,17 +264,17 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
   float ior = intersectInfo.obj->indexOfRefraction();
 
   if (intersectInfo.obj->material()->roughness > 0) {
-    for (int i = 0; i < 3; ++i) {
-      intersectInfo.normal[i] += intersectInfo.obj->getPerturbation(rngInfo.rng);
-    }
+    intersectInfo.normal[0] += intersectInfo.obj->getPerturbation(rngInfo.rng);
+    intersectInfo.normal[1] += intersectInfo.obj->getPerturbation(rngInfo.rng);
+    intersectInfo.normal[2] += intersectInfo.obj->getPerturbation(rngInfo.rng);
     intersectInfo.normal = normalized(intersectInfo.normal);
   }
 
   // Make normals point away from incident ray
   if (dot(intersectInfo.normal, direction) > 0) {
-    intersectInfo.normal = -1 * intersectInfo.normal;
+    intersectInfo.normal *= -1;
   } else {
-    ior = 1 / ior;
+    ior = 1.0f / ior;
   }
   
   Vector3D &reflectance = intersectInfo.obj->shine();

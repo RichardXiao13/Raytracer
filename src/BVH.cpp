@@ -18,8 +18,9 @@
 #include "macros.h"
 
 #define MIN_THREAD_WORK 64
-#define N_BUCKETS 10
+#define N_BUCKETS 16
 #define STACK_SIZE 64
+#define MIN_LEAF_SIZE 4
 
 BVH::~BVH() {
   free(nodes);
@@ -235,7 +236,7 @@ float BVH::calculateSAH(Node *node, int axis, float position) {
 
 int BVH::partition(Node *node) {
   // Base case: allow a max of 4 objects for a node before becoming a leaf
-  if (node->numObjects <= 4) {
+  if (node->numObjects <= MIN_LEAF_SIZE) {
     progress.increment(node->numObjects);
     return 1;
   }
