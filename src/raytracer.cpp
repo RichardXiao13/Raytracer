@@ -250,6 +250,7 @@ bool Scene::pointInShadow(const Vector3D& point, const std::unique_ptr<Bulb>& bu
   float intersectToBulbDist = magnitude(bulb->center() - point);
   IntersectionInfo info = bvh->findClosestObject(point, bulb->getLightDirection(point));
   float objectToIntersect = magnitude(point - info.point);
+  // might be able to get rid of first condition since objectToIntersect is INF if obj doesn't exist
   return info.obj != nullptr && objectToIntersect < intersectToBulbDist;
 }
 
@@ -262,11 +263,9 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
   if (intersectInfo.obj == nullptr) return RGBAColor(0, 0, 0, 0);
 
   float ior = intersectInfo.obj->indexOfRefraction();
-
-  if (intersectInfo.obj->material()->roughness > 0) {
-    intersectInfo.normal[0] += intersectInfo.obj->getPerturbation(rngInfo.rng);
-    intersectInfo.normal[1] += intersectInfo.obj->getPerturbation(rngInfo.rng);
-    intersectInfo.normal[2] += intersectInfo.obj->getPerturbation(rngInfo.rng);
+  const std::unique_ptr<Material> &material = intersectInfo.obj->material();
+  if (material->roughness > 0) {
+    intersectInfo.normal += material->getPerturbation3D(rngInfo.rng);
     intersectInfo.normal = normalized(intersectInfo.normal);
   }
 

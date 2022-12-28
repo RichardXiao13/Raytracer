@@ -22,6 +22,10 @@ public:
     return roughnessDistribution(rng);
   }
 
+  Vector3D getPerturbation3D(std::mt19937 &rng) {
+    return Vector3D(roughnessDistribution(rng), roughnessDistribution(rng), roughnessDistribution(rng));
+  }
+
   Vector3D shine;
   Vector3D transparency;
   float indexOfRefraction;
