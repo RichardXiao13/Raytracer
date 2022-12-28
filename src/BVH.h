@@ -83,6 +83,7 @@ private:
   PartitionInfo threadPartitionTask(Node *node, int start, int end);
   PartitionInfo findBestBucketSplit(Node *node);
   void flatten(Node *node, int &idx);
+  int height(Node *node);
   std::vector<std::unique_ptr<Object>> &objects;
   std::vector<FlattenedNode> nodes;
   int maxThreads;

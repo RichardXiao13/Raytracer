@@ -172,9 +172,7 @@ BVH::BVH(std::vector<std::unique_ptr<Object>> &objects, int maxThreads)
   root->start = 0;
   root->numObjects = objects.size();
   updateNodeBounds(root);
-
   int numNodes = partition(root);
-  std::cout << "Flattening BVH with " << numNodes << " nodes" << std::endl;
   int idx = 0;
   nodes.reserve(numNodes);
   flatten(root, idx);
@@ -418,4 +416,11 @@ void BVH::flatten(Node *node, int &idx) {
   nodes.at(i).right = idx;
   flatten(node->right, idx);
   delete node;
+}
+
+int BVH::height(Node *node) {
+  if (node->isLeaf()) {
+    return 1;
+  }
+  return std::max(height(node->left), height(node->right)) + 1;
 }
