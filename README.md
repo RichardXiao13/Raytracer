@@ -98,11 +98,11 @@ Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heur
 
 Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heuristic, Stack traversal, and early shadow breaking: O(logN) for traversing - WITH Compiler Optimizations -O3
 
-    Takes 2 minutes 33 seconds on tenthousand.txt; BVH creation takes 12.25 seconds.
+    Takes 2 minutes 14 seconds on tenthousand.txt; BVH creation takes 12.25 seconds.
 
     Takes 25.09 seconds on redchair.txt; BVH creation takes 0.50 seconds. NO Global Illumination.
 
-    Takes 5 minutes 33 seconds on redchair.txt; BVH creation takes 0.49 seconds. WITH Global Illumination.
+    Takes 6 minutes 28 seconds on redchair.txt; BVH creation takes 0.49 seconds. WITH Global Illumination.
 
     Takes 2 minutes 23 seconds on spiral.txt; BVH creation takes 2.32 seconds.
 
@@ -116,13 +116,13 @@ Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heur
 
     16 threads: Takes 29.56 seconds on tenthousand.txt.
 
-    4 threads: Takes  2 minutes 44 seconds on redchair.txt.
+    4 threads: Takes  1 minutes 44 seconds on redchair.txt.
 
-    6 threads: Takes 2 minutes 18 seconds on redchair.txt.
+    6 threads: Takes 1 minutes 27 seconds on redchair.txt.
 
-    8 threads: Takes 2 minutes 4 seconds on redchair.txt.
+    8 threads: Takes 1 minutes 15 seconds on redchair.txt.
 
-    16 threads: Takes 2 minutes 5 seconds on redchair.txt.
+    16 threads: Takes 1 minutes 17 seconds on redchair.txt.
 
     4 threads: Takes 37.15 seconds on spiral.txt.
 
@@ -134,11 +134,11 @@ Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heur
 
 # Multi-threading Render Results Using Fastest Single Threaded Method and Singled-threaded Binned SAH BVH
 
-    8 threads: Takes 31.82 seconds on tenthousand.txt; BVH creation takes 0.02 seconds.
+    8 threads: Takes 26.47 seconds on tenthousand.txt; BVH creation takes 0.02 seconds.
 
-    8 threads: Takes 2 minutes on redchair.txt; BVH creation takes 0.01 seconds.
+    8 threads: Takes 1 minutes 15 seconds on redchair.txt; BVH creation takes 0.01 seconds.
 
-    8 threads: Takes 24.07 seconds on spiral.txt; BVH creation takes 0.01 seconds.
+    8 threads: Takes 20.92 seconds on spiral.txt; BVH creation takes 0.01 seconds.
 
 # Multi-threading BVH Construction Results Using Parallelized SAH loops
 
