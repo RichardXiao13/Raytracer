@@ -1,6 +1,7 @@
 #include "raytracer.h"
 #include "Objects.h"
 #include "macros.h"
+#include "vector3d.h"
 
 Vector3D Object::sampleRay(UniformRNGInfo &rngInfo) {
   float phi = rngInfo.distribution(rngInfo.rng) * 2 * M_PI;
@@ -56,10 +57,10 @@ IntersectionInfo Sphere::intersect(const Vector3D& origin, const Vector3D& direc
   }
 
   Vector3D intersectionPoint = t * normalizedDirection + origin;
-  return { t, intersectionPoint, intersectionPoint - center, this };
+  return { t, intersectionPoint, normalized(intersectionPoint - center), this };
 }
 
-Plane::Plane(float A, float B, float C, float D) : normal(A, B, C) {
+Plane::Plane(float A, float B, float C, float D) : normal(normalized(Vector3D(A, B, C))) {
   if (A != 0) {
     point[0] = -D/A;
   } else if (B != 0) {
@@ -95,7 +96,7 @@ Triangle::Triangle(const Vector3D& p1, const Vector3D& p2, const Vector3D& p3)
   Vector3D p3p1Diff = p3 - p1;
   Vector3D p2p1Diff = p2 - p1;
 
-  normal = cross(p2p1Diff, p3p1Diff);
+  normal = normalized(cross(p2p1Diff, p3p1Diff));
 
   Vector3D a1 = cross(p3p1Diff, normal);
   Vector3D a2 = cross(p2p1Diff, normal);

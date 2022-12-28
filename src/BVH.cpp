@@ -354,32 +354,30 @@ bool BVH::findAnyObject(const Vector3D& origin, const Vector3D& direction) {
     float dist = pairing.first;
     FlattenedNode &subtree = nodes[pairing.second];
     to_visit.pop();
-    if (dist < minDistance) {
-      if (subtree.isLeaf()) {
-        int end = subtree.start + subtree.numObjects;
-        for (int i = subtree.start; i < end; ++i) {
-          IntersectionInfo info = objects.at(i)->intersect(origin, direction);
-          if (info.obj != nullptr) {
-            return true;
-          }
+    if (subtree.isLeaf()) {
+      int end = subtree.start + subtree.numObjects;
+      for (int i = subtree.start; i < end; ++i) {
+        IntersectionInfo info = objects.at(i)->intersect(origin, direction);
+        if (info.obj != nullptr) {
+          return true;
         }
-      } else {
-        int leftIdx = pairing.second + 1;
-        int rightIdx = subtree.right;
-        FlattenedNode &left = nodes[leftIdx];
-        FlattenedNode &right = nodes[rightIdx];
-        float leftDistance = intersectAABB(origin, invDirection, left.aabbMin, left.aabbMax);
-        float rightDistance = intersectAABB(origin, invDirection, right.aabbMin, right.aabbMax);
-        if (rightDistance < leftDistance) {
-          std::swap(leftIdx, rightIdx);
-          std::swap(leftDistance, rightDistance);
+      }
+    } else {
+      int leftIdx = pairing.second + 1;
+      int rightIdx = subtree.right;
+      FlattenedNode &left = nodes[leftIdx];
+      FlattenedNode &right = nodes[rightIdx];
+      float leftDistance = intersectAABB(origin, invDirection, left.aabbMin, left.aabbMax);
+      float rightDistance = intersectAABB(origin, invDirection, right.aabbMin, right.aabbMax);
+      if (rightDistance < leftDistance) {
+        std::swap(leftIdx, rightIdx);
+        std::swap(leftDistance, rightDistance);
+      }
+      if (leftDistance != INF_D) {
+        if (rightDistance != INF_D) {
+          to_visit.push({ rightDistance, rightIdx });
         }
-        if (leftDistance != INF_D) {
-          if (rightDistance != INF_D) {
-            to_visit.push({ rightDistance, rightIdx });
-          }
-          to_visit.push({ leftDistance, leftIdx });
-        }
+        to_visit.push({ leftDistance, leftIdx });
       }
     }
   }

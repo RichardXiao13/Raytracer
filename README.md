@@ -47,6 +47,9 @@ Any feedback or issues found are very much welcome, as well as additional contri
 * Parallelize SAH BVH construction - Done!!
     * Need even faster, so update BVH with binning - DONE!! Then parallelize that if possible
 
+* Improve speed
+    * Align BVH nodes to cache - DONE!!
+
 * Document everything
 
 * Refactor inputs to raytrace and illuminate to avoid long argument lists

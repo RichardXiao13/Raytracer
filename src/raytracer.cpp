@@ -214,8 +214,8 @@ RGBAColor Scene::illuminate(const IntersectionInfo& info, int giDepth, UniformRN
       continue;
     }
 
-    float reflectance = std::max(0.0f, dot(surfaceNormal, normalizedLightDirection));
-    newColor += (*it)->color() * reflectance;
+    float intensity = std::max(0.0f, dot(surfaceNormal, normalizedLightDirection));
+    newColor += (*it)->color() * intensity;
   }
 
   for (auto it = bulbs.begin(); it != bulbs.end(); ++it) {
@@ -225,16 +225,16 @@ RGBAColor Scene::illuminate(const IntersectionInfo& info, int giDepth, UniformRN
     }
     
     float distance = magnitude((*it)->center() - intersectionPoint);
-    float reflectance = std::max(0.0f, dot(surfaceNormal, normalizedLightDirection)) / (distance * distance);
+    float intensity = std::max(0.0f, dot(surfaceNormal, normalizedLightDirection)) / (distance * distance);
 
-    newColor += (*it)->color() * reflectance;
+    newColor += (*it)->color() * intensity;
   }
 
   if (giDepth < globalIllumination) {
     Vector3D globalIlluminationDirection = normalized(surfaceNormal + info.obj->sampleRay(rngInfo));
-    float gi = std::max(0.0f, dot(surfaceNormal, globalIlluminationDirection));
+    float intensity = std::max(0.0f, dot(surfaceNormal, globalIlluminationDirection));
     RGBAColor giColor = raytrace(intersectionPoint, globalIlluminationDirection, 0, giDepth + 1, rngInfo);
-    newColor += giColor * gi;
+    newColor += giColor * intensity;
   }
 
   return RGBAColor(objectColor.r * newColor.r, objectColor.g * newColor.g, objectColor.b * newColor.b, objectColor.a);
@@ -259,7 +259,6 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
   
   if (intersectInfo.obj == nullptr) return RGBAColor(0, 0, 0, 0);
 
-  intersectInfo.normal = normalized(intersectInfo.normal);
   float ior = intersectInfo.obj->indexOfRefraction();
 
   if (intersectInfo.obj->material()->roughness > 0) {
