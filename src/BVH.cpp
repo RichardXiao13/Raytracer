@@ -281,7 +281,9 @@ int BVH::partition(Node *node) {
 }
 
 IntersectionInfo BVH::findClosestObject(const Vector3D& origin, const Vector3D& direction) {
+  #ifdef PROFILE_INTERSECT
   Profiler p(Funcs::BVHIntersectClosest);
+  #endif
   // Use vector as the underlying container
   // Better/faster for operations on the top of the stack, which is all this function does
   std::stack<std::pair<float, int>, std::vector<std::pair<float, int>>> to_visit;
@@ -306,19 +308,21 @@ IntersectionInfo BVH::findClosestObject(const Vector3D& origin, const Vector3D& 
           }
         }
       } else {
-        FlattenedNode &left = nodes.at(subtree.left);
-        FlattenedNode &right = nodes.at(subtree.right);
+        int leftIdx = subtree.left;
+        int rightIdx = subtree.right;
+        FlattenedNode &left = nodes.at(leftIdx);
+        FlattenedNode &right = nodes.at(rightIdx);
         float leftDistance = intersectAABB(origin, direction, left.aabbMin, left.aabbMax);
         float rightDistance = intersectAABB(origin, direction, right.aabbMin, right.aabbMax);
         if (rightDistance < leftDistance) {
-          std::swap(left, right);
+          std::swap(leftIdx, rightIdx);
           std::swap(leftDistance, rightDistance);
         }
         if (leftDistance != INF_D) {
           if (rightDistance != INF_D) {
-            to_visit.push({ rightDistance, subtree.right });
+            to_visit.push({ rightDistance, rightIdx });
           }
-          to_visit.push({ leftDistance, subtree.left });
+          to_visit.push({ leftDistance, leftIdx });
         }
       }
     }
@@ -328,8 +332,11 @@ IntersectionInfo BVH::findClosestObject(const Vector3D& origin, const Vector3D& 
 }
 
 bool BVH::findAnyObject(const Vector3D& origin, const Vector3D& direction) {
+  #ifdef PROFILE_INTERSECT
   Profiler p(Funcs::BVHIntersectAny);
-
+  #endif
+  // Use vector as the underlying container
+  // Better/faster for operations on the top of the stack, which is all this function does
   std::stack<std::pair<float, int>, std::vector<std::pair<float, int>>> to_visit;
   to_visit.push({ intersectAABB(origin, direction, nodes.at(0).aabbMin, nodes.at(0).aabbMax), 0 });
 
@@ -350,19 +357,21 @@ bool BVH::findAnyObject(const Vector3D& origin, const Vector3D& direction) {
           }
         }
       } else {
-        FlattenedNode &left = nodes.at(subtree.left);
-        FlattenedNode &right = nodes.at(subtree.right);
+        int leftIdx = subtree.left;
+        int rightIdx = subtree.right;
+        FlattenedNode &left = nodes.at(leftIdx);
+        FlattenedNode &right = nodes.at(rightIdx);
         float leftDistance = intersectAABB(origin, direction, left.aabbMin, left.aabbMax);
         float rightDistance = intersectAABB(origin, direction, right.aabbMin, right.aabbMax);
         if (rightDistance < leftDistance) {
-          std::swap(left, right);
+          std::swap(leftIdx, rightIdx);
           std::swap(leftDistance, rightDistance);
         }
         if (leftDistance != INF_D) {
           if (rightDistance != INF_D) {
-            to_visit.push({ rightDistance, subtree.right });
+            to_visit.push({ rightDistance, rightIdx });
           }
-          to_visit.push({ leftDistance, subtree.left });
+          to_visit.push({ leftDistance, leftIdx });
         }
       }
     }
@@ -372,7 +381,7 @@ bool BVH::findAnyObject(const Vector3D& origin, const Vector3D& direction) {
 }
 
 float BVH::intersectAABB(const Vector3D& origin, const Vector3D& direction, const Vector3D& aabbMin, const Vector3D& aabbMax) {
-  Profiler p(Funcs::BVHIntersectAABB);
+  // Profiler p(Funcs::BVHIntersectAABB);
 
   float tx_near = (aabbMin[0] - origin[0]) / direction[0];
   float tx_far = (aabbMax[0] - origin[0]) / direction[0];

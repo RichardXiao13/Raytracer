@@ -59,20 +59,12 @@ float magnitude(const Vector3D& v) {
 }
 
 Vector3D normalized(const Vector3D& v) {
-  float mag = magnitude(v);
-  float normalizedX = v[0] / mag;
-  float normalizedY = v[1] / mag;
-  float normalizedZ = v[2] / mag;
-  
-  return Vector3D(normalizedX, normalizedY, normalizedZ);
+  float invMag = 1.0f / magnitude(v);
+  return Vector3D(v[0] * invMag, v[1] * invMag, v[2] * invMag);
 }
 
 float dot(const Vector3D& v1, const Vector3D& v2) {
-  float summation = 0;
-  for (size_t i = 0; i < 3; ++i) {
-    summation += v1[i] * v2[i];
-  }
-  return summation;
+  return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
 }
 Vector3D cross(const Vector3D& v1, const Vector3D& v2) {
   float i = v1[1] * v2[2] - v2[1] * v1[2];
