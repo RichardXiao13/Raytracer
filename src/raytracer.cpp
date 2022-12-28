@@ -282,7 +282,7 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
   Vector3D diffuse = 1.0 - refraction - reflectance;
   RGBAColor color = diffuse * illuminate(intersectInfo, giDepth, rngInfo);
 
-  if (transparency[0] > 0 || transparency[1] > 0 || transparency[2] > 0) {
+  if (!isZero(transparency)) {
     Vector3D normalizedSurfaceNormal = intersectInfo.normal;
     Vector3D point = intersectInfo.point;
 
@@ -290,7 +290,7 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
     RGBAColor refractedColor = refraction * raytrace(point, refractedDirection, depth + 1, giDepth, rngInfo);
     color += refractedColor;
   }
-  if (reflectance[0] > 0 || reflectance[1] > 0 || reflectance[2] > 0) {
+  if (!isZero(reflectance)) {
     Vector3D reflectedDirection = reflect(normalizedDirection, intersectInfo.normal);
     RGBAColor reflectedColor = reflectance * raytrace(intersectInfo.point + bias_ * intersectInfo.normal, reflectedDirection, depth + 1, giDepth, rngInfo);
     color += reflectedColor;

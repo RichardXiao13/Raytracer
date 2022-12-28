@@ -46,6 +46,14 @@ Vector3D operator*(const Vector3D& v, float scalar) {
   return Vector3D(v.vec[0] * scalar, v.vec[1] * scalar, v.vec[2] * scalar);
 }
 
+Vector3D operator/(float scalar, const Vector3D& v) {
+  return Vector3D(scalar / v[0], scalar / v[1], scalar / v[2]);
+}
+
+Vector3D operator/(const Vector3D& v, float scalar) {
+  return Vector3D(v[0] / scalar, v[1] / scalar, v[2] / scalar);
+}
+
 Vector3D operator-(float scalar, const Vector3D& v) {
   return Vector3D(scalar - v[0], scalar - v[1], scalar - v[2]);
 }
@@ -66,12 +74,17 @@ Vector3D normalized(const Vector3D& v) {
 float dot(const Vector3D& v1, const Vector3D& v2) {
   return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
 }
+
 Vector3D cross(const Vector3D& v1, const Vector3D& v2) {
   float i = v1[1] * v2[2] - v2[1] * v1[2];
   float j = -1 * (v1[0] * v2[2] - v2[0] * v1[2]);
   float k = v1[0] * v2[1] - v2[0] * v1[1];
 
   return Vector3D(i, j, k);
+}
+
+bool isZero(const Vector3D& v) {
+  return v[0] + v[1] + v[2] == 0.0f;
 }
 
 std::ostream& operator<<(std::ostream& out, const Vector3D& v) {
