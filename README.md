@@ -47,7 +47,7 @@ Any feedback or issues found are very much welcome, as well as additional contri
 * Parallelize SAH BVH construction - Done!!
     * Need even faster, so update BVH with binning - DONE!! Then parallelize that if possible
 
-* Improve speed - Got nearly 33% speed up when refactoring Vector3D and Object classes
+* Improve speed - Got nearly 33% speed up when refactoring Vector3D class
     * Align BVH nodes to cache - DONE!!
 
     * Refactor Vector3D to use x,y,z rather than array of floats to reduce function calls to [] operator - DONE!!
@@ -113,29 +113,41 @@ Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heur
 
 # Current Multi-threading Render Results Using Fastest Single Threaded Method
 
-    4 threads: Takes 40.54 seconds on tenthousand.txt.
+    1 thread : Takes 1 minutes 34.84 seconds on tenthousand.txt.
 
-    6 threads: Takes 33.33 seconds on tenthousand.txt.
+    2 threads: Takes 49.08 seconds on tenthousand.txt.
 
-    8 threads: Takes 29.94 seconds on tenthousand.txt.
+    4 threads: Takes 25.57 seconds on tenthousand.txt.
 
-    16 threads: Takes 29.56 seconds on tenthousand.txt.
+    6 threads: Takes 21.07 seconds on tenthousand.txt.
 
-    4 threads: Takes  1 minutes 44 seconds on redchair.txt.
+    8 threads: Takes 17.82 seconds on tenthousand.txt.
 
-    6 threads: Takes 1 minutes 27 seconds on redchair.txt.
+    16 threads: Takes 17.95 seconds on tenthousand.txt.
 
-    8 threads: Takes 1 minutes 15 seconds on redchair.txt.
+    1 thread : Takes 4 minutes 39 seconds on redchair.txt.
+    
+    2 threads: Takes 2 minutes 23 seconds on redchair.txt.
 
-    16 threads: Takes 1 minutes 17 seconds on redchair.txt.
+    4 threads: Takes 1 minutes 14 seconds on redchair.txt.
 
-    4 threads: Takes 37.15 seconds on spiral.txt.
+    6 threads: Takes 1 minutes 1 seconds on redchair.txt.
 
-    6 threads: Takes 31.62 seconds on spiral.txt.
+    8 threads: Takes 51.68 seconds on redchair.txt.
 
-    8 threads: Takes 23.24 seconds on spiral.txt.
+    16 threads: Takes 51.15 seconds on redchair.txt.
 
-    16 threads: Takes 23.17 seconds on spiral.txt.
+    1 thread : Takes 1 minutes 12.81 seconds on spiral.txt.
+
+    2 threads: Takes 37.37 seconds on spiral.txt.
+
+    4 threads: Takes 19.46 seconds on spiral.txt.
+
+    6 threads: Takes 16.19 seconds on spiral.txt.
+
+    8 threads: Takes 14.39 seconds on spiral.txt.
+
+    16 threads: Takes 13.96 seconds on spiral.txt.
 
 # Current Multi-threading Render Results Using Fastest Single Threaded Method and Singled-threaded Binned SAH BVH
 
