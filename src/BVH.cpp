@@ -344,16 +344,15 @@ bool BVH::findAnyObject(const Vector3D& origin, const Vector3D& direction) {
   #endif
   // Use vector as the underlying container
   // Better/faster for operations on the top of the stack, which is all this function does
-  std::stack<std::pair<float, int>, std::vector<std::pair<float, int>>> to_visit;
+  std::stack<int, std::vector<int>> to_visit;
   Vector3D invDirection = 1.0f / direction;
-  to_visit.push({ intersectAABB(origin, direction, nodes[0].aabbMin, nodes[0].aabbMax), 0 });
+  to_visit.push(0);
 
   float minDistance = INF_D;
 
   while (to_visit.empty() == false) {
-    std::pair<float, int> pairing = to_visit.top();
-    float dist = pairing.first;
-    FlattenedNode &subtree = nodes[pairing.second];
+    int nodeIdx = to_visit.top();
+    FlattenedNode &subtree = nodes[nodeIdx];
     to_visit.pop();
     if (subtree.isLeaf()) {
       int end = subtree.start + subtree.numObjects;
@@ -364,7 +363,7 @@ bool BVH::findAnyObject(const Vector3D& origin, const Vector3D& direction) {
         }
       }
     } else {
-      int leftIdx = pairing.second + 1;
+      int leftIdx = nodeIdx + 1;
       int rightIdx = subtree.right;
       FlattenedNode &left = nodes[leftIdx];
       FlattenedNode &right = nodes[rightIdx];
@@ -376,9 +375,9 @@ bool BVH::findAnyObject(const Vector3D& origin, const Vector3D& direction) {
       }
       if (leftDistance != INF_D) {
         if (rightDistance != INF_D) {
-          to_visit.push({ rightDistance, rightIdx });
+          to_visit.push(rightIdx);
         }
-        to_visit.push({ leftDistance, leftIdx });
+        to_visit.push(leftIdx);
       }
     }
   }
