@@ -292,18 +292,20 @@ IntersectionInfo BVH::findClosestObject(const Vector3D& origin, const Vector3D& 
   #endif
   // Use vector as the underlying container
   // Better/faster for operations on the top of the stack, which is all this function does
-  std::stack<std::pair<float, int>, std::vector<std::pair<float, int>>> to_visit;
+  int to_visit[STACK_SIZE];
+  float distances[STACK_SIZE];
   Vector3D invDirection = 1.0f / direction;
-  to_visit.push({ intersectAABB(origin, invDirection, nodes[0].aabbMin, nodes[0].aabbMax), 0 });
+  to_visit[0] = 0;
+  distances[0] = intersectAABB(origin, invDirection, nodes[0].aabbMin, nodes[0].aabbMax);
+  int stackIdx = 0;
 
   float minDistance = INF_D;
   IntersectionInfo closestInfo{ INF_D, {}, {}, nullptr };
 
-  while (to_visit.empty() == false) {
-    std::pair<float, int> pairing = to_visit.top();
-    float dist = pairing.first;
-    FlattenedNode &subtree = nodes[pairing.second];
-    to_visit.pop();
+  while (stackIdx >= 0) {
+    float dist = distances[stackIdx];
+    int nodeIdx = to_visit[stackIdx];
+    FlattenedNode &subtree = nodes[nodeIdx];
     if (dist < minDistance) {
       if (subtree.isLeaf()) {
         int end = subtree.start + subtree.numObjects;
@@ -315,7 +317,7 @@ IntersectionInfo BVH::findClosestObject(const Vector3D& origin, const Vector3D& 
           }
         }
       } else {
-        int leftIdx = pairing.second + 1;
+        int leftIdx = nodeIdx + 1;
         int rightIdx = subtree.right;
         FlattenedNode &left = nodes[leftIdx];
         FlattenedNode &right = nodes[rightIdx];
@@ -327,12 +329,15 @@ IntersectionInfo BVH::findClosestObject(const Vector3D& origin, const Vector3D& 
         }
         if (leftDistance != INF_D) {
           if (rightDistance != INF_D) {
-            to_visit.push({ rightDistance, rightIdx });
+            to_visit[stackIdx] = rightIdx;
+            distances[stackIdx++] = rightDistance;
           }
-          to_visit.push({ leftDistance, leftIdx });
+          to_visit[stackIdx] = leftIdx;
+          distances[stackIdx++] = leftDistance;
         }
       }
     }
+    --stackIdx;
   }
 
   return closestInfo;
@@ -342,18 +347,16 @@ bool BVH::findAnyObject(const Vector3D& origin, const Vector3D& direction) {
   #ifdef PROFILE_INTERSECT
   Profiler p(Funcs::BVHIntersectAny);
   #endif
-  // Use vector as the underlying container
-  // Better/faster for operations on the top of the stack, which is all this function does
-  std::stack<int, std::vector<int>> to_visit;
+  // Use array which is lighter and faster than vector/stack
+  // to_visit stores next node index to visit
+  int to_visit[STACK_SIZE];
   Vector3D invDirection = 1.0f / direction;
-  to_visit.push(0);
+  to_visit[0] = 0;
+  int stackIdx = 0;
 
-  float minDistance = INF_D;
-
-  while (to_visit.empty() == false) {
-    int nodeIdx = to_visit.top();
+  while (stackIdx >= 0) {
+    int nodeIdx = to_visit[stackIdx];
     FlattenedNode &subtree = nodes[nodeIdx];
-    to_visit.pop();
     if (subtree.isLeaf()) {
       int end = subtree.start + subtree.numObjects;
       for (int i = subtree.start; i < end; ++i) {
@@ -375,11 +378,12 @@ bool BVH::findAnyObject(const Vector3D& origin, const Vector3D& direction) {
       }
       if (leftDistance != INF_D) {
         if (rightDistance != INF_D) {
-          to_visit.push(rightIdx);
+          to_visit[stackIdx++] = rightIdx;
         }
-        to_visit.push(leftIdx);
+        to_visit[stackIdx++] = leftIdx;
       }
     }
+    --stackIdx;
   }
 
   return false;
