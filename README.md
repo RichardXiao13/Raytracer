@@ -139,11 +139,11 @@ Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heur
 
 # Current Multi-threading Render Results Using Fastest Single Threaded Method and Singled-threaded Binned SAH BVH
 
-    8 threads: Takes 26.47 seconds on tenthousand.txt; BVH creation takes 0.02 seconds.
+    8 threads: Takes 17.95 seconds on tenthousand.txt; BVH creation takes 0.00 seconds.
 
-    8 threads: Takes 1 minutes 15 seconds on redchair.txt; BVH creation takes 0.01 seconds.
+    8 threads: Takes 57.52 seconds on redchair.txt; BVH creation takes 0.01 seconds.
 
-    8 threads: Takes 20.92 seconds on spiral.txt; BVH creation takes 0.01 seconds.
+    8 threads: Takes 14.14 seconds on spiral.txt; BVH creation takes 0.00 seconds.
 
 # Current Multi-threading BVH Construction Results Using Parallelized SAH loops
 
