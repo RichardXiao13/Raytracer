@@ -47,8 +47,13 @@ Any feedback or issues found are very much welcome, as well as additional contri
 * Parallelize SAH BVH construction - Done!!
     * Need even faster, so update BVH with binning - DONE!! Then parallelize that if possible
 
-* Improve speed
+* Improve speed - Got nearly 33% speed up when refactoring Vector3D and Object classes
     * Align BVH nodes to cache - DONE!!
+
+    * Refactor Vector3D to use x,y,z rather than array of floats to reduce function calls to [] operator - DONE!!
+
+    * Refactor Object class to have public members rather than getter methods to reduce function calls - DONE!!
+
 
 * Document everything
 
