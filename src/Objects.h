@@ -32,53 +32,33 @@ public:
   virtual ~Object() {};
   virtual IntersectionInfo intersect(const Vector3D& origin, const Vector3D& direction) = 0;
 
-  Vector3D aabbMin() {
-    return aabbMin_;
-  }
-
-  Vector3D aabbMax() {
-    return aabbMax_;
-  }
-
-  Vector3D centroid() {
-    return centroid_;
-  }
-  RGBAColor color() {
-    return color_;
-  }
-
-  void setColor(const RGBAColor& color) {
-    color_ = color;
+  void setColor(const RGBAColor& c) {
+    color = c;
   }
 
   Vector3D &shine() {
-    return material_->shine;
+    return material->shine;
   }
 
   Vector3D &transparency() {
-    return material_->transparency;
+    return material->transparency;
   }
 
   float indexOfRefraction() {
-    return material_->indexOfRefraction;
+    return material->indexOfRefraction;
   }
 
   void setMaterial(std::unique_ptr<Material> mat) {
-    material_ = std::move(mat);
-  }
-
-  const std::unique_ptr<Material>& material() {
-    return material_;
+    material = std::move(mat);
   }
 
   virtual Vector3D sampleRay(UniformRNGInfo &rngInfo);
 
-protected:
-  RGBAColor color_;
-  std::unique_ptr<Material> material_;
-  Vector3D aabbMin_;
-  Vector3D aabbMax_;
-  Vector3D centroid_;
+  RGBAColor color;
+  std::unique_ptr<Material> material;
+  Vector3D aabbMin;
+  Vector3D aabbMax;
+  Vector3D centroid;
 };
 
 class Light {

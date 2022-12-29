@@ -17,15 +17,15 @@ Vector3D Bulb::getLightDirection(const Vector3D& point) const {
 }
 
 Sphere::Sphere(float x1, float y1, float z1, float r1) : center(x1, y1, z1), r(r1) {
-  aabbMin_[0] = x1 - r1;
-  aabbMin_[1] = y1 - r1;
-  aabbMin_[2] = z1 - r1;
-  aabbMax_[0] = x1 + r1;
-  aabbMax_[1] = y1 + r1;
-  aabbMax_[2] = z1 + r1;
-  centroid_[0] = x1;
-  centroid_[1] = y1;
-  centroid_[2] = z1;
+  aabbMin.x = x1 - r1;
+  aabbMin.y = y1 - r1;
+  aabbMin.z = z1 - r1;
+  aabbMax.x = x1 + r1;
+  aabbMax.y = y1 + r1;
+  aabbMax.z = z1 + r1;
+  centroid.x = x1;
+  centroid.y = y1;
+  centroid.z = z1;
 }
 
 IntersectionInfo Sphere::intersect(const Vector3D& origin, const Vector3D& direction) {
@@ -62,11 +62,11 @@ IntersectionInfo Sphere::intersect(const Vector3D& origin, const Vector3D& direc
 
 Plane::Plane(float A, float B, float C, float D) : normal(normalized(Vector3D(A, B, C))) {
   if (A != 0) {
-    point[0] = -D/A;
+    point.x = -D/A;
   } else if (B != 0) {
-    point[1] = -D/B;
+    point.y = -D/B;
   } else {
-    point[2] = -D/C;
+    point.z = -D/C;
   }
 }
 
@@ -83,15 +83,15 @@ IntersectionInfo Plane::intersect(const Vector3D& origin, const Vector3D& direct
 
 Triangle::Triangle(const Vector3D& p1, const Vector3D& p2, const Vector3D& p3)
   : p1(p1) {
-  aabbMin_[0] = std::min(std::min(p1[0], p2[0]), p3[0]);
-  aabbMin_[1] = std::min(std::min(p1[1], p2[1]), p3[1]);
-  aabbMin_[2] = std::min(std::min(p1[2], p2[2]), p3[2]);
-  aabbMax_[0] = std::max(std::max(p1[0], p2[0]), p3[0]);
-  aabbMax_[1] = std::max(std::max(p1[1], p2[1]), p3[1]);
-  aabbMax_[2] = std::max(std::max(p1[2], p2[2]), p3[2]);
-  centroid_[0] = (p1[0] + p2[0] + p3[0]) * ONE_THIRD;
-  centroid_[1] = (p1[1] + p2[1] + p3[1]) * ONE_THIRD;
-  centroid_[2] = (p1[2] + p2[2] + p3[2]) * ONE_THIRD;
+  aabbMin.x = std::min(std::min(p1.x, p2.x), p3.x);
+  aabbMin.y = std::min(std::min(p1.y, p2.y), p3.y);
+  aabbMin.z = std::min(std::min(p1.z, p2.z), p3.z);
+  aabbMax.x = std::max(std::max(p1.x, p2.x), p3.x);
+  aabbMax.y = std::max(std::max(p1.y, p2.y), p3.y);
+  aabbMax.z = std::max(std::max(p1.z, p2.z), p3.z);
+  centroid.x = (p1.x + p2.x + p3.x) * ONE_THIRD;
+  centroid.y = (p1.y + p2.y + p3.y) * ONE_THIRD;
+  centroid.z = (p1.z + p2.z + p3.z) * ONE_THIRD;
 
   Vector3D p3p1Diff = p3 - p1;
   Vector3D p2p1Diff = p2 - p1;

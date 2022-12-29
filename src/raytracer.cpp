@@ -79,7 +79,7 @@ void Scene::threadTaskFisheye(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgre
     int x = task.x;
     int y = task.y;
 
-    RGBAColor avgColor(0, 0, 0, 1);
+    RGBAColor avgColor(0, 0, 0, 0);
     int hits = 0;
 
     for (int i = 0; i < numRays; ++i) {
@@ -127,7 +127,7 @@ void Scene::threadTaskDOF(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBa
     int x = task.x;
     int y = task.y;
 
-    RGBAColor avgColor(0, 0, 0, 1);
+    RGBAColor avgColor(0, 0, 0, 0);
     int hits = 0;
 
     for (int i = 0; i < numRays; ++i) {
@@ -209,7 +209,7 @@ IntersectionInfo Scene::findClosestObject(const Vector3D& origin, const Vector3D
 }
 
 RGBAColor Scene::illuminate(const IntersectionInfo& info, int giDepth, UniformRNGInfo &rngInfo) {
-  const RGBAColor& objectColor = info.obj->color();
+  const RGBAColor& objectColor = info.obj->color;
   const Vector3D& surfaceNormal = info.normal;
   const Vector3D& intersectionPoint = info.point + bias_ * surfaceNormal;
   RGBAColor newColor(0, 0, 0, objectColor.a);
@@ -238,7 +238,7 @@ RGBAColor Scene::illuminate(const IntersectionInfo& info, int giDepth, UniformRN
 
   if (giDepth < globalIllumination) {
     Vector3D globalIlluminationDirection = normalized(surfaceNormal + info.obj->sampleRay(rngInfo));
-    float intensity = 1;std::max(0.0f, dot(surfaceNormal, globalIlluminationDirection));
+    float intensity = std::max(0.0f, dot(surfaceNormal, globalIlluminationDirection));
     if (intensity > 1e-4) {
       RGBAColor giColor = raytrace(intersectionPoint, globalIlluminationDirection, 0, giDepth + 1, rngInfo);
       newColor += giColor * intensity;
@@ -269,7 +269,7 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
   if (intersectInfo.obj == nullptr) return RGBAColor(0, 0, 0, 0);
 
   float ior = intersectInfo.obj->indexOfRefraction();
-  const std::unique_ptr<Material> &material = intersectInfo.obj->material();
+  const std::unique_ptr<Material> &material = intersectInfo.obj->material;
   if (material->roughness > 0) {
     intersectInfo.normal += material->getPerturbation3D(rngInfo.rng);
     intersectInfo.normal = normalized(intersectInfo.normal);

@@ -37,7 +37,7 @@ void parallelFor(int start, int end, int maxThreads, std::function<void (int)> f
     }, i, std::min(i + workPerThread, end));
   }
   for (size_t i = 0; i < threads.size(); ++i) {
-    threads.at(i).join();
+    threads[i].join();
   }
 }
 
@@ -52,7 +52,7 @@ PartitionInfo BVH::parallelizeSAH(Node *node, int start, int end, int maxThreads
   }
   PartitionInfo bestInfo;
   for (size_t i = 0; i < threads.size(); ++i) {
-    PartitionInfo info = threads.at(i).get();
+    PartitionInfo info = threads[i].get();
     if (info.bestCost < bestInfo.bestCost) {
       bestInfo = info;
     }
@@ -66,7 +66,7 @@ PartitionInfo BVH::threadPartitionTask(Node *node, int start, int end) {
   float bestCost = INF_D;
 
   for (int i = start; i < end; ++i) {
-    Vector3D centroid = objects.at(i)->centroid();
+    Vector3D centroid = objects[i]->centroid;
     for (int axis = 0; axis < 3; ++axis) {
       float possiblePosition = centroid[axis];
       float cost = calculateSAH(node, axis, possiblePosition);
@@ -90,8 +90,8 @@ PartitionInfo BVH::findBestBucketSplit(Node *node) {
   Box extent;
   int end = node->start + node->numObjects;
   for(int i = node->start; i < end; ++i) {
-    extent.expand(objects.at(i)->centroid());
-    extent.shrink(objects.at(i)->centroid());
+    extent.expand(objects[i]->centroid);
+    extent.shrink(objects[i]->centroid);
   }
 
   const Vector3D &maxPoint = extent.maxPoint();
@@ -104,11 +104,11 @@ PartitionInfo BVH::findBestBucketSplit(Node *node) {
     int bucketCount[N_BUCKETS] = {0};
     float scale = N_BUCKETS / (maxPoint[axis] - minPoint[axis]);
     for(int i = node->start; i < end; ++i) {
-      std::unique_ptr<Object> &obj = objects.at(i);
+      std::unique_ptr<Object> &obj = objects[i];
       // Use min to fix case where centroid is the max extent
-      int bucketIdx = std::min(N_BUCKETS - 1, static_cast<int>((obj->centroid()[axis] - minPoint[axis]) * scale));
-      buckets[bucketIdx].shrink(obj->aabbMin());
-      buckets[bucketIdx].expand(obj->aabbMax());
+      int bucketIdx = std::min(N_BUCKETS - 1, static_cast<int>((obj->centroid[axis] - minPoint[axis]) * scale));
+      buckets[bucketIdx].shrink(obj->aabbMin);
+      buckets[bucketIdx].expand(obj->aabbMax);
       bucketCount[bucketIdx]++;
     }
 
@@ -152,22 +152,22 @@ PartitionInfo BVH::findBestBucketSplit(Node *node) {
 }
 
 void Box::shrink(const Vector3D& minPoint) {
-  minPoint_[0] = std::min(minPoint_[0], minPoint[0]);
-  minPoint_[1] = std::min(minPoint_[1], minPoint[1]);
-  minPoint_[2] = std::min(minPoint_[2], minPoint[2]);
+  minPoint_.x = std::min(minPoint_.x, minPoint.x);
+  minPoint_.y = std::min(minPoint_.y, minPoint.y);
+  minPoint_.z = std::min(minPoint_.z, minPoint.z);
 }
 
 void Box::expand(const Vector3D& maxPoint) {
-  maxPoint_[0] = std::max(maxPoint_[0], maxPoint[0]);
-  maxPoint_[1] = std::max(maxPoint_[1], maxPoint[1]);
-  maxPoint_[2] = std::max(maxPoint_[2], maxPoint[2]);
+  maxPoint_.x = std::max(maxPoint_.x, maxPoint.x);
+  maxPoint_.y = std::max(maxPoint_.y, maxPoint.y);
+  maxPoint_.z = std::max(maxPoint_.z, maxPoint.z);
 }
 
 float Box::surfaceArea() {
   Vector3D extent = maxPoint_ - minPoint_;
   // Cost uses surface area of a box, but don't need to multiply by 2 since everything is multiplied by 2 in the heuristic
   // Can remove multiply if desired
-  return 2 * (extent[0] * extent[1] + extent[1] * extent[2] + extent[0] * extent[2]);
+  return 2 * (extent.x * extent.y + extent.y * extent.z + extent.x * extent.z);
 }
 
 BVH::BVH(std::vector<std::unique_ptr<Object>> &objects, int maxThreads)
@@ -192,16 +192,16 @@ void BVH::updateNodeBounds(Node *node) {
   node->aabbMax = Vector3D(-INF_D, -INF_D, -INF_D);
   int end = node->start + node->numObjects;
   for (int i = node->start; i < end; ++i) {
-    Vector3D aabbObjMin = objects.at(i)->aabbMin();
-    Vector3D aabbObjMax = objects.at(i)->aabbMax();
+    Vector3D aabbObjMin = objects[i]->aabbMin;
+    Vector3D aabbObjMax = objects[i]->aabbMax;
 
-    node->aabbMin[0] = std::min(node->aabbMin[0], aabbObjMin[0]);
-    node->aabbMin[1] = std::min(node->aabbMin[1], aabbObjMin[1]);
-    node->aabbMin[2] = std::min(node->aabbMin[2], aabbObjMin[2]);
+    node->aabbMin.x = std::min(node->aabbMin.x, aabbObjMin.x);
+    node->aabbMin.y = std::min(node->aabbMin.y, aabbObjMin.y);
+    node->aabbMin.z = std::min(node->aabbMin.z, aabbObjMin.z);
 
-    node->aabbMax[0] = std::max(node->aabbMax[0], aabbObjMax[0]);
-    node->aabbMax[1] = std::max(node->aabbMax[1], aabbObjMax[1]);
-    node->aabbMax[2] = std::max(node->aabbMax[2], aabbObjMax[2]);
+    node->aabbMax.x = std::max(node->aabbMax.x, aabbObjMax.x);
+    node->aabbMax.y = std::max(node->aabbMax.y, aabbObjMax.y);
+    node->aabbMax.z = std::max(node->aabbMax.z, aabbObjMax.z);
   }
 }
 
@@ -214,15 +214,15 @@ float BVH::calculateSAH(Node *node, int axis, float position) {
 
   int end = node->start + node->numObjects;
   for(int i = node->start; i < end; ++i) {
-    std::unique_ptr<Object> &obj = objects.at(i);
-    if (obj->centroid()[axis] < position) {
-      leftBox.shrink(obj->aabbMin());
-      leftBox.expand(obj->aabbMax());
+    std::unique_ptr<Object> &obj = objects[i];
+    if (obj->centroid[axis] < position) {
+      leftBox.shrink(obj->aabbMin);
+      leftBox.expand(obj->aabbMax);
       leftBoxCount++;
     }
     else {
-      rightBox.shrink(obj->aabbMin());
-      rightBox.expand(obj->aabbMax());
+      rightBox.shrink(obj->aabbMin);
+      rightBox.expand(obj->aabbMax);
       rightBoxCount++;
     }
   }
@@ -263,7 +263,7 @@ int BVH::partition(Node *node) {
   
   auto middle = std::partition(objects.begin() + i, objects.begin() + j,
   [axis, splitPosition](const std::unique_ptr<Object>& em) {
-    return em->centroid()[axis] < splitPosition;
+    return em->centroid[axis] < splitPosition;
   });
 
   // abort split if one of the sides is empty
@@ -308,7 +308,7 @@ IntersectionInfo BVH::findClosestObject(const Vector3D& origin, const Vector3D& 
       if (subtree.isLeaf()) {
         int end = subtree.start + subtree.numObjects;
         for (int i = subtree.start; i < end; ++i) {
-          IntersectionInfo info = objects.at(i)->intersect(origin, direction);
+          IntersectionInfo info = objects[i]->intersect(origin, direction);
           if (info.t < minDistance) {
             minDistance = info.t;
             closestInfo = info;
@@ -358,7 +358,7 @@ bool BVH::findAnyObject(const Vector3D& origin, const Vector3D& direction) {
     if (subtree.isLeaf()) {
       int end = subtree.start + subtree.numObjects;
       for (int i = subtree.start; i < end; ++i) {
-        IntersectionInfo info = objects.at(i)->intersect(origin, direction);
+        IntersectionInfo info = objects[i]->intersect(origin, direction);
         if (info.obj != nullptr) {
           return true;
         }
@@ -389,16 +389,16 @@ bool BVH::findAnyObject(const Vector3D& origin, const Vector3D& direction) {
 float BVH::intersectAABB(const Vector3D& origin, const Vector3D& invDirection, const Vector3D& aabbMin, const Vector3D& aabbMax) {
   // Profiler p(Funcs::BVHIntersectAABB);
 
-  float tx_near = (aabbMin[0] - origin[0]) * invDirection[0];
-  float tx_far = (aabbMax[0] - origin[0]) * invDirection[0];
+  float tx_near = (aabbMin.x - origin.x) * invDirection.x;
+  float tx_far = (aabbMax.x - origin.x) * invDirection.x;
   float tmin = std::min(tx_near, tx_far);
   float tmax = std::max(tx_near, tx_far);
-  float ty_near = (aabbMin[1] - origin[1]) * invDirection[1];
-  float ty_far = (aabbMax[1] - origin[1]) * invDirection[1];
+  float ty_near = (aabbMin.y - origin.y) * invDirection.y;
+  float ty_far = (aabbMax.y - origin.y) * invDirection.y;
   tmin = std::max(tmin, std::min(ty_near, ty_far));
   tmax = std::min(tmax, std::max(ty_near, ty_far));
-  float tz_near = (aabbMin[2] - origin[2]) * invDirection[2];
-  float tz_far = (aabbMax[2] - origin[2]) * invDirection[2];
+  float tz_near = (aabbMin.z - origin.z) * invDirection.z;
+  float tz_far = (aabbMax.z - origin.z) * invDirection.z;
   tmin = std::max(tmin, std::min(tz_near, tz_far));
   tmax = std::min(tmax, std::max(tz_near, tz_far));
   if (tmax >= tmin && tmax > 0) {
