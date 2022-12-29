@@ -13,7 +13,7 @@ Vector3D Object::sampleRay(UniformRNGInfo &rngInfo) {
 }
 
 Vector3D Bulb::getLightDirection(const Vector3D& point) const {
-  return center_ - point;
+  return center - point;
 }
 
 Sphere::Sphere(float x1, float y1, float z1, float r1) : center(x1, y1, z1), r(r1) {

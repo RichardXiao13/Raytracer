@@ -215,13 +215,13 @@ RGBAColor Scene::illuminate(const IntersectionInfo& info, int giDepth, UniformRN
   RGBAColor newColor(0, 0, 0, objectColor.a);
   
   for (auto it = lights.begin(); it != lights.end(); ++it) {
-    Vector3D normalizedLightDirection = normalized((*it)->direction());
+    Vector3D normalizedLightDirection = normalized((*it)->direction);
     if (pointInShadow(intersectionPoint, normalizedLightDirection)) {
       continue;
     }
 
     float intensity = std::max(0.0f, dot(surfaceNormal, normalizedLightDirection));
-    newColor += (*it)->color() * intensity;
+    newColor += (*it)->color * intensity;
   }
 
   for (auto it = bulbs.begin(); it != bulbs.end(); ++it) {
@@ -230,10 +230,10 @@ RGBAColor Scene::illuminate(const IntersectionInfo& info, int giDepth, UniformRN
       continue;
     }
     
-    float distance = magnitude((*it)->center() - intersectionPoint);
+    float distance = magnitude((*it)->center - intersectionPoint);
     float intensity = std::max(0.0f, dot(surfaceNormal, normalizedLightDirection)) / (distance * distance);
 
-    newColor += (*it)->color() * intensity;
+    newColor += (*it)->color * intensity;
   }
 
   if (giDepth < globalIllumination) {
@@ -253,7 +253,7 @@ bool Scene::pointInShadow(const Vector3D& point, const Vector3D& lightDirection)
 }
 
 bool Scene::pointInShadow(const Vector3D& point, const std::unique_ptr<Bulb>& bulb) {
-  float intersectToBulbDist = magnitude(bulb->center() - point);
+  float intersectToBulbDist = magnitude(bulb->center - point);
   IntersectionInfo info = bvh->findClosestObject(point, bulb->getLightDirection(point));
   float objectToIntersect = magnitude(point - info.point);
   // might be able to get rid of first condition since objectToIntersect is INF if obj doesn't exist
@@ -268,10 +268,10 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
   
   if (intersectInfo.obj == nullptr) return RGBAColor(0, 0, 0, 0);
 
-  float ior = intersectInfo.obj->indexOfRefraction();
   const std::unique_ptr<Material> &material = intersectInfo.obj->material;
+  float ior = material->indexOfRefraction;
   if (material->roughness > 0) {
-    intersectInfo.normal += material->getPerturbation3D(rngInfo.rng);
+    intersectInfo.normal = material->getPerturbation3D(rngInfo.rng);
     intersectInfo.normal = normalized(intersectInfo.normal);
   }
 
@@ -282,8 +282,8 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
     ior = 1.0f / ior;
   }
   
-  Vector3D &reflectance = intersectInfo.obj->shine();
-  Vector3D &transparency = intersectInfo.obj->transparency();
+  Vector3D &reflectance = material->shine;
+  Vector3D &transparency = material->transparency;
   Vector3D refraction = (1.0 - reflectance) * transparency;
   Vector3D diffuse = 1.0 - refraction - reflectance;
   RGBAColor color = diffuse * illuminate(intersectInfo, giDepth, rngInfo);

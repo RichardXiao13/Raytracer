@@ -36,18 +36,6 @@ public:
     color = c;
   }
 
-  Vector3D &shine() {
-    return material->shine;
-  }
-
-  Vector3D &transparency() {
-    return material->transparency;
-  }
-
-  float indexOfRefraction() {
-    return material->indexOfRefraction;
-  }
-
   void setMaterial(std::unique_ptr<Material> mat) {
     material = std::move(mat);
   }
@@ -63,36 +51,19 @@ public:
 
 class Light {
 public:
-  Light(float x, float y, float z, const RGBAColor& color) : color_(color), direction_(x, y, z) {};
-  RGBAColor &color() {
-    return color_;
-  }
-  Vector3D &direction() {
-    return direction_;
-  }
-private:
-  RGBAColor color_;
-  Vector3D direction_;
+  Light(float x, float y, float z, const RGBAColor& color) : color(color), direction(x, y, z) {};
+
+  RGBAColor color;
+  Vector3D direction;
 };
 
 class Bulb {
 public:
-  Bulb(float x, float y, float z, const RGBAColor& color) : center_(x, y, z), color_(color) {};
+  Bulb(float x, float y, float z, const RGBAColor& color) : center(x, y, z), color(color) {};
   Vector3D getLightDirection(const Vector3D& point) const;
-  RGBAColor &color() {
-    return color_;
-  }
-  Vector3D &center() {
-    return center_;
-  }
 
-  Vector3D center() const {
-    return center_;
-  }
-
-private:
-  Vector3D center_;
-  RGBAColor color_;
+  Vector3D center;
+  RGBAColor color;
 };
 
 class Sphere : public Object {
