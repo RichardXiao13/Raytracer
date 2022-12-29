@@ -111,7 +111,7 @@ Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heur
 
     Takes 2 minutes 23 seconds on spiral.txt; BVH creation takes 2.32 seconds.
 
-# Multi-threading Render Results Using Fastest Single Threaded Method
+# Current Multi-threading Render Results Using Fastest Single Threaded Method
 
     4 threads: Takes 40.54 seconds on tenthousand.txt.
 
@@ -137,7 +137,7 @@ Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heur
 
     16 threads: Takes 23.17 seconds on spiral.txt.
 
-# Multi-threading Render Results Using Fastest Single Threaded Method and Singled-threaded Binned SAH BVH
+# Current Multi-threading Render Results Using Fastest Single Threaded Method and Singled-threaded Binned SAH BVH
 
     8 threads: Takes 26.47 seconds on tenthousand.txt; BVH creation takes 0.02 seconds.
 
@@ -145,7 +145,7 @@ Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heur
 
     8 threads: Takes 20.92 seconds on spiral.txt; BVH creation takes 0.01 seconds.
 
-# Multi-threading BVH Construction Results Using Parallelized SAH loops
+# Current Multi-threading BVH Construction Results Using Parallelized SAH loops
 
     4 threads: Takes 3.69 seconds on tenthousand.txt.
 
@@ -163,7 +163,7 @@ Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heur
 
     16 threads: Takes 0.59 seconds on spiral.txt.
 
-# BVH Construction Results Using Parallelized SAH loops with 8 Threads; Construction has O(N<sup>2</sup>logN)
+# Current BVH Construction Results Using Parallelized SAH loops with 8 Threads; Construction has O(N<sup>2</sup>logN)
 
     Takes 0.06 seconds on suzanne.obj; 968 objects.
 
@@ -177,7 +177,7 @@ Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heur
 
     Did not test on dragon.obj (Estimated around 11 hours); 871414 objects.
 
-# BVH Construction Results Using Binned SAH with 1 Thread and 10 Buckets and Flattening; Construction has O(NlogN)
+# Current BVH Construction Results Using Binned SAH with 1 Thread and 10 Buckets and Flattening; Construction has O(NlogN)
 
     Takes < 0.00 seconds on suzanne.obj; 968 objects; 25.4 MB memory used.
 
