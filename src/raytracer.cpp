@@ -271,7 +271,7 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
   const std::unique_ptr<Material> &material = intersectInfo.obj->material;
   float ior = material->indexOfRefraction;
   if (material->roughness > 0) {
-    intersectInfo.normal = material->getPerturbation3D(rngInfo.rng);
+    intersectInfo.normal += material->getPerturbation3D(rngInfo.rng);
     intersectInfo.normal = normalized(intersectInfo.normal);
   }
 
