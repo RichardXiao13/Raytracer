@@ -251,4 +251,4 @@ Multi-threading with member functions of classes. Spent a very long time figurin
 
 Can't use more than 6 threads for some reason on redchair - FIXED: Due to a race condition in threadTaskFisheye; Was modifiying Scene's forward vector, which is shared. Solution: Make a copy of forward.
 
-Global Illumination is not showing correct colors. Maybe improper sampling?
+Global Illumination is not showing correct colors. Maybe improper sampling? - FIXED: @TODO
