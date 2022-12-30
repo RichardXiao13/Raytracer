@@ -1,7 +1,6 @@
 #pragma once
 
-#include <random>
-
+#include "../macros.h"
 #include "../vector3d.h"
 
 class Material {

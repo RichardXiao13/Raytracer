@@ -1,6 +1,4 @@
-#include <iostream>
-#include <iomanip>
-
+#include "macros.h"
 #include "SafeProgressBar.h"
 
 void displayRenderProgress(float progress, int barWidth) {

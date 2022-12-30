@@ -1,6 +1,30 @@
 #pragma once
 
 #include <limits>
+#include <vector>
+#include <queue>
+#include <functional>
+#include <iostream>
+#include <stack>
+#include <memory>
+#include <thread>
+#include <future>
+#include <algorithm>
+#include <iterator>
+#include <cmath>
+#include <random>
+#include <stdlib.h>
+#include <string>
+#include <fstream>
+#include <sstream>
+#include <unistd.h>
+#include <ostream>
+#include <utility>
+#include <iomanip>
+#include <chrono>
+#include <ctime>
+#include <mutex>
+#include <unordered_map>
 
 #define DEBUG
 // #define PROFILE_RAYTRACE

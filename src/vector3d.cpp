@@ -1,7 +1,5 @@
-#include <cmath>
+#include "macros.h"
 #include "vector3d.h"
-
-using std::sqrt;
 
 Vector3D::Vector3D(float x1, float y1, float z1) : x(x1), y(y1), z(z1) {};
 
@@ -69,7 +67,7 @@ Vector3D operator-(const Vector3D& v, float scalar) {
 }
 
 float magnitude(const Vector3D& v) {
-  return sqrt(dot(v, v));
+  return std::sqrt(dot(v, v));
 }
 
 Vector3D normalized(const Vector3D& v) {

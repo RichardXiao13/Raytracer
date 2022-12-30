@@ -1,7 +1,6 @@
 #pragma once
 
-#include <vector>
-#include <ostream>
+#include "macros.h"
 
 class Vector3D {
 public:

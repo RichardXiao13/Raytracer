@@ -1,7 +1,4 @@
-#include <chrono>
-#include <iostream>
-#include <iomanip>
-
+#include "macros.h"
 #include "Profiler.h"
 
 static Stats stats;

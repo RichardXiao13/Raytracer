@@ -1,9 +1,6 @@
 #pragma once
 
-#include <unordered_map>
-#include <string>
-#include <mutex>
-#include <chrono>
+#include "macros.h"
 
 enum class Funcs {
   SceneConstruction,

@@ -1,6 +1,6 @@
+#include "macros.h"
 #include "raytracer.h"
 #include "Objects.h"
-#include "macros.h"
 #include "vector3d.h"
 
 Vector3D Object::sampleRay(UniformRNGInfo &rngInfo) {

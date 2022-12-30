@@ -1,7 +1,4 @@
-#include <iostream>
-#include <string>
-#include <cmath>
-
+#include "macros.h"
 #include "PNG.h"
 #include "lodepng.h"
 #include "vector3d.h"

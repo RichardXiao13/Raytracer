@@ -1,22 +1,10 @@
-#include <string>
-#include <vector>
-#include <cmath>
-#include <algorithm>
-#include <utility>
-#include <iostream>
-#include <iomanip>
-#include <chrono>
-#include <ctime>
-#include <thread>
-
+#include "macros.h"
 #include "lodepng.h"
 #include "raytracer.h"
 #include "SafeQueue.h"
-#include "timer.h"
 #include "math_utils.h"
 #include "SafeProgressBar.h"
 #include "Profiler.h"
-#include "macros.h"
 
 #define THRESHOLD 512
 

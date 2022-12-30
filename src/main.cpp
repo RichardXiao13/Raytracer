@@ -1,8 +1,4 @@
-#include <iostream>
-#include <fstream>
-#include <unistd.h>
-#include <memory>
-
+#include "macros.h"
 #include "vector3d.h"
 #include "parser.h"
 #include "raytracer.h"

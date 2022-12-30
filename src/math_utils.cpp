@@ -1,4 +1,5 @@
 #include "math_utils.h"
+#include "vector3d.h"
 
 Vector3D reflect(const Vector3D& incident, const Vector3D& normal) {
   return incident - 2 * dot(normal, incident) * normal;

@@ -1,8 +1,6 @@
 #pragma once
 
-#include <random>
-#include <memory>
-
+#include "macros.h"
 #include "vector3d.h"
 #include "PNG.h"
 #include "materials/Material.h"

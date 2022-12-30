@@ -1,13 +1,4 @@
-#include <string>
-#include <fstream>
-#include <vector>
-#include <sstream>
-#include <iterator>
-#include <iostream>
-#include <algorithm>
-#include <memory>
-#include <random>
-
+#include "macros.h"
 #include "parser.h"
 #include "raytracer.h"
 #include "Objects.h"
@@ -15,7 +6,6 @@
 #include "materials/Glass.h"
 #include "materials/Plastic.h"
 #include "Profiler.h"
-#include "macros.h"
 
 // From StackOverflow https://stackoverflow.com/questions/874134/find-out-if-string-ends-with-another-string-in-c
 inline bool ends_with(std::string const & value, std::string const & ending) {

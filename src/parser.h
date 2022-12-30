@@ -1,10 +1,6 @@
 #pragma once
 
-#include <vector>
-#include <string>
-#include <fstream>
-#include <memory>
-
+#include "macros.h"
 #include "raytracer.h"
 
 template <typename Out>

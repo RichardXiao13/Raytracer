@@ -1,21 +1,8 @@
-#include <vector>
-#include <queue>
-#include <functional>
-#include <iostream>
-#include <stack>
-#include <memory>
-#include <thread>
-#include <future>
-#include <algorithm>
-#include <iterator>
-#include <cmath>
-#include <stdlib.h>
-
+#include "macros.h"
 #include "raytracer.h"
 #include "BVH.h"
 #include "SafeProgressBar.h"
 #include "Profiler.h"
-#include "macros.h"
 
 #define MIN_THREAD_WORK 64
 #define N_BUCKETS 16

@@ -1,8 +1,6 @@
 #pragma once
 
-#include <mutex>
-#include <iostream>
-#include <iomanip>
+#include "macros.h"
 
 void displayRenderProgress(float progress, int barWidth=70);
 

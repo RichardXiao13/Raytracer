@@ -1,10 +1,6 @@
 #pragma once
 
-#include <vector>
-#include <utility>
-#include <random>
-#include <functional>
-
+#include "macros.h"
 #include "PNG.h"
 #include "vector3d.h"
 #include "BVH.h"

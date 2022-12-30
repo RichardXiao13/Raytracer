@@ -1,7 +1,6 @@
 #pragma once
 
-#include <cmath>
-
+#include "macros.h"
 #include "vector3d.h"
 
 /**
