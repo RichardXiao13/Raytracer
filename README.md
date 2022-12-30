@@ -56,8 +56,6 @@ Any feedback or issues found are very much welcome, as well as additional contri
 
     * Refactor BVH intersect methods to use array-based stack to reduce std::stack overhead - DONE!! Nearly 25% speed up
 
-    * Use additional conditional statement rather than perform swaps in intersect methods - DONE!! Nearly 25% speed up
-
 
 * Document everything
 
