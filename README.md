@@ -127,7 +127,7 @@ Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heur
 
     16 threads: Takes 12.99 seconds on tenthousand.txt.
 
-    1 thread : Takes 3 minutes 8 seconds on redchair.txt.
+    1 thread : Takes 3 minutes 6 seconds on redchair.txt.
     
     2 threads: Takes 1 minutes 37 seconds on redchair.txt.
 
@@ -135,9 +135,9 @@ Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heur
 
     6 threads: Takes 39.99 seconds on redchair.txt.
 
-    8 threads: Takes 36.52 seconds on redchair.txt.
+    8 threads: Takes 33.82 seconds on redchair.txt.
 
-    16 threads: Takes 34.70 seconds on redchair.txt.
+    16 threads: Takes 33.31 seconds on redchair.txt.
 
     1 thread : Takes 55.55 seconds on spiral.txt.
 
@@ -147,9 +147,9 @@ Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heur
 
     6 threads: Takes 11.90 seconds on spiral.txt.
 
-    8 threads: Takes 10.68 seconds on spiral.txt.
+    8 threads: Takes 10.35 seconds on spiral.txt.
 
-    16 threads: Takes 10.32 seconds on spiral.txt.
+    16 threads: Takes 10.15 seconds on spiral.txt.
 
 # Current Multi-threading Render Results Using Fastest Single Threaded Method and Singled-threaded Binned SAH BVH
 
