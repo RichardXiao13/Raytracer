@@ -24,6 +24,11 @@ struct IntersectionInfo {
   Object *obj;
 };
 
+enum class ObjectType {
+  Diffuse,
+  Reflective,
+  Refractive,
+};
 
 class Object {
 public:
@@ -45,6 +50,7 @@ public:
   Vector3D aabbMin;
   Vector3D aabbMax;
   Vector3D centroid;
+  ObjectType type;
 };
 
 class Light {

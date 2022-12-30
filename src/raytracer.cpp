@@ -278,34 +278,54 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
   if (intersectInfo.obj == nullptr) return RGBAColor(0, 0, 0, 0);
 
   const std::unique_ptr<Material> &material = intersectInfo.obj->material;
-  float ior = material->indexOfRefraction;
-  if (material->roughness > 0) {
-    intersectInfo.normal += material->getPerturbation3D(rngInfo.rng);
-    intersectInfo.normal = normalized(intersectInfo.normal);
-  }
+  float eta = material->eta;
+  // if (material->roughness > 0) {
+  //   std::cout << "huh";
+  //   intersectInfo.normal += material->getPerturbation3D(rngInfo.rng);
+  //   intersectInfo.normal = normalized(intersectInfo.normal);
+  // }
 
   // Make normals point away from incident ray
   if (dot(intersectInfo.normal, direction) > 0) {
     intersectInfo.normal *= -1;
   } else {
-    ior = 1.0f / ior;
+    eta = 1.0f / eta;
   }
   
-  Vector3D &reflectance = material->shine;
-  Vector3D &transparency = material->transparency;
-  Vector3D refraction = (1.0 - reflectance) * transparency;
-  Vector3D diffuse = 1.0 - refraction - reflectance;
-  RGBAColor color = diffuse * illuminate(intersectInfo, depth, rngInfo);
+  RGBAColor color;
 
-  if (!isZero(refraction)) {
-    Vector3D point = intersectInfo.point;
+  switch (intersectInfo.obj->type) {
+    case ObjectType::Diffuse: {
+      color += illuminate(intersectInfo, depth, rngInfo);
+      break;
+    }
 
-    Vector3D refractedDirection = refract(normalizedDirection, intersectInfo.normal, ior, point, bias_);
-    color += refraction * raytrace(point, refractedDirection, depth + 1, rngInfo);
-  }
-  if (!isZero(reflectance)) {
-    Vector3D reflectedDirection = reflect(normalizedDirection, intersectInfo.normal);
-    color += reflectance * raytrace(intersectInfo.point + bias_ * intersectInfo.normal, reflectedDirection, depth + 1, rngInfo);
+    case ObjectType::Reflective: {
+      Vector3D reflectedDirection = reflect(normalizedDirection, intersectInfo.normal);
+      color += material->Kr * raytrace(intersectInfo.point + bias_ * intersectInfo.normal, reflectedDirection, depth + 1, rngInfo);
+      break;
+    }
+
+    case ObjectType::Refractive: {
+      // get reflective and refractive contribution
+      float Kr = fresnel(normalizedDirection, intersectInfo.normal, eta);
+      float Kt = 1 - Kr;
+
+      if (Kt > 0) {
+        Vector3D point = intersectInfo.point;
+        Vector3D refractedDirection = refract(normalizedDirection, intersectInfo.normal, eta, point, bias_);
+        color += Kt * raytrace(point, refractedDirection, depth + 1, rngInfo);
+      }
+      if (Kr > 0) {
+        Vector3D reflectedDirection = reflect(normalizedDirection, intersectInfo.normal);
+        color += Kr * raytrace(intersectInfo.point + bias_ * intersectInfo.normal, reflectedDirection, depth + 1, rngInfo);
+      }
+      }
+      break;
+
+    default:
+      // Unknown object?
+      break;
   }
   
   return color;

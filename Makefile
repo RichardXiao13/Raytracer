@@ -4,10 +4,12 @@ EXE = raytracer
 # Add all object files needed for compiling:
 EXE_OBJ = main.o
 OBJS = main.o lodepng.o vector3d.o raytracer.o parser.o PNG.o BVH.o SafeQueue.o Objects.o math_utils.o SafeProgressBar.o \
-materials/Material.o materials/Glass.o materials/Plastic.o materials/Metal.o Profiler.o macros.o
+materials/Material.o materials/Glass.o materials/Plastic.o materials/Metal.o materials/Mirror.o Profiler.o macros.o
 
 # Optimization level:
 OPT = -Ofast
+
+OPT = -O0
 
 # Compiler/linker config and object/depfile directory:
 CXX = clang++

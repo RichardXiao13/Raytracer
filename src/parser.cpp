@@ -6,6 +6,7 @@
 #include "materials/Glass.h"
 #include "materials/Plastic.h"
 #include "materials/Metal.h"
+#include "materials/Mirror.h"
 #include "Profiler.h"
 
 // From StackOverflow https://stackoverflow.com/questions/874134/find-out-if-string-ends-with-another-string-in-c
@@ -39,7 +40,7 @@ std::unique_ptr<Scene> readOBJ(std::istream& in) {
   // Will set scene filename later
   std::unique_ptr<Scene> scene = std::make_unique<Scene>(1024, 1024, "");
   std::vector<Vector3D> points;
-  std::unique_ptr<Material> currentMaterial = std::make_unique<Material>(Vector3D(0,0,0), Vector3D(0,0,0), 1.458, 0.0);
+  std::unique_ptr<Material> currentMaterial = std::make_unique<Material>();
   RGBAColor currentColor(1, 1, 1, 1);
   float minX = INF_D;
   float minY = INF_D;
@@ -130,8 +131,9 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
   std::string filename = lineInfo.at(3);
   std::unique_ptr<Scene> scene = std::make_unique<Scene>(width, height, filename);
   std::vector<Vector3D> points;
-  std::unique_ptr<Material> currentMaterial = std::make_unique<Material>(Vector3D(0,0,0), Vector3D(0,0,0), 1.458, 0.0);
+  std::unique_ptr<Material> currentMaterial = std::make_unique<Material>();
   RGBAColor currentColor(1, 1, 1, 1);
+  ObjectType currentObjectType = ObjectType::Diffuse;
 
   for (; std::getline(in, line);) {
     lineInfo = split(line, ' ');
@@ -150,6 +152,7 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
       std::unique_ptr<Material> material = std::make_unique<Material>(*currentMaterial);
       newObject->setColor(currentColor);
       newObject->setMaterial(std::move(material));
+      newObject->type = currentObjectType;
       scene->addObject(std::move(newObject));
     } else if (keyword == "sun") {
       float x = std::stof(lineInfo.at(1));
@@ -171,6 +174,7 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
       std::unique_ptr<Material> material = std::make_unique<Material>(*currentMaterial);
       newObject->setColor(currentColor);
       newObject->setMaterial(std::move(material));
+      newObject->type = currentObjectType;
       scene->addPlane(std::move(newObject));
     } else if (keyword == "bulb") {
       float x = std::stof(lineInfo.at(1));
@@ -200,31 +204,14 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
       std::unique_ptr<Material> material = std::make_unique<Material>(*currentMaterial);
       newObject->setColor(currentColor);
       newObject->setMaterial(std::move(material));
+      newObject->type = currentObjectType;
       scene->addObject(std::move(newObject));
     } else if (keyword == "expose") {
       float exposure = std::stof(lineInfo.at(1));
       scene->setExposure(exposure);
-    } else if (keyword == "shininess") {
-      float Sr = std::stof(lineInfo.at(1));
-      float Sg = Sr;
-      float Sb = Sr;
-      if (lineInfo.size() > 2) {
-        Sg = std::stof(lineInfo.at(2));
-        Sb = std::stof(lineInfo.at(3));
-      }
-      currentMaterial->shine = Vector3D(Sr, Sg, Sb);
     } else if (keyword == "bounces") {
       float d = std::stoi(lineInfo.at(1));
       scene->setMaxBounces(d);
-    } else if (keyword == "transparency") {
-      float Tr = std::stof(lineInfo.at(1));
-      float Tg = Tr;
-      float Tb = Tr;
-      if (lineInfo.size() > 2) {
-        Tg = std::stof(lineInfo.at(2));
-        Tb = std::stof(lineInfo.at(3));
-      }
-      currentMaterial->transparency = Vector3D(Tr, Tg, Tb);
     } else if (keyword == "aa") {
       int n = std::stoi(lineInfo.at(1));
       scene->setNumRays(n);
@@ -250,8 +237,8 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
     } else if (keyword == "fisheye") {
       scene->enableFisheye();
     } else if (keyword == "ior") {
-      float ior = std::stof(lineInfo.at(1));
-      currentMaterial->indexOfRefraction = ior;
+      float eta = std::stof(lineInfo.at(1));
+      currentMaterial->eta = eta;
     } else if (keyword == "gi") {
       int gi = std::stoi(lineInfo.at(1));
       scene->setGlobalIllumination(gi);
@@ -261,14 +248,25 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
       scene->setFocus(focus);
       scene->setLens(lens);
     } else if (keyword == "glass") {
-      currentMaterial = std::make_unique<Glass>();
+      currentObjectType = ObjectType::Refractive;
+      currentMaterial = std::make_unique<Material>(1.5f, 1.0f, 0.0f);
     } else if (keyword == "plastic") {
-      currentMaterial = std::make_unique<Plastic>();
+      currentObjectType = ObjectType::Diffuse;
+      currentMaterial = std::make_unique<Material>(1.0f, 0.25f, 0.01f);
     } else if (keyword == "none") {
-      currentMaterial = std::make_unique<Material>(Vector3D(0,0,0), Vector3D(0,0,0), 1.458, 0.0);
+      currentObjectType = ObjectType::Diffuse;
+      currentMaterial = std::make_unique<Material>();
     } else if (keyword == "copper") {
+      currentObjectType = ObjectType::Reflective;
       currentColor = RGBAColor(0.95597f, 0.63760f, 0.53948f);
-      currentMaterial = std::make_unique<Metal>(Vector3D(0.9553,0.9553,0.9553), Vector3D(0,0,0), 0.23883, 0.01);
+      currentMaterial = std::make_unique<Material>(1.0f, 0.23883f, 0.01f);
+    } else if (keyword == "mirror") {
+      currentObjectType = ObjectType::Reflective;
+      currentMaterial = std::make_unique<Material>(1.0f, 0.9f, 0.0f);
+    } else if (keyword == "diffuse") {
+      currentObjectType = ObjectType::Diffuse;
+    } else if (keyword == "refractive") {
+      currentObjectType = ObjectType::Refractive;
     }
   }
 

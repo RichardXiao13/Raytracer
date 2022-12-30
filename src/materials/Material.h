@@ -5,15 +5,10 @@
 
 class Material {
 public:
-  Material(
-    Vector3D shine,
-    Vector3D transparency,
-    float indexOfRefraction,
-    float roughness
-  ) :
-    shine(shine),
-    transparency(transparency),
-    indexOfRefraction(indexOfRefraction),
+  Material() : eta(1.0f), Kr(0.0f), roughness(0.0f) {};
+  Material(float eta, float Kr, float roughness) :
+    eta(eta),
+    Kr(Kr),
     roughness(roughness),
     roughnessDistribution(0, roughness) {};
   
@@ -25,9 +20,8 @@ public:
     return Vector3D(roughnessDistribution(rng), roughnessDistribution(rng), roughnessDistribution(rng));
   }
 
-  Vector3D shine;
-  Vector3D transparency;
-  float indexOfRefraction;
+  float eta;
+  float Kr;
   float roughness;
   std::normal_distribution<float> roughnessDistribution;
 };
