@@ -47,11 +47,11 @@ RGBAColor &RGBAColor::operator+=(const RGBAColor& other) {
 }
 
 RGBAColor operator*(const Vector3D& v, const RGBAColor& c) {
-  return RGBAColor(c.r * v[0], c.g * v[1], c.b * v[2], c.a);
+  return RGBAColor(c.r * v.x, c.g * v.y, c.b * v.z, c.a);
 }
 
 RGBAColor operator*(const RGBAColor& c, const Vector3D& v) {
-  return RGBAColor(c.r * v[0], c.g * v[1], c.b * v[2], c.a);
+  return RGBAColor(c.r * v.x, c.g * v.y, c.b * v.z, c.a);
 }
 
 RGBAColor clipColor(const RGBAColor& c) {

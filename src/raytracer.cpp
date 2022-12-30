@@ -18,9 +18,12 @@
 #include "Profiler.h"
 #include "macros.h"
 
+#define THRESHOLD 512
+
 void Scene::threadTaskDefault(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBar *counter) {
   RenderTask task;
   std::mt19937 rng;
+  int finishedPixels = 0;
 
   float invNumRays = 1.0 / numRays;
   int allowAntiAliasing = std::min(1, numRays - 1);
@@ -53,13 +56,18 @@ void Scene::threadTaskDefault(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgre
     }
 
     img->getPixel(y, x) = clipColor(avgColor);
-    counter->increment();
+    ++finishedPixels;
+    if (finishedPixels % THRESHOLD == 0) {
+      counter->increment(THRESHOLD);
+    }
   }
+  counter->increment(finishedPixels % THRESHOLD);
 }
 
 void Scene::threadTaskFisheye(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBar *counter) {
   RenderTask task;
   std::mt19937 rng;
+  int finishedPixels = 0;
 
   float invNumRays = 1.0 / numRays;
   int allowAntiAliasing = std::min(1, numRays - 1);
@@ -107,13 +115,18 @@ void Scene::threadTaskFisheye(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgre
     }
 
     img->getPixel(y, x) = clipColor(avgColor);
-    counter->increment();
+    ++finishedPixels;
+    if (finishedPixels % THRESHOLD == 0) {
+      counter->increment(THRESHOLD);
+    }
   }
+  counter->increment(finishedPixels % THRESHOLD);
 }
 
 void Scene::threadTaskDOF(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBar *counter) {
   RenderTask task;
   std::mt19937 rng;
+  int finishedPixels = 0;
 
   float invNumRays = 1.0 / numRays;
   int allowAntiAliasing = std::min(1, numRays - 1);
@@ -153,8 +166,12 @@ void Scene::threadTaskDOF(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBa
     }
 
     img->getPixel(y, x) = clipColor(avgColor);
-    counter->increment();
+    ++finishedPixels;
+    if (finishedPixels % THRESHOLD == 0) {
+      counter->increment(THRESHOLD);
+    }
   }
+  counter->increment(finishedPixels % THRESHOLD);
 }
 
 float getRayScaleX(float x, int w, int h) {
@@ -240,8 +257,7 @@ RGBAColor Scene::illuminate(const IntersectionInfo& info, int giDepth, UniformRN
     Vector3D globalIlluminationDirection = normalized(surfaceNormal + info.obj->sampleRay(rngInfo));
     float intensity = std::max(0.0f, dot(surfaceNormal, globalIlluminationDirection));
     if (intensity > 1e-4) {
-      RGBAColor giColor = raytrace(intersectionPoint, globalIlluminationDirection, 0, giDepth + 1, rngInfo);
-      newColor += giColor * intensity;
+      newColor += intensity * raytrace(intersectionPoint, globalIlluminationDirection, 0, giDepth + 1, rngInfo);
     }
   }
 
@@ -289,17 +305,14 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
   RGBAColor color = diffuse * illuminate(intersectInfo, giDepth, rngInfo);
 
   if (!isZero(transparency)) {
-    Vector3D normalizedSurfaceNormal = intersectInfo.normal;
     Vector3D point = intersectInfo.point;
 
-    Vector3D refractedDirection = refract(normalizedDirection, normalizedSurfaceNormal, ior, point, bias_);
-    RGBAColor refractedColor = refraction * raytrace(point, refractedDirection, depth + 1, giDepth, rngInfo);
-    color += refractedColor;
+    Vector3D refractedDirection = refract(normalizedDirection, intersectInfo.normal, ior, point, bias_);
+    color += refraction * raytrace(point, refractedDirection, depth + 1, giDepth, rngInfo);
   }
   if (!isZero(reflectance)) {
     Vector3D reflectedDirection = reflect(normalizedDirection, intersectInfo.normal);
-    RGBAColor reflectedColor = reflectance * raytrace(intersectInfo.point + bias_ * intersectInfo.normal, reflectedDirection, depth + 1, giDepth, rngInfo);
-    color += reflectedColor;
+    color += reflectance * raytrace(intersectInfo.point + bias_ * intersectInfo.normal, reflectedDirection, depth + 1, giDepth, rngInfo);
   }
   
   return color;

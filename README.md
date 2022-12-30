@@ -18,8 +18,8 @@ make
 Any feedback or issues found are very much welcome, as well as additional contributors!
 
 # TODOs
-* Fix Global Illumination
-    * Now samples correctly but still looks too dark
+* Fix Global Illumination - DONE!!
+    * Now samples correctly but still looks too dark - FIXED. Was clipping the color before averaging instead of the reverse
 
 * Check if random number generator is thread safe; if not... uh oh - Unnecessary due to refactoring Object class - DONE!!
 
