@@ -5,6 +5,7 @@
 #include "materials/Material.h"
 #include "materials/Glass.h"
 #include "materials/Plastic.h"
+#include "materials/Metal.h"
 #include "Profiler.h"
 
 // From StackOverflow https://stackoverflow.com/questions/874134/find-out-if-string-ends-with-another-string-in-c
@@ -265,6 +266,9 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
       currentMaterial = std::make_unique<Plastic>();
     } else if (keyword == "none") {
       currentMaterial = std::make_unique<Material>(Vector3D(0,0,0), Vector3D(0,0,0), 1.458, 0.0);
+    } else if (keyword == "copper") {
+      currentColor = RGBAColor(0.95597f, 0.63760f, 0.53948f);
+      currentMaterial = std::make_unique<Metal>(Vector3D(0.9553,0.9553,0.9553), Vector3D(0,0,0), 0.23883, 0.01);
     }
   }
 

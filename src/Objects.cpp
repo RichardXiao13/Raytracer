@@ -111,7 +111,7 @@ IntersectionInfo Triangle::intersect(const Vector3D& origin, const Vector3D& dir
 
   float b2 = dot(e1, intersectionPoint - p1);
   float b3 = dot(e2, intersectionPoint - p1);
-  float b1 = 1.0 - b3 - b2;
+  float b1 = 1.0f - b3 - b2;
 
   return (b1 < 0 || b1 > 1 || b2 < 0 || b2 > 1 || b3 < 0 || b3 > 1)
   ? IntersectionInfo{ INF_D, Vector3D(), Vector3D(), nullptr }
