@@ -123,7 +123,7 @@ Bounding Volume Hierarchy: Axis-Aligned Bounding Box using the Surface Area Heur
 
     6 threads: Takes 15.34 seconds on tenthousand.txt.
 
-    8 threads: Takes 11.01 seconds on tenthousand.txt.
+    8 threads: Takes 12.99 seconds on tenthousand.txt.
 
     16 threads: Takes 12.99 seconds on tenthousand.txt.
 
