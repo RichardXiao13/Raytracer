@@ -48,13 +48,7 @@ IntersectionInfo Sphere::intersect(const Vector3D& origin, const Vector3D& direc
   }
 
   float tOffset = sqrt(radiusSquared - distanceSquared);
-  float t = 0;
-
-  if (isInsideSphere) {
-    t = tc + tOffset;
-  } else {
-    t = tc - tOffset;
-  }
+  float t = isInsideSphere ? tc + tOffset : tc - tOffset;
 
   Vector3D intersectionPoint = t * normalizedDirection + origin;
   return { t, intersectionPoint, normalized(intersectionPoint - center), this };
@@ -75,10 +69,9 @@ IntersectionInfo Plane::intersect(const Vector3D& origin, const Vector3D& direct
 
   float t = dot((point - origin), normal) / dot(normalizedDirection, normal);
 
-  if (t < 0) {
-    return { INF_D, Vector3D(), Vector3D(), nullptr };
-  }
-  return { t, t * normalizedDirection + origin, normal, this };
+  return (t < 0)
+  ? IntersectionInfo{ INF_D, Vector3D(), Vector3D(), nullptr }
+  : IntersectionInfo{ t, t * normalizedDirection + origin, normal, this };
 }
 
 Triangle::Triangle(const Vector3D& p1, const Vector3D& p2, const Vector3D& p3)
@@ -120,9 +113,7 @@ IntersectionInfo Triangle::intersect(const Vector3D& origin, const Vector3D& dir
   float b3 = dot(e2, intersectionPoint - p1);
   float b1 = 1.0 - b3 - b2;
 
-  if (b1 < 0 || b1 > 1 || b2 < 0 || b2 > 1 || b3 < 0 || b3 > 1) {
-    return { INF_D, Vector3D(), Vector3D(), nullptr };
-  }
-
-  return { t, intersectionPoint, normal, this };
+  return (b1 < 0 || b1 > 1 || b2 < 0 || b2 > 1 || b3 < 0 || b3 > 1)
+  ? IntersectionInfo{ INF_D, Vector3D(), Vector3D(), nullptr }
+  : IntersectionInfo{ t, intersectionPoint, normal, this };
 }

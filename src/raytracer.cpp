@@ -40,7 +40,7 @@ void Scene::threadTaskDefault(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgre
       float Sx = getRayScaleX(x + rayDistribution(rng) * allowAntiAliasing, width_, height_);
       float Sy = getRayScaleY(y + rayDistribution(rng) * allowAntiAliasing, width_, height_);
 
-      RGBAColor color = clipColor(raytrace(eye, forward + Sx * right + Sy * up, 0, 0, rngInfo));
+      RGBAColor color = raytrace(eye, forward + Sx * right + Sy * up, 0, 0, rngInfo);
       if (color.a != 0) {
         avgColor += color;
         ++hits;
@@ -52,7 +52,7 @@ void Scene::threadTaskDefault(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgre
       avgColor.a = hits * invNumRays;
     }
 
-    img->getPixel(y, x) = avgColor;
+    img->getPixel(y, x) = clipColor(avgColor);
     counter->increment();
   }
 }
@@ -94,7 +94,7 @@ void Scene::threadTaskFisheye(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgre
       }
       forwardCopy = sqrt(1 - r_2) * normalizedForward;
 
-      RGBAColor color = clipColor(raytrace(eye, forwardCopy + Sx * right + Sy * up, 0, 0, rngInfo));
+      RGBAColor color = raytrace(eye, forwardCopy + Sx * right + Sy * up, 0, 0, rngInfo);
       if (color.a != 0) {
         avgColor += color;
         ++hits;
@@ -106,7 +106,7 @@ void Scene::threadTaskFisheye(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgre
       avgColor.a = hits * invNumRays;
     }
 
-    img->getPixel(y, x) = avgColor;
+    img->getPixel(y, x) = clipColor(avgColor);
     counter->increment();
   }
 }
@@ -140,7 +140,7 @@ void Scene::threadTaskDOF(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBa
       Vector3D origin = r * cos(weight) * lens_ / magnitude(right) * right + r * sin(weight) * lens_ / magnitude(up) * up + eye;
       rayDirection = intersectionPoint - origin;
 
-      RGBAColor color = clipColor(raytrace(origin, rayDirection, 0, 0, rngInfo));
+      RGBAColor color = raytrace(origin, rayDirection, 0, 0, rngInfo);
       if (color.a != 0) {
         avgColor += color;
         ++hits;
@@ -152,7 +152,7 @@ void Scene::threadTaskDOF(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBa
       avgColor.a = hits * invNumRays;
     }
 
-    img->getPixel(y, x) = avgColor;
+    img->getPixel(y, x) = clipColor(avgColor);
     counter->increment();
   }
 }
@@ -312,7 +312,7 @@ PNG *Scene::render(std::function<void (Scene *, PNG *, SafeQueue<RenderTask> *, 
   int update = std::max(4096.0, 0.01 * totalPixels);
 
   PNG *img = new PNG(width_, height_);
-\
+
   SafeQueue<RenderTask> tasks;
   SafeProgressBar counter(70, totalPixels, update);
 
