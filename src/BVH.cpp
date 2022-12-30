@@ -81,8 +81,8 @@ PartitionInfo BVH::findBestBucketSplit(Node *node) {
     extent.shrink(objects[i]->centroid);
   }
 
-  const Vector3D &maxPoint = extent.maxPoint();
-  const Vector3D &minPoint = extent.minPoint();
+  const Vector3D &maxPoint = extent.maxPoint;
+  const Vector3D &minPoint = extent.minPoint;
 
   for (int axis = 0; axis < 3; ++axis) {
     // hold extent of each bucket
@@ -114,12 +114,12 @@ PartitionInfo BVH::findBestBucketSplit(Node *node) {
       rightCount += bucketCount[N_BUCKETS - i - 1];
       rightBoxCount[N_BUCKETS - i - 2] = rightCount;
       
-      leftBox.expand(buckets[i].maxPoint());
-      leftBox.shrink(buckets[i].minPoint());
+      leftBox.expand(buckets[i].maxPoint);
+      leftBox.shrink(buckets[i].minPoint);
       leftBoxArea[i] = leftBox.surfaceArea();
 
-      rightBox.expand(buckets[N_BUCKETS - i - 1].maxPoint());
-      rightBox.shrink(buckets[N_BUCKETS - i - 1].minPoint());
+      rightBox.expand(buckets[N_BUCKETS - i - 1].maxPoint);
+      rightBox.shrink(buckets[N_BUCKETS - i - 1].minPoint);
       rightBoxArea[N_BUCKETS - i - 2] = rightBox.surfaceArea();
     }
 
@@ -138,20 +138,20 @@ PartitionInfo BVH::findBestBucketSplit(Node *node) {
   return { bestAxis, bestPosition, bestCost };
 }
 
-void Box::shrink(const Vector3D& minPoint) {
-  minPoint_.x = std::min(minPoint_.x, minPoint.x);
-  minPoint_.y = std::min(minPoint_.y, minPoint.y);
-  minPoint_.z = std::min(minPoint_.z, minPoint.z);
+void Box::shrink(const Vector3D& point) {
+  minPoint.x = std::min(minPoint.x, point.x);
+  minPoint.y = std::min(minPoint.y, point.y);
+  minPoint.z = std::min(minPoint.z, point.z);
 }
 
-void Box::expand(const Vector3D& maxPoint) {
-  maxPoint_.x = std::max(maxPoint_.x, maxPoint.x);
-  maxPoint_.y = std::max(maxPoint_.y, maxPoint.y);
-  maxPoint_.z = std::max(maxPoint_.z, maxPoint.z);
+void Box::expand(const Vector3D& point) {
+  maxPoint.x = std::max(maxPoint.x, point.x);
+  maxPoint.y = std::max(maxPoint.y, point.y);
+  maxPoint.z = std::max(maxPoint.z, point.z);
 }
 
 float Box::surfaceArea() {
-  Vector3D extent = maxPoint_ - minPoint_;
+  Vector3D extent = maxPoint - minPoint;
   // Cost uses surface area of a box, but don't need to multiply by 2 since everything is multiplied by 2 in the heuristic
   // Can remove multiply if desired
   return 2 * (extent.x * extent.y + extent.y * extent.z + extent.x * extent.z);

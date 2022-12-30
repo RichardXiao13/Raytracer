@@ -330,8 +330,8 @@ PNG *Scene::render(std::function<void (Scene *, PNG *, SafeQueue<RenderTask> *, 
   for (int i = 0; i < numThreads; ++i) {
     tasks.enqueue({ -1, -1 });
   }
-  for (auto it = threads.begin(); it != threads.end(); ++it) {
-    it->join();
+  for (size_t i = 0; i < threads.size(); ++i) {
+    threads[i].join();
   }
   expose(img);
   return img;

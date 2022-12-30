@@ -16,21 +16,14 @@ struct PartitionInfo {
 
 class Box {
 public:
-  Box() : minPoint_(INF_D, INF_D, INF_D), maxPoint_(-INF_D, -INF_D, -INF_D) {};
-  Box(const Vector3D& minPoint, const Vector3D& maxPoint) : minPoint_(minPoint), maxPoint_(maxPoint) {};
+  Box() : minPoint(INF_D, INF_D, INF_D), maxPoint(-INF_D, -INF_D, -INF_D) {};
+  Box(const Vector3D& minPoint, const Vector3D& maxPoint) : minPoint(minPoint), maxPoint(maxPoint) {};
   void shrink(const Vector3D& minPoint);
   void expand(const Vector3D& maxPoint);
-  float surfaceArea();
-  Vector3D &minPoint() {
-    return minPoint_;
-  }
-  Vector3D &maxPoint() {
-    return maxPoint_;
-  }
+  inline float surfaceArea();
 
-private:
-  Vector3D minPoint_;
-  Vector3D maxPoint_;
+  Vector3D minPoint;
+  Vector3D maxPoint;
 };
 
 /**
