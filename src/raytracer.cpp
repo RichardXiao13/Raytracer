@@ -217,6 +217,12 @@ RGBAColor Scene::illuminate(const IntersectionInfo& info, int depth, UniformRNGI
   const RGBAColor& objectColor = info.obj->color;
   const Vector3D& surfaceNormal = info.normal;
   RGBAColor directDiffuse;
+  RGBAColor indirectDiffuse;
+  RGBAColor directSpecular;
+  RGBAColor indirectSpecular;
+  const std::unique_ptr<Material> &material = info.obj->material;
+  const float n = material->n;
+  const MaterialType type = material->type;
   
   for (auto it = lights.begin(); it != lights.end(); ++it) {
     Vector3D normalizedLightDirection = normalized((*it)->direction);
@@ -224,8 +230,12 @@ RGBAColor Scene::illuminate(const IntersectionInfo& info, int depth, UniformRNGI
       continue;
     }
 
-    float intensity = std::max(0.0f, dot(surfaceNormal, normalizedLightDirection));
-    directDiffuse += (*it)->color * intensity;
+    float lambert = std::max(0.0f, dot(surfaceNormal, normalizedLightDirection));
+    directDiffuse += (*it)->color * lambert;
+
+    Vector3D reflectedLightDirection = reflect(normalizedLightDirection, surfaceNormal);
+    lambert = std::max(0.0f, -dot(surfaceNormal, reflectedLightDirection));
+    directSpecular += std::pow(lambert, n) * ((type == MaterialType::Metal) ? objectColor : (*it)->color);
   }
 
   for (auto it = bulbs.begin(); it != bulbs.end(); ++it) {
@@ -235,25 +245,37 @@ RGBAColor Scene::illuminate(const IntersectionInfo& info, int depth, UniformRNGI
     }
     
     float distance = magnitude((*it)->center - info.point);
-    float intensity = std::max(0.0f, dot(surfaceNormal, normalizedLightDirection)) / (distance * distance);
+    float invDistance =  1.0f / (distance * distance);
+    float lambert = std::max(0.0f, dot(surfaceNormal, normalizedLightDirection));
+    directDiffuse += (*it)->color * lambert * invDistance;
 
-    directDiffuse += (*it)->color * intensity;
+    Vector3D reflectedLightDirection = reflect(normalizedLightDirection, surfaceNormal);
+    lambert = std::max(0.0f, -dot(surfaceNormal, reflectedLightDirection));
+    directSpecular += std::pow(lambert, n) * invDistance * ((type == MaterialType::Metal) ? objectColor : (*it)->color);
   }
 
-  RGBAColor indirectDiffuse;
   for (int i = 0; i < globalIllumination; ++i) {
     Vector3D globalIlluminationDirection = normalized(surfaceNormal + info.obj->sampleRay(rngInfo));
-    float intensity = std::max(0.0f, dot(surfaceNormal, globalIlluminationDirection));
-    if (intensity > 1e-4) {
-      indirectDiffuse += intensity * raytrace(info.point, globalIlluminationDirection, depth + 1, rngInfo);
+    float lambert = std::max(0.0f, dot(surfaceNormal, globalIlluminationDirection));
+    if (lambert > 1e-4) {
+      RGBAColor giColor = lambert * raytrace(info.point, globalIlluminationDirection, depth + 1, rngInfo);
+      indirectDiffuse += giColor;
+
+      Vector3D reflectedLightDirection = reflect(globalIlluminationDirection, surfaceNormal);
+      lambert = std::max(0.0f, -dot(surfaceNormal, reflectedLightDirection));
+      indirectSpecular += std::pow(lambert, n) * ((type == MaterialType::Metal) ? objectColor : giColor);
     }
   }
-  RGBAColor newColor = directDiffuse * (1.0f/M_PI);
+
+  RGBAColor diffuse = directDiffuse * M_1_PI;
+  RGBAColor specular = directSpecular * M_1_PI;
   if (globalIllumination > 0) {
-    newColor += indirectDiffuse * (2.0f/globalIllumination);
+    diffuse += indirectDiffuse * (2.0f/globalIllumination);
+    specular += indirectSpecular * (2.0f/globalIllumination);
   }
 
-  return RGBAColor(objectColor.r * newColor.r, objectColor.g * newColor.g, objectColor.b * newColor.b, objectColor.a);
+  diffuse = RGBAColor(objectColor.r * diffuse.r, objectColor.g * diffuse.g, objectColor.b * diffuse.b, objectColor.a);
+  return diffuse * material->Kd + specular * material->Ks;
 }
 
 bool Scene::pointInShadow(const Vector3D& point, const Vector3D& lightDirection) {
@@ -278,10 +300,6 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
 
   const std::unique_ptr<Material> &material = intersectInfo.obj->material;
   float eta = material->eta;
-  if (material->roughness > 0) {
-    intersectInfo.normal += material->getPerturbation3D(rngInfo.rng);
-    intersectInfo.normal = normalized(intersectInfo.normal);
-  }
 
   bool isInside = dot(intersectInfo.normal, direction) > 0;
   
@@ -319,8 +337,15 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
         Vector3D reflectedDirection = reflect(normalizedDirection, intersectInfo.normal);
         color += Kr * raytrace(intersectInfo.point, reflectedDirection, depth + 1, rngInfo);
       }
-      }
       break;
+    }
+
+    case ObjectType::Metal: {
+      color += (1.0f - material->Ka) * illuminate(intersectInfo, depth, rngInfo);
+      Vector3D reflectedDirection = reflect(normalizedDirection, intersectInfo.normal);
+      color += (1.0f - material->Ka) * material->Kr * raytrace(intersectInfo.point, reflectedDirection, depth + 1, rngInfo);
+      break;
+    }
 
     default:
       // Unknown object?

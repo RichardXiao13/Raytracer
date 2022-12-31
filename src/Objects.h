@@ -28,6 +28,7 @@ enum class ObjectType {
   Diffuse,
   Reflective,
   Refractive,
+  Metal
 };
 
 class Object {
