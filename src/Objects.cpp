@@ -115,5 +115,5 @@ IntersectionInfo Triangle::intersect(const Vector3D& origin, const Vector3D& dir
 
   return (b1 < 0 || b1 > 1 || b2 < 0 || b2 > 1 || b3 < 0 || b3 > 1)
   ? IntersectionInfo{ INF_D, Vector3D(), Vector3D(), nullptr }
-  : IntersectionInfo{ t, intersectionPoint, normal, this };
+  : IntersectionInfo{ t, intersectionPoint, normalized(n1 * b1 + n2 * b2 + n3 * b3), this };
 }

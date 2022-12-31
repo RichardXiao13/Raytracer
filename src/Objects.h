@@ -98,4 +98,8 @@ public:
   Vector3D normal;
   Vector3D e1;
   Vector3D e2;
+  
+  Vector3D n1;
+  Vector3D n2;
+  Vector3D n3;
 };

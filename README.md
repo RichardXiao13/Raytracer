@@ -18,6 +18,10 @@ make
 Any feedback or issues found are very much welcome, as well as additional contributors!
 
 # TODOs
+* Add textures
+
+* Interpolate normals for smooth shading on triangles - DONE!!
+
 * Fix Global Illumination - DONE!!
     * Now samples correctly but still looks too dark - FIXED. Was clipping the color before averaging instead of the reverse
 

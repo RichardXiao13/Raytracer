@@ -32,6 +32,20 @@ std::vector<std::string> split(const std::string &s, char delim) {
   return elems;
 }
 
+std::vector<int> parseOBJPoint(const std::string &s) {
+  std::vector<int> indices;
+  std::istringstream iss(s);
+  std::string item;
+  while (std::getline(iss, item, '/')) {
+    if (!item.empty()) {
+      indices.push_back(stoi(item));
+    } else {
+      indices.push_back(-1);
+    }
+  }
+  return indices;
+}
+
 std::unique_ptr<Scene> readOBJ(std::istream& in) {
   std::string line;
   std::getline(in, line);
@@ -40,6 +54,7 @@ std::unique_ptr<Scene> readOBJ(std::istream& in) {
   // Will set scene filename later
   std::unique_ptr<Scene> scene = std::make_unique<Scene>(1024, 1024, "");
   std::vector<Vector3D> points;
+  std::vector<Vector3D> normals;
   std::unique_ptr<Material> currentMaterial = std::make_unique<Material>();
   RGBAColor currentColor(1, 1, 1, 1);
   float minX = INF_D;
@@ -68,15 +83,23 @@ std::unique_ptr<Scene> readOBJ(std::istream& in) {
       maxY = std::max(y, maxY);
       maxZ = std::max(z, maxZ);
       points.emplace_back(x, y, z);
+    } else if (keyword == "vn") {
+      float x = std::stof(lineInfo.at(1));
+      float y = std::stof(lineInfo.at(2));
+      float z = std::stof(lineInfo.at(3));
+      normals.emplace_back(x, y, z);
     } else if (keyword == "f") {
       // didn't deal with negative indices yet
       int numPoints = points.size();
-      int i = std::stoi(lineInfo.at(1)) - 1;
+      std::vector<int> vertex1 = parseOBJPoint(lineInfo.at(1));
+      int i = vertex1.at(0) - 1;
       int j;
       int k;
       for (size_t idx = 2; idx < lineInfo.size() - 1; ++idx) {
-        j = std::stoi(lineInfo.at(idx)) - 1;
-        k = std::stoi(lineInfo.at(idx + 1)) - 1;
+        std::vector<int> vertex2 = parseOBJPoint(lineInfo.at(idx));
+        std::vector<int> vertex3 = parseOBJPoint(lineInfo.at(idx + 1));
+        j = vertex2.at(0) - 1;
+        k = vertex3.at(0) - 1;
         // Try skipping invalid indices?
         if (i >= numPoints || j >= numPoints || k >= numPoints) {
           std::cout << "Indices out of range: " << i << ' ' << j << ' ' << k << std::endl;
@@ -86,6 +109,11 @@ std::unique_ptr<Scene> readOBJ(std::istream& in) {
         std::unique_ptr<Material> material = std::make_unique<Material>(*currentMaterial);
         newObject->setColor(currentColor);
         newObject->setMaterial(std::move(material));
+        if (vertex1.size() == 3) {
+          newObject->n1 = normals.at(vertex1.at(2) - 1);
+          newObject->n2 = normals.at(vertex2.at(2) - 1);
+          newObject->n3 = normals.at(vertex3.at(2) - 1);
+        }
         scene->addObject(std::move(newObject));
       }
     } else {
@@ -210,6 +238,9 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
       if (dot(scene->forward, newObject->centroid - scene->eye) > 0 && dot(scene->forward, newObject->normal) > 0) {
         newObject->normal *= -1.0f;
       }
+      newObject->n1 = newObject->normal;
+      newObject->n2 = newObject->normal;
+      newObject->n3 = newObject->normal;
       scene->addObject(std::move(newObject));
     } else if (keyword == "expose") {
       float exposure = std::stof(lineInfo.at(1));
