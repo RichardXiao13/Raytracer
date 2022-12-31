@@ -205,6 +205,11 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
       newObject->setColor(currentColor);
       newObject->setMaterial(std::move(material));
       newObject->type = currentObjectType;
+      // Orient the normal if the normal faces with the forward vector and the object is in front of the camera
+      // I think this works??
+      if (dot(scene->forward, newObject->centroid - scene->eye) > 0 && dot(scene->forward, newObject->normal) > 0) {
+        newObject->normal *= -1.0f;
+      }
       scene->addObject(std::move(newObject));
     } else if (keyword == "expose") {
       float exposure = std::stof(lineInfo.at(1));

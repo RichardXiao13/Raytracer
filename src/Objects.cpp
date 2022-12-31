@@ -90,10 +90,6 @@ Triangle::Triangle(const Vector3D& p1, const Vector3D& p2, const Vector3D& p3)
   Vector3D p2p1Diff = p2 - p1;
 
   normal = normalized(cross(p2p1Diff, p3p1Diff));
-  if (determinant(p1, p2, p3) > 0) {
-    normal *= -1.0f;
-  }
-
 
   Vector3D a1 = cross(p3p1Diff, normal);
   Vector3D a2 = cross(p2p1Diff, normal);
