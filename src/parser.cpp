@@ -252,7 +252,7 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
       currentMaterial = std::make_unique<Material>(1.5f, 1.0f, 0.0f);
     } else if (keyword == "plastic") {
       currentObjectType = ObjectType::Diffuse;
-      currentMaterial = std::make_unique<Material>(1.0f, 0.25f, 0.01f);
+      currentMaterial = std::make_unique<Material>(1.0f, 0.25f, 0.1f);
     } else if (keyword == "none") {
       currentObjectType = ObjectType::Diffuse;
       currentMaterial = std::make_unique<Material>();

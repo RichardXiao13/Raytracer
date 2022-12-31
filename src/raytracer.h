@@ -26,7 +26,7 @@ struct UniformRNGInfo {
 class Scene {
 public: 
   Scene(int w, int h, const std::string& file)
-  : width_(w), height_(h), filename_(file), eye(0, 0, 0), forward(0, 0, -1), right(1, 0, 0), up(0, 1, 0) {};
+  : width_(w), height_(h), filename_(file) {};
   void addObject(std::unique_ptr<Object> obj);
   void addPlane(std::unique_ptr<Plane> plane);
   void addLight(std::unique_ptr<Light> light);
@@ -90,6 +90,11 @@ public:
     lens_ = l;
   }
 
+  Vector3D eye{0, 0, 0}; // POINT; NOT NORMALIZED
+  Vector3D forward{0, 0, -1}; // NOT NORMALIZED; LONGER VECTOR FOR NARROWER FIELD OF VIEW
+  Vector3D right{1, 0, 0}; // NORMALIZED
+  Vector3D up{0, 1, 0}; // NORMALIZED
+
 private:
   RGBAColor illuminate(const IntersectionInfo& info, int depth, UniformRNGInfo &rngInfo);
   RGBAColor raytrace(const Vector3D& origin, const Vector3D& direction, int depth, UniformRNGInfo &rngInfo);
@@ -114,10 +119,6 @@ private:
   int width_;
   int height_;
   std::string filename_;
-  Vector3D eye; // POINT; NOT NORMALIZED
-  Vector3D forward; // NOT NORMALIZED; LONGER VECTOR FOR NARROWER FIELD OF VIEW
-  Vector3D right; // NORMALIZED
-  Vector3D up; // NORMALIZED
   float bias_ = 1e-4;
   float exposure = -1.0;
   int maxBounces = 4;

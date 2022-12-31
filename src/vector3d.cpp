@@ -91,6 +91,10 @@ bool isZero(const Vector3D& v) {
   return v.x + v.y + v.z == 0.0f;
 }
 
+float determinant(const Vector3D& v1, const Vector3D& v2, const Vector3D& v3) {
+  return v1.x * (v2.y * v3.z - v2.z * v3.y) - v2.x * (v1.y * v3.z - v1.z * v3.y) + v3.x * (v2.z * v1.y - v2.y * v1.z);
+}
+
 std::ostream& operator<<(std::ostream& out, const Vector3D& v) {
   out << '<' << v.x << ", " << v.y << ", " << v.z << '>';
   return out;

@@ -2,22 +2,20 @@
 #include "vector3d.h"
 
 Vector3D reflect(const Vector3D& incident, const Vector3D& normal) {
-  return incident - 2 * dot(normal, incident) * normal;
+  return incident - 2.0f * dot(normal, incident) * normal;
 }
 
-Vector3D refract(const Vector3D& incident, Vector3D& normal, float eta, Vector3D &point, float bias) {
-  float enteringCosine = -dot(normal, incident);
-  
-  float k = 1.0 - eta * eta * (1.0 - enteringCosine * enteringCosine);
-
-  if (k >= 0) {
-    point = point - bias * normal;
-    return eta * incident + (eta * enteringCosine - sqrt(k)) * normal;
+// refract shouldn't be called if there is total internal reflection given by fresnel
+Vector3D refract(const Vector3D& incident, Vector3D& normal, float eta) {
+  float enteringCosine = dot(normal, incident);
+  if (enteringCosine < 0) {
+    enteringCosine = -enteringCosine;
+    eta = 1.0f/eta;
   } else {
-    // total internal reflection
-    point = point + bias * normal;
-    return reflect(incident, normal);
+    normal *= -1.0f;
   }
+  float k = 1.0 - eta * eta * (1.0 - enteringCosine * enteringCosine);
+  return eta * incident + (eta * enteringCosine - sqrt(k)) * normal;
 }
 
 float fresnel(const Vector3D &incident, const Vector3D &normal, const float eta) { 

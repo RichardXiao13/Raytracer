@@ -26,6 +26,7 @@ public:
   friend float dot(const Vector3D& v1, const Vector3D& v2);
   friend Vector3D cross(const Vector3D& v1, const Vector3D& v2);
   friend bool isZero(const Vector3D& v);
+  friend float determinant(const Vector3D& v1, const Vector3D& v2, const Vector3D& v3);
 
   float x;
   float y;

@@ -20,6 +20,6 @@ Vector3D reflect(const Vector3D& incident, const Vector3D& normal);
  * point - intersection point
  * bias - small shift to the intersection point
 */
-Vector3D refract(const Vector3D& incident, Vector3D& normal, float eta, Vector3D &point, float bias);
+Vector3D refract(const Vector3D& incident, Vector3D& normal, float eta);
 
 float fresnel(const Vector3D &incident, const Vector3D &normal, const float eta);

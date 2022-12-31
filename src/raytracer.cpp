@@ -216,12 +216,11 @@ IntersectionInfo Scene::findClosestObject(const Vector3D& origin, const Vector3D
 RGBAColor Scene::illuminate(const IntersectionInfo& info, int depth, UniformRNGInfo &rngInfo) {
   const RGBAColor& objectColor = info.obj->color;
   const Vector3D& surfaceNormal = info.normal;
-  const Vector3D& intersectionPoint = info.point + bias_ * surfaceNormal;
   RGBAColor directDiffuse;
   
   for (auto it = lights.begin(); it != lights.end(); ++it) {
     Vector3D normalizedLightDirection = normalized((*it)->direction);
-    if (pointInShadow(intersectionPoint, normalizedLightDirection)) {
+    if (pointInShadow(info.point, normalizedLightDirection)) {
       continue;
     }
 
@@ -230,12 +229,12 @@ RGBAColor Scene::illuminate(const IntersectionInfo& info, int depth, UniformRNGI
   }
 
   for (auto it = bulbs.begin(); it != bulbs.end(); ++it) {
-    Vector3D normalizedLightDirection = normalized((*it)->getLightDirection(intersectionPoint));
-    if (pointInShadow(intersectionPoint, *it)) {
+    Vector3D normalizedLightDirection = normalized((*it)->getLightDirection(info.point));
+    if (pointInShadow(info.point, *it)) {
       continue;
     }
     
-    float distance = magnitude((*it)->center - intersectionPoint);
+    float distance = magnitude((*it)->center - info.point);
     float intensity = std::max(0.0f, dot(surfaceNormal, normalizedLightDirection)) / (distance * distance);
 
     directDiffuse += (*it)->color * intensity;
@@ -246,7 +245,7 @@ RGBAColor Scene::illuminate(const IntersectionInfo& info, int depth, UniformRNGI
     Vector3D globalIlluminationDirection = normalized(surfaceNormal + info.obj->sampleRay(rngInfo));
     float intensity = std::max(0.0f, dot(surfaceNormal, globalIlluminationDirection));
     if (intensity > 1e-4) {
-      indirectDiffuse += intensity * raytrace(intersectionPoint, globalIlluminationDirection, depth + 1, rngInfo);
+      indirectDiffuse += intensity * raytrace(info.point, globalIlluminationDirection, depth + 1, rngInfo);
     }
   }
   RGBAColor newColor = directDiffuse * (1.0f/M_PI);
@@ -279,20 +278,18 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
 
   const std::unique_ptr<Material> &material = intersectInfo.obj->material;
   float eta = material->eta;
-  // if (material->roughness > 0) {
-  //   std::cout << "huh";
-  //   intersectInfo.normal += material->getPerturbation3D(rngInfo.rng);
-  //   intersectInfo.normal = normalized(intersectInfo.normal);
-  // }
-
-  // Make normals point away from incident ray
-  if (dot(intersectInfo.normal, direction) > 0) {
-    intersectInfo.normal *= -1;
-  } else {
-    eta = 1.0f / eta;
+  if (material->roughness > 0) {
+    intersectInfo.normal += material->getPerturbation3D(rngInfo.rng);
+    intersectInfo.normal = normalized(intersectInfo.normal);
   }
+
+  bool isInside = dot(intersectInfo.normal, direction) > 0;
   
   RGBAColor color;
+  Vector3D point = intersectInfo.point;
+  intersectInfo.point = isInside
+  ? intersectInfo.point - bias_ * intersectInfo.normal
+  : intersectInfo.point + bias_ * intersectInfo.normal;
 
   switch (intersectInfo.obj->type) {
     case ObjectType::Diffuse: {
@@ -302,7 +299,7 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
 
     case ObjectType::Reflective: {
       Vector3D reflectedDirection = reflect(normalizedDirection, intersectInfo.normal);
-      color += material->Kr * raytrace(intersectInfo.point + bias_ * intersectInfo.normal, reflectedDirection, depth + 1, rngInfo);
+      color += material->Kr * raytrace(intersectInfo.point, reflectedDirection, depth + 1, rngInfo);
       break;
     }
 
@@ -312,13 +309,15 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
       float Kt = 1 - Kr;
 
       if (Kt > 0) {
-        Vector3D point = intersectInfo.point;
-        Vector3D refractedDirection = refract(normalizedDirection, intersectInfo.normal, eta, point, bias_);
+        point = isInside
+        ? point + bias_ * intersectInfo.normal
+        : point - bias_ * intersectInfo.normal;
+        Vector3D refractedDirection = refract(normalizedDirection, intersectInfo.normal, eta);
         color += Kt * raytrace(point, refractedDirection, depth + 1, rngInfo);
       }
       if (Kr > 0) {
         Vector3D reflectedDirection = reflect(normalizedDirection, intersectInfo.normal);
-        color += Kr * raytrace(intersectInfo.point + bias_ * intersectInfo.normal, reflectedDirection, depth + 1, rngInfo);
+        color += Kr * raytrace(intersectInfo.point, reflectedDirection, depth + 1, rngInfo);
       }
       }
       break;

@@ -84,7 +84,6 @@ public:
   Plane(float A1, float B1, float C1, float D1);
   IntersectionInfo intersect(const Vector3D& origin, const Vector3D& direction);
 
-private:
   Vector3D normal;
   Vector3D point;
 };
@@ -94,7 +93,6 @@ public:
   Triangle(const Vector3D& p1, const Vector3D& p2, const Vector3D& p3);
   IntersectionInfo intersect(const Vector3D& origin, const Vector3D& direction);
 
-private:
   Vector3D p1;
   Vector3D normal;
   Vector3D e1;

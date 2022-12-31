@@ -9,8 +9,6 @@ materials/Material.o materials/Glass.o materials/Plastic.o materials/Metal.o mat
 # Optimization level:
 OPT = -Ofast
 
-OPT = -O0
-
 # Compiler/linker config and object/depfile directory:
 CXX = clang++
 LD = clang++
