@@ -18,6 +18,8 @@ public:
 
   friend RGBAColor operator*(float scalar, const RGBAColor& c);
   friend RGBAColor operator*(const RGBAColor& c, float scalar);
+  friend RGBAColor operator/(float scalar, const RGBAColor& c);
+  friend RGBAColor operator/(const RGBAColor& c, float scalar);
   RGBAColor operator+(const RGBAColor& other) const;
   RGBAColor &operator+=(const RGBAColor& other);
   RGBAColor &operator*=(float scalar);

@@ -3,6 +3,12 @@
 #include "macros.h"
 #include "vector3d.h"
 
+struct UniformRNGInfo {
+  UniformRNGInfo(std::mt19937 &rng, std::uniform_real_distribution<float> &distribution) : rng(rng), distribution(distribution) {};
+  std::mt19937 &rng;
+  std::uniform_real_distribution<float> &distribution;
+};
+
 /**
  * reflect - reflect a ray using the incident direction and surface normal.
  * 

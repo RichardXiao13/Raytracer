@@ -7,6 +7,7 @@
 #include "Objects.h"
 #include "SafeQueue.h"
 #include "SafeProgressBar.h"
+#include "math_utils.h"
 
 // A ray has origin 'eye' and direction 'forward' + Sx * 'right' + Sy * 'up'
 float getRayScaleX(float x, int w, int h);
@@ -15,12 +16,6 @@ float getRayScaleY(float y, int w, int h);
 struct RenderTask {
   int x;
   int y;
-};
-
-struct UniformRNGInfo {
-  UniformRNGInfo(std::mt19937 &rng, std::uniform_real_distribution<float> &distribution) : rng(rng), distribution(distribution) {};
-  std::mt19937 &rng;
-  std::uniform_real_distribution<float> &distribution;
 };
 
 class Scene {
@@ -96,8 +91,7 @@ public:
   Vector3D up{0, 1, 0}; // NORMALIZED
 
 private:
-  RGBAColor illuminate(const IntersectionInfo& info, int depth, UniformRNGInfo &rngInfo);
-  RGBAColor illuminateSpecular(const IntersectionInfo& info, int depth, UniformRNGInfo &rngInfo);
+  RGBAColor illuminate(const Vector3D &rayDirection, const IntersectionInfo& info, int depth, UniformRNGInfo &rngInfo);
   RGBAColor raytrace(const Vector3D& origin, const Vector3D& direction, int depth, UniformRNGInfo &rngInfo);
   IntersectionInfo findClosestObject(const Vector3D& origin, const Vector3D& direction);
   void expose(PNG *img);

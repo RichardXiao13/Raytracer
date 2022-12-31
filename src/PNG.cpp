@@ -25,6 +25,16 @@ RGBAColor operator*(const RGBAColor& c, float scalar) {
   return RGBAColor(scalar * c.r, scalar * c.g, scalar * c.b, c.a);
 }
 
+RGBAColor operator/(float scalar, const RGBAColor& c) {
+  float inv = 1.0f / scalar;
+  return RGBAColor(inv * c.r, inv * c.g, inv * c.b, c.a);
+}
+
+RGBAColor operator/(const RGBAColor& c, float scalar) {
+  float inv = 1.0f / scalar;
+  return RGBAColor(inv * c.r, inv * c.g, inv * c.b, c.a);
+}
+
 RGBAColor &RGBAColor::operator*=(float scalar) {
   r *= scalar;
   g *= scalar;

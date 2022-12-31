@@ -3,15 +3,6 @@
 #include "Objects.h"
 #include "vector3d.h"
 
-Vector3D Object::sampleRay(UniformRNGInfo &rngInfo) {
-  float phi = rngInfo.distribution(rngInfo.rng) * 2 * M_PI;
-  float costheta = (rngInfo.distribution(rngInfo.rng) - 0.5) * 2;
-  float u = rngInfo.distribution(rngInfo.rng);
-  float theta = acos(costheta);
-  float r = cbrt(u);
-  return Vector3D(r * sin(theta) * cos(phi), r * sin(theta) * sin(phi), r * cos(theta));
-}
-
 Vector3D Bulb::getLightDirection(const Vector3D& point) const {
   return center - point;
 }

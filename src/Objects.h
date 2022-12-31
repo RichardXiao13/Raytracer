@@ -7,6 +7,7 @@
 #include "raytracer.h"
 
 class Object;
+class Material;
 struct UniformRNGInfo;
 
 /**
@@ -43,8 +44,6 @@ public:
   void setMaterial(std::unique_ptr<Material> mat) {
     material = std::move(mat);
   }
-
-  virtual Vector3D sampleRay(UniformRNGInfo &rngInfo);
 
   RGBAColor color;
   std::unique_ptr<Material> material;

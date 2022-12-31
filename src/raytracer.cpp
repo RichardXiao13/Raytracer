@@ -213,7 +213,7 @@ IntersectionInfo Scene::findClosestObject(const Vector3D& origin, const Vector3D
   return closestInfo;
 }
 
-RGBAColor Scene::illuminate(const IntersectionInfo& info, int depth, UniformRNGInfo &rngInfo) {
+RGBAColor Scene::illuminate(const Vector3D &rayDirection, const IntersectionInfo& info, int depth, UniformRNGInfo &rngInfo) {
   const RGBAColor& objectColor = info.obj->color;
   const Vector3D& surfaceNormal = info.normal;
   RGBAColor directDiffuse;
@@ -255,14 +255,14 @@ RGBAColor Scene::illuminate(const IntersectionInfo& info, int depth, UniformRNGI
   }
 
   for (int i = 0; i < globalIllumination; ++i) {
-    Vector3D globalIlluminationDirection = normalized(surfaceNormal + info.obj->sampleRay(rngInfo));
-    float lambert = std::max(0.0f, dot(surfaceNormal, globalIlluminationDirection));
-    if (lambert > 1e-4) {
-      RGBAColor giColor = lambert * raytrace(info.point, globalIlluminationDirection, depth + 1, rngInfo);
+    Vector3D inDirection = material->brdf->sample(rayDirection, surfaceNormal, rngInfo);
+    float pdf = material->brdf->pdf(inDirection, surfaceNormal);
+    if (pdf > 1e-4) {
+      RGBAColor giColor = raytrace(info.point, inDirection, depth + 1, rngInfo) * material->brdf->evaluate(inDirection, rayDirection, surfaceNormal) / pdf;
       indirectDiffuse += giColor;
 
-      Vector3D reflectedLightDirection = reflect(globalIlluminationDirection, surfaceNormal);
-      lambert = std::max(0.0f, -dot(surfaceNormal, reflectedLightDirection));
+      Vector3D reflectedLightDirection = reflect(inDirection, surfaceNormal);
+      float lambert = std::max(0.0f, -dot(surfaceNormal, reflectedLightDirection));
       indirectSpecular += std::pow(lambert, n) * ((type == MaterialType::Metal) ? objectColor : giColor);
     }
   }
@@ -270,8 +270,8 @@ RGBAColor Scene::illuminate(const IntersectionInfo& info, int depth, UniformRNGI
   RGBAColor diffuse = directDiffuse * M_1_PI;
   RGBAColor specular = directSpecular * M_1_PI;
   if (globalIllumination > 0) {
-    diffuse += indirectDiffuse * (2.0f/globalIllumination);
-    specular += indirectSpecular * (2.0f/globalIllumination);
+    diffuse += indirectDiffuse / globalIllumination * M_1_PI;
+    specular += indirectSpecular / globalIllumination * M_1_PI;
   }
 
   diffuse = RGBAColor(objectColor.r * diffuse.r, objectColor.g * diffuse.g, objectColor.b * diffuse.b, objectColor.a);
@@ -311,7 +311,7 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
 
   switch (intersectInfo.obj->type) {
     case ObjectType::Diffuse: {
-      color += illuminate(intersectInfo, depth, rngInfo);
+      color += illuminate(normalizedDirection, intersectInfo, depth, rngInfo);
       break;
     }
 
@@ -341,7 +341,7 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
     }
 
     case ObjectType::Metal: {
-      color += (1.0f - material->Ka) * illuminate(intersectInfo, depth, rngInfo);
+      color += (1.0f - material->Ka) * illuminate(normalizedDirection, intersectInfo, depth, rngInfo);
       Vector3D reflectedDirection = reflect(normalizedDirection, intersectInfo.normal);
       color += (1.0f - material->Ka) * material->Kr * raytrace(intersectInfo.point, reflectedDirection, depth + 1, rngInfo);
       break;

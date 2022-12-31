@@ -32,3 +32,4 @@
 
 #define INF_D std::numeric_limits<float>::infinity()
 #define ONE_THIRD 1.0 / 3.0
+#define M_1_SQRT_3 1.0f / sqrtf(3.0)
