@@ -294,7 +294,7 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
     } else if (keyword == "copper") {
       currentObjectType = ObjectType::Metal;
       currentColor = RGBAColor(0.95597f, 0.63760f, 0.53948f);
-      currentMaterial = std::make_unique<Material>(0.23883f, 0.9553f, 0.7f, 0.3f, 0.0447f, 0.078125f, MaterialType::Metal);
+      currentMaterial = std::make_unique<Material>(0.23883f, 0.9553f, 0.9f, 0.1f, 0.0447f, 0.078125f, MaterialType::Metal);
     } else if (keyword == "mirror") {
       currentObjectType = ObjectType::Reflective;
       currentMaterial = std::make_unique<Material>(1.0f, 0.9f, 1.0f, 0.0f, 0.0f, 0.0f, MaterialType::Dialectric);

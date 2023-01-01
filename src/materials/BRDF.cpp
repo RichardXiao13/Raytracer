@@ -35,7 +35,7 @@ Vector3D LambertBRDF::sample(const Vector3D &outDirection, const Vector3D &norma
 }
 
 float LambertBRDF::pdf(const Vector3D &inDirection, const Vector3D &normal) {
-  return std::max(0.0f, dot(inDirection, normal)) * 0.5f * M_1_PI;
+  return 0.5f * M_1_PI;
 }
 
 float LambertBRDF::evaluate(const Vector3D &inDirection, const Vector3D &outDirection, const Vector3D &normal) {
