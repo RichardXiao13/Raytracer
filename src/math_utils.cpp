@@ -35,4 +35,4 @@ float fresnel(const Vector3D &incident, const Vector3D &normal, const float eta)
   return (Rs * Rs + Rp * Rp) / 2; 
   // As a consequence of the conservation of energy, transmittance is given by:
   // kt = 1 - kr;
-} 
+}

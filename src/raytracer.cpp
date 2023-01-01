@@ -223,6 +223,8 @@ RGBAColor Scene::illuminate(const Vector3D &rayDirection, const IntersectionInfo
   const std::unique_ptr<Material> &material = info.obj->material;
   const float n = material->n;
   const MaterialType type = material->type;
+  const BRDF *diffuseBRDF = material->difffuseBRDF;
+  const BRDF *specularBRDF = material->specularBRDF;
   
   for (auto it = lights.begin(); it != lights.end(); ++it) {
     Vector3D normalizedLightDirection = normalized((*it)->direction);
@@ -230,11 +232,11 @@ RGBAColor Scene::illuminate(const Vector3D &rayDirection, const IntersectionInfo
       continue;
     }
 
-    float lambert = std::max(0.0f, dot(surfaceNormal, normalizedLightDirection));
+    float lambert = clipDot(surfaceNormal, normalizedLightDirection);
     directDiffuse += (*it)->color * lambert;
 
     Vector3D reflectedLightDirection = reflect(normalizedLightDirection, surfaceNormal);
-    lambert = std::max(0.0f, -dot(surfaceNormal, reflectedLightDirection));
+    lambert = clipDot(surfaceNormal, -1 * reflectedLightDirection);
     directSpecular += std::pow(lambert, n) * ((type == MaterialType::Metal) ? objectColor : (*it)->color);
   }
 
@@ -246,26 +248,27 @@ RGBAColor Scene::illuminate(const Vector3D &rayDirection, const IntersectionInfo
     
     float distance = magnitude((*it)->center - info.point);
     float invDistance =  1.0f / (distance * distance);
-    float lambert = std::max(0.0f, dot(surfaceNormal, normalizedLightDirection));
+    float lambert = clipDot(surfaceNormal, normalizedLightDirection);
     directDiffuse += (*it)->color * lambert * invDistance;
 
     Vector3D reflectedLightDirection = reflect(normalizedLightDirection, surfaceNormal);
-    lambert = std::max(0.0f, -dot(surfaceNormal, reflectedLightDirection));
+    lambert = clipDot(surfaceNormal, -1 * reflectedLightDirection);
     directSpecular += std::pow(lambert, n) * invDistance * ((type == MaterialType::Metal) ? objectColor : (*it)->color);
   }
 
+  // accumulate diffuse reflection
   for (int i = 0; i < globalIllumination; ++i) {
-    Vector3D inDirection = material->brdf->sample(rayDirection, surfaceNormal, rngInfo);
-    float pdf = material->brdf->pdf(inDirection, surfaceNormal);
-    if (pdf > 1e-4) {
-      float attenuation = material->brdf->evaluate(inDirection, rayDirection, surfaceNormal) / pdf;
-      RGBAColor giColor = raytrace(info.point, inDirection, depth + 1, rngInfo) * attenuation;
-      indirectDiffuse += giColor;
-
-      Vector3D reflectedLightDirection = reflect(inDirection, surfaceNormal);
-      float lambert = std::max(0.0f, -dot(surfaceNormal, reflectedLightDirection));
-      indirectSpecular += std::pow(lambert, n) * ((type == MaterialType::Metal) ? objectColor * attenuation : giColor);
-    }
+    Vector3D inDirection = diffuseBRDF->sample(rayDirection, surfaceNormal, rngInfo);
+    float attenuation = diffuseBRDF->integrate(inDirection, rayDirection, surfaceNormal);
+    RGBAColor giColor = raytrace(info.point, inDirection, depth + 1, rngInfo) * attenuation;
+    indirectDiffuse += giColor;
+  }
+  // accumulate specular reflection
+  for (int i = 0; i < globalIllumination; ++i) {
+    Vector3D inDirection = specularBRDF->sample(rayDirection, surfaceNormal, rngInfo);
+    float attenuation = specularBRDF->integrate(inDirection, rayDirection, surfaceNormal);
+    RGBAColor giColor = raytrace(info.point, inDirection, depth + 1, rngInfo) * attenuation;
+    indirectSpecular += giColor;
   }
 
   RGBAColor diffuse = directDiffuse;

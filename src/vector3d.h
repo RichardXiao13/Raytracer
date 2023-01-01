@@ -24,6 +24,7 @@ public:
   friend float magnitude(const Vector3D& v);
   friend Vector3D normalized(const Vector3D& v);
   friend float dot(const Vector3D& v1, const Vector3D& v2);
+  friend float clipDot(const Vector3D& v1, const Vector3D& v2);
   friend Vector3D cross(const Vector3D& v1, const Vector3D& v2);
   friend bool isZero(const Vector3D& v);
   friend float determinant(const Vector3D& v1, const Vector3D& v2, const Vector3D& v3);

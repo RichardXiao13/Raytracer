@@ -79,6 +79,10 @@ float dot(const Vector3D& v1, const Vector3D& v2) {
   return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
 }
 
+float clipDot(const Vector3D& v1, const Vector3D& v2) {
+  return std::max(0.0f, dot(v1, v2));
+}
+
 /**
  * |i     j      k|
  * |v1.x v1.y v1.z|

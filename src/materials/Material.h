@@ -12,7 +12,7 @@ enum class MaterialType {
 class Material {
 public:
   Material() : eta(1.0f), Kr(0.0f), Kd(1.0f), Ks(0.0f), Ka(0.0f), roughness(0.0f),
-  type(MaterialType::Dialectric), brdf(new LambertBRDF()) {};
+  type(MaterialType::Dialectric), difffuseBRDF(new LambertBRDF()), specularBRDF(new CookTorranceGGX(0.0f, 1.0f, &conductorFresnel)) {};
   Material(float eta, float Kr, float Kd, float Ks, float Ka, float roughness, MaterialType type) :
     eta(eta),
     Kr(Kr),
@@ -22,7 +22,8 @@ public:
     roughness(roughness),
     n(1.0f/roughness),
     type(type),
-    brdf(new LambertBRDF()) {};
+    difffuseBRDF(new LambertBRDF()),
+    specularBRDF(new CookTorranceGGX(roughness, eta, &conductorFresnel)) {};
   
   float eta;
   float Kr;
@@ -32,5 +33,6 @@ public:
   float roughness;
   float n;
   MaterialType type;
-  BRDF *brdf;
+  BRDF *difffuseBRDF;
+  BRDF *specularBRDF;
 };
