@@ -66,6 +66,10 @@ Vector3D operator-(const Vector3D& v, float scalar) {
   return Vector3D(v.x - scalar, v.y - scalar, v.z - scalar);
 }
 
+Vector3D Vector3D::operator-() const {
+  return Vector3D(-x, -y, -z);
+}
+
 float magnitude(const Vector3D& v) {
   return std::sqrt(dot(v, v));
 }

@@ -290,62 +290,8 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
   IntersectionInfo intersectInfo = findClosestObject(origin, normalizedDirection);
   
   if (intersectInfo.obj == nullptr) return RGBAColor(0, 0, 0, 0);
-
-  const std::unique_ptr<Material> &material = intersectInfo.obj->material;
-  float eta = material->eta;
-
-  bool isInside = dot(intersectInfo.normal, direction) > 0;
   
-  RGBAColor color;
-  Vector3D point = intersectInfo.point;
-  intersectInfo.point = isInside
-  ? intersectInfo.point - bias_ * intersectInfo.normal
-  : intersectInfo.point + bias_ * intersectInfo.normal;
-
-  switch (intersectInfo.obj->type) {
-    case ObjectType::Diffuse: {
-      color += illuminate(normalizedDirection, intersectInfo, depth, rngInfo);
-      break;
-    }
-
-    case ObjectType::Reflective: {
-      Vector3D reflectedDirection = reflect(normalizedDirection, intersectInfo.normal);
-      color += material->Kr * raytrace(intersectInfo.point, reflectedDirection, depth + 1, rngInfo);
-      break;
-    }
-
-    case ObjectType::Refractive: {
-      // get reflective and refractive contribution
-      float Kr = fresnel(normalizedDirection, intersectInfo.normal, eta);
-      float Kt = 1 - Kr;
-
-      if (Kt > 0) {
-        point = isInside
-        ? point + bias_ * intersectInfo.normal
-        : point - bias_ * intersectInfo.normal;
-        Vector3D refractedDirection = refract(normalizedDirection, intersectInfo.normal, eta);
-        color += Kt * raytrace(point, refractedDirection, depth + 1, rngInfo);
-      }
-      if (Kr > 0) {
-        Vector3D reflectedDirection = reflect(normalizedDirection, intersectInfo.normal);
-        color += Kr * raytrace(intersectInfo.point, reflectedDirection, depth + 1, rngInfo);
-      }
-      break;
-    }
-
-    case ObjectType::Metal: {
-      color += illuminate(normalizedDirection, intersectInfo, depth, rngInfo);
-      Vector3D reflectedDirection = reflect(normalizedDirection, intersectInfo.normal);
-      color += material->Kr * raytrace(intersectInfo.point, reflectedDirection, depth + 1, rngInfo);
-      break;
-    }
-
-    default:
-      // Unknown object?
-      break;
-  }
-  
-  return color;
+  return illuminate(direction, intersectInfo, depth + 1, rngInfo);
 }
 
 PNG *Scene::render(std::function<void (Scene *, PNG *, SafeQueue<RenderTask> *, SafeProgressBar *)> worker, int numThreads) {

@@ -14,6 +14,7 @@ public:
   Vector3D &operator+=(const Vector3D& other);
   Vector3D operator*(const Vector3D& other) const;
   Vector3D &operator*=(float scalar);
+  Vector3D operator-() const;
 
   friend Vector3D operator*(float scalar, const Vector3D& v);
   friend Vector3D operator*(const Vector3D& v, float scalar);

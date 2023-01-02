@@ -9,6 +9,8 @@ struct UniformRNGInfo {
   std::uniform_real_distribution<float> &distribution;
 };
 
+float clamp(float val, float low, float high);
+
 /**
  * reflect - reflect a ray using the incident direction and surface normal.
  * 
@@ -17,15 +19,69 @@ struct UniformRNGInfo {
 */
 Vector3D reflect(const Vector3D& incident, const Vector3D& normal);
 
-/**
- * refract - refract a ray using the incident direction, surface normal, and index of refraction.
- * 
- * incident - normalized vector
- * normal - normalized vector
- * ior - index of refraction
- * point - intersection point
- * bias - small shift to the intersection point
-*/
-Vector3D refract(const Vector3D& incident, Vector3D& normal, float eta);
+bool refract(const Vector3D &incident, const Vector3D &normal, float eta, Vector3D *wt);
 
-float fresnel(const Vector3D &incident, const Vector3D &normal, const float eta);
+float fresnelDielectric(float cosThetaI, float etaI, float etaT);
+
+float fresnelConductor(float cosThetaI, float etaI, float etaT, float k);
+
+/**
+ * Abstract class Fresnel
+ * 
+ * Interface for FresnelDielectric and FresnelConductor
+*/
+class Fresnel {
+public:
+  virtual ~Fresnel() {};
+  /**
+   * evaluate
+   * 
+   * returns the amount of reflected light at the given cosine angle between the
+   * incident and normal directions.
+  */
+  virtual float evaluate(float cosThetaI) const = 0;
+};
+
+/**
+ * class FresnelDielectric
+ * 
+ * Manages interface for calculating the amount of reflected light between two
+ * dielectric materials
+ * 
+ * private members:
+ *  etaI - Index of refraction for the incident media
+ *  etaT - Index of refraction for the transmitted media
+*/
+class FresnelDielectric : public Fresnel {
+public:
+  FresnelDielectric(const float etaI, const float etaT)
+    : etaI(etaI), etaT(etaT) {};
+  float evaluate(float cosThetaI) const;
+
+private:
+  float etaI;
+  float etaT;
+};
+
+/**
+ * class FresnelConductor
+ * 
+ * Manages interface for calculating the amount of reflected light between a coductor
+ * and a dielectric material.
+ * 
+ * private members:
+ *  etaI - Index of refraction for the incident (conductor) media
+ *  etaT - Index of refraction for the transmitted (dialectric) media
+ *  k    - Absorption coefficient for the conductor
+*/
+class FresnelConductor : public Fresnel {
+public:
+  FresnelConductor(const float etaI, const float etaT, const float k)
+    : etaI(etaI), etaT(etaT), k(k) {};
+  float evaluate(float cosThetaI) const;
+
+private:
+  float etaI;
+  float etaT;
+  float k;
+};
