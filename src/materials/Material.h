@@ -11,19 +11,29 @@ enum class MaterialType {
 
 class Material {
 public:
+  ~Material() {
+    // delete diffuseBRDF;
+    // delete specularBRDF;
+  }
   Material() : eta(1.0f), Kr(0.0f), Kd(1.0f), Ks(0.0f), Ka(0.0f), roughness(0.0f),
-  type(MaterialType::Dialectric), difffuseBRDF(new LambertBRDF()), specularBRDF(new CookTorranceGGX(0.0f, 1.0f, &conductorFresnel)) {};
+  type(MaterialType::Dialectric),
+  diffuseBRDF(new LambertBRDF()),
+  specularBRDF(new CookTorranceGGX(0.0f, 0.0f, 1.0f, &dialectricFresnel)) {};
   Material(float eta, float Kr, float Kd, float Ks, float Ka, float roughness, MaterialType type) :
-    eta(eta),
-    Kr(Kr),
-    Kd(Kd),
-    Ks(Ks),
-    Ka(Ka),
-    roughness(roughness),
-    n(1.0f/roughness),
-    type(type),
-    difffuseBRDF(new LambertBRDF()),
-    specularBRDF(new CookTorranceGGX(roughness, eta, &conductorFresnel)) {};
+  eta(eta),
+  Kr(Kr),
+  Kd(Kd),
+  Ks(Ks),
+  Ka(Ka),
+  roughness(roughness),
+  type(type),
+  diffuseBRDF(new LambertBRDF()) {
+    if (type == MaterialType::Metal) {
+      specularBRDF = new CookTorranceGGX(Ka, roughness, eta, &conductorFresnel);
+    } else {
+      specularBRDF = new CookTorranceGGX(Ka, roughness, eta, &dialectricFresnel);
+    }
+  };
   
   float eta;
   float Kr;
@@ -31,8 +41,7 @@ public:
   float Ks;
   float Ka;
   float roughness;
-  float n;
   MaterialType type;
-  BRDF *difffuseBRDF;
+  BRDF *diffuseBRDF;
   BRDF *specularBRDF;
 };

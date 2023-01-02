@@ -76,6 +76,9 @@ public:
   void setGlobalIllumination(int gi) {
     globalIllumination = gi;
   }
+  void setSpecularRays(int specular) {
+    specularRays = specular;
+  }
 
   void setFocus(float f) {
     focus_ = f;
@@ -121,6 +124,7 @@ private:
   std::unique_ptr<BVH> bvh;
   bool fisheye = false;
   int globalIllumination = 0;
+  int specularRays = 4;
   float focus_ = -1.0;
   float lens_ = 0;
 };

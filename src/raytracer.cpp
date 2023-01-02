@@ -216,15 +216,13 @@ IntersectionInfo Scene::findClosestObject(const Vector3D& origin, const Vector3D
 RGBAColor Scene::illuminate(const Vector3D &rayDirection, const IntersectionInfo& info, int depth, UniformRNGInfo &rngInfo) {
   const RGBAColor& objectColor = info.obj->color;
   const Vector3D& surfaceNormal = info.normal;
-  RGBAColor directDiffuse;
-  RGBAColor indirectDiffuse;
-  RGBAColor directSpecular;
-  RGBAColor indirectSpecular;
+  RGBAColor diffuse;
+  RGBAColor specular;
   const std::unique_ptr<Material> &material = info.obj->material;
-  const float n = material->n;
   const MaterialType type = material->type;
-  const BRDF *diffuseBRDF = material->difffuseBRDF;
+  const BRDF *diffuseBRDF = material->diffuseBRDF;
   const BRDF *specularBRDF = material->specularBRDF;
+  const Vector3D outDirection = -1.0f * rayDirection;
   
   for (auto it = lights.begin(); it != lights.end(); ++it) {
     Vector3D normalizedLightDirection = normalized((*it)->direction);
@@ -233,11 +231,7 @@ RGBAColor Scene::illuminate(const Vector3D &rayDirection, const IntersectionInfo
     }
 
     float lambert = clipDot(surfaceNormal, normalizedLightDirection);
-    directDiffuse += (*it)->color * lambert;
-
-    Vector3D reflectedLightDirection = reflect(normalizedLightDirection, surfaceNormal);
-    lambert = clipDot(surfaceNormal, -1 * reflectedLightDirection);
-    directSpecular += std::pow(lambert, n) * ((type == MaterialType::Metal) ? objectColor : (*it)->color);
+    diffuse += (*it)->color * lambert;
   }
 
   for (auto it = bulbs.begin(); it != bulbs.end(); ++it) {
@@ -249,36 +243,31 @@ RGBAColor Scene::illuminate(const Vector3D &rayDirection, const IntersectionInfo
     float distance = magnitude((*it)->center - info.point);
     float invDistance =  1.0f / (distance * distance);
     float lambert = clipDot(surfaceNormal, normalizedLightDirection);
-    directDiffuse += (*it)->color * lambert * invDistance;
-
-    Vector3D reflectedLightDirection = reflect(normalizedLightDirection, surfaceNormal);
-    lambert = clipDot(surfaceNormal, -1 * reflectedLightDirection);
-    directSpecular += std::pow(lambert, n) * invDistance * ((type == MaterialType::Metal) ? objectColor : (*it)->color);
+    diffuse += (*it)->color * lambert * invDistance;
   }
 
-  // accumulate diffuse reflection
-  for (int i = 0; i < globalIllumination; ++i) {
-    Vector3D inDirection = diffuseBRDF->sample(rayDirection, surfaceNormal, rngInfo);
-    float attenuation = diffuseBRDF->integrate(inDirection, rayDirection, surfaceNormal);
-    RGBAColor giColor = raytrace(info.point, inDirection, depth + 1, rngInfo) * attenuation;
-    indirectDiffuse += giColor;
+  // accumulate global illumination
+  if (material->Kd > 0.0f) {
+    for (int i = 0; i < globalIllumination; ++i) {
+      Vector3D inDirection = diffuseBRDF->sample(outDirection, surfaceNormal, rngInfo);
+      float attenuation = diffuseBRDF->integrate(inDirection, outDirection, surfaceNormal);
+      diffuse += raytrace(info.point, inDirection, depth + 1, rngInfo) * attenuation / globalIllumination;
+    }
   }
   // accumulate specular reflection
-  for (int i = 0; i < globalIllumination; ++i) {
-    Vector3D inDirection = specularBRDF->sample(rayDirection, surfaceNormal, rngInfo);
-    float attenuation = specularBRDF->integrate(inDirection, rayDirection, surfaceNormal);
-    RGBAColor giColor = raytrace(info.point, inDirection, depth + 1, rngInfo) * attenuation;
-    indirectSpecular += giColor;
+  if (material->Ks > 0.0f) {
+    for (int i = 0; i < specularRays; ++i) {
+      Vector3D inDirection = specularBRDF->sample(outDirection, surfaceNormal, rngInfo);
+      float attenuation = specularBRDF->integrate(inDirection, outDirection, surfaceNormal);
+      specular += raytrace(info.point, inDirection, depth + 1, rngInfo) * attenuation / specularRays;
+    }
+    if (type == MaterialType::Metal) {
+      specular = RGBAColor(objectColor.r * specular.r, objectColor.g * specular.g, objectColor.b * specular.b, objectColor.a);
+    }
+    // std::cout << std::setprecision(5) << specular << std::endl;
   }
 
-  RGBAColor diffuse = directDiffuse;
-  RGBAColor specular = directSpecular;
-  if (globalIllumination > 0) {
-    diffuse += indirectDiffuse / globalIllumination;
-    specular += indirectSpecular / globalIllumination;
-  }
-
-  diffuse = RGBAColor(objectColor.r * diffuse.r, objectColor.g * diffuse.g, objectColor.b * diffuse.b, objectColor.a);
+  diffuse = M_1_PI * RGBAColor(objectColor.r * diffuse.r, objectColor.g * diffuse.g, objectColor.b * diffuse.b, objectColor.a);
   return diffuse * material->Kd + specular * material->Ks;
 }
 
@@ -345,9 +334,9 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
     }
 
     case ObjectType::Metal: {
-      color += (1.0f - material->Ka) * illuminate(normalizedDirection, intersectInfo, depth, rngInfo);
+      color += illuminate(normalizedDirection, intersectInfo, depth, rngInfo);
       Vector3D reflectedDirection = reflect(normalizedDirection, intersectInfo.normal);
-      color += (1.0f - material->Ka) * material->Kr * raytrace(intersectInfo.point, reflectedDirection, depth + 1, rngInfo);
+      color += material->Kr * raytrace(intersectInfo.point, reflectedDirection, depth + 1, rngInfo);
       break;
     }
 

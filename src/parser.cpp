@@ -277,6 +277,9 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
     } else if (keyword == "gi") {
       int gi = std::stoi(lineInfo.at(1));
       scene->setGlobalIllumination(gi);
+    } else if (keyword == "specular") {
+      int specularRays = std::stoi(lineInfo.at(1));
+      scene->setSpecularRays(specularRays);
     } else if (keyword == "dof") {
       float focus = std::stof(lineInfo.at(1));
       float lens = std::stof(lineInfo.at(2));
@@ -284,22 +287,23 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
       scene->setLens(lens);
     } else if (keyword == "glass") {
       currentObjectType = ObjectType::Refractive;
-      currentMaterial = std::make_unique<Material>(1.5f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, MaterialType::Dialectric);
+      currentMaterial = std::make_unique<Material>(1.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, MaterialType::Dialectric);
     } else if (keyword == "plastic") {
       currentObjectType = ObjectType::Diffuse;
-      currentMaterial = std::make_unique<Material>(1.0f, 0.0f, 0.25f, 0.25f, 0.0f, 0.1f, MaterialType::Dialectric);
+      currentMaterial = std::make_unique<Material>(1.3f, 0.0f, 0.25f, 0.25f, 0.0f, 0.1f, MaterialType::Dialectric);
     } else if (keyword == "none") {
       currentObjectType = ObjectType::Diffuse;
       currentMaterial = std::make_unique<Material>();
     } else if (keyword == "copper") {
       currentObjectType = ObjectType::Metal;
       currentColor = RGBAColor(0.95597f, 0.63760f, 0.53948f);
-      currentMaterial = std::make_unique<Material>(0.23883f, 0.9553f, 0.9f, 0.1f, 0.0447f, 0.078125f, MaterialType::Metal);
+      currentMaterial = std::make_unique<Material>(0.23883f, 0.9553f, 0.0f, 1.0f, 0.0447f, 0.078125f, MaterialType::Metal);
     } else if (keyword == "mirror") {
       currentObjectType = ObjectType::Reflective;
       currentMaterial = std::make_unique<Material>(1.0f, 0.9f, 1.0f, 0.0f, 0.0f, 0.0f, MaterialType::Dialectric);
     } else if (keyword == "diffuse") {
       currentObjectType = ObjectType::Diffuse;
+      currentMaterial = std::make_unique<Material>();
     } else if (keyword == "refractive") {
       currentObjectType = ObjectType::Refractive;
     } else if (keyword == "reflective") {
