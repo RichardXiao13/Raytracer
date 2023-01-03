@@ -41,6 +41,10 @@ public:
     image_ = new RGBAColor[width_ * height_];
   }
 
+  PNG(const std::string &filename) {
+    readFromFile(filename);
+  }
+
   ~PNG() {
     delete[] image_;
   }
@@ -55,11 +59,13 @@ public:
     return height_;
   }
 
-  bool saveToFile(const std::string& filename);
+  bool readFromFile(const std::string &filename);
+
+  bool saveToFile(const std::string &filename);
 
 private:
-  int width_;
-  int height_;
+  unsigned width_;
+  unsigned height_;
   RGBAColor *image_;
 };
 

@@ -107,6 +107,29 @@ std::ostream& operator<<(std::ostream& out, const RGBAColor& color) {
   return out;
 }
 
+bool PNG::readFromFile(const std::string &filename) {
+  std::vector<unsigned char> byteData;
+  unsigned error = lodepng::decode(byteData, width_, height_, filename);
+
+  if (error) {
+    std::cerr << "PNG decoder error " << error << ": " << lodepng_error_text(error) << std::endl;
+    return false;
+  }
+
+  delete[] image_;
+  image_ = new RGBAColor[width_ * height_];
+
+  for (unsigned i = 0; i < byteData.size(); i += 4) {
+    RGBAColor &pixel = image_[i/4];
+    pixel.r = byteData[i];
+    pixel.g = byteData[i + 1];
+    pixel.b = byteData[i + 2];
+    pixel.a = byteData[i + 3];
+  }
+
+  return true;
+}
+
 bool PNG::saveToFile(const std::string& filename) {
   unsigned char *byteData = new unsigned char[width_ * height_ * 4];
   for (int i = 0; i < width_ * height_; i++) {

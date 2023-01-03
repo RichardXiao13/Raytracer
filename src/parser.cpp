@@ -158,6 +158,7 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
   std::unique_ptr<Material> currentMaterial = std::make_unique<Material>();
   RGBAColor currentColor(1, 1, 1, 1);
   ObjectType currentObjectType = ObjectType::Diffuse;
+  std::unordered_map<std::string, std::shared_ptr<PNG>> textures;
 
   for (; std::getline(in, line);) {
     lineInfo = split(line, ' ');
@@ -303,6 +304,8 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
     } else if (keyword == "reflective") {
       currentObjectType = ObjectType::Reflective;
       currentMaterial = std::make_unique<Material>(0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, MaterialType::Dialectric);
+    } else if (keyword == "texture") {
+      textures[lineInfo.at(1)] = std::make_shared<PNG>(lineInfo.at(1));
     }
   }
 
