@@ -17,53 +17,22 @@ make
 
 Any feedback or issues found are very much welcome, as well as additional contributors!
 
-# TODOs
+# TODOs - Version 2: Realistic Rendering
 * Add textures
-
-* Interpolate normals for smooth shading on triangles - DONE!!
-
-* Fix Global Illumination - DONE!!
-    * Now samples correctly but still looks too dark - FIXED. Was clipping the color before averaging instead of the reverse
-
-* Check if random number generator is thread safe; if not... uh oh - Unnecessary due to refactoring Object class - DONE!!
 
 * Find a better file format or parse other formats into this format
 
-* Implement other materials (plastic, matte surfaces, metals, ...)
+* Implement other materials (plastic, matte surfaces, metals, ...) and update Material interface
 
-    * Need interface for glossy reflections (Phong?)
+* Add microfacet distributions to BDFs
+
+* Refactor raytrace to path tracing method
 
 * Add more benchmarking scenes (Gruesome... Unless a generous soul wants to do this by hand, I'll probably find a better file format and parse those instead)
     * Need scenes with lots of primitives, dense, overlapping, or evenly distributed throughout the scene
         * Parsed some .obj files from Stanford's 3D Repo [here](https://github.com/alecjacobson/common-3d-test-models); Format of the files was funky so I used MeshLab to convert the objs to plys and back to objs rather than figure out the parsing, I think?
 
-* Reduce memory footprint
-    * Flatten BVH. Should improve memory and performance since memory allocation is unneeded and better cache coherence - DONE!!
-    
-    * Also consider referencing points in the scene rather than make copies for triangles. Should help since there are ~2x as many triangles than vertices - DONE!!
-
-    * Refactor Object class to not need independent distributions - DONE!!
-
-    * Refactor Material class to have a supplied rng state rather than keep track of its own - DONE!!
-
-* Might need to replace int with size_t in BVH nodes if there are lots of objects
-
-* Parallelize SAH BVH construction - Done!!
-    * Need even faster, so update BVH with binning - DONE!! Then parallelize that if possible
-
-* Improve speed - Got nearly 33% speed up when refactoring Vector3D class
-    * Align BVH nodes to cache - DONE!!
-
-    * Refactor Vector3D to use x,y,z rather than array of floats to reduce function calls to [] operator - DONE!!
-
-    * Refactor Object class to have public members rather than getter methods to reduce function calls - DONE!!
-
-    * Refactor BVH intersect methods to use array-based stack to reduce std::stack overhead - DONE!! Nearly 25% speed up
-
-
 * Document everything
-
-* Refactor inputs to raytrace and illuminate to avoid long argument lists
 
 * Create a testing suite (Should've started with this but oh well... Who actually *tests* their code?? Right? *Right??* Just Kidding!)
 
