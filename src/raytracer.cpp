@@ -272,9 +272,11 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
       if (pdf < 1e-8 || contribution < 1e-8)
         continue;
       RGBAColor Li = raytrace(point, wi, depth + 1, rngInfo);
-      specular += contribution * Li / (pdf * nSamples);
+      specular += contribution * Li / pdf;
     }
-    return specular;
+    if (intersectInfo.obj->material->type == MaterialType::Metal)
+      specular *= intersectInfo.obj->color;
+    return specular / nSamples;
   }
   return color;
 }
