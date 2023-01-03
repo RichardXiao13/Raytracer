@@ -2,11 +2,7 @@
 #include "parser.h"
 #include "raytracer.h"
 #include "Objects.h"
-#include "materials/Material.h"
-#include "materials/Glass.h"
-#include "materials/Plastic.h"
-#include "materials/Metal.h"
-#include "materials/Mirror.h"
+#include "Material.h"
 #include "Profiler.h"
 
 // From StackOverflow https://stackoverflow.com/questions/874134/find-out-if-string-ends-with-another-string-in-c

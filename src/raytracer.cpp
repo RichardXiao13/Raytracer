@@ -233,16 +233,26 @@ IntersectionInfo Scene::findClosestObject(const Vector3D& origin, const Vector3D
 RGBAColor Scene::illuminate(const Vector3D &rayDirection, const IntersectionInfo& info, int depth, UniformRNGInfo &rngInfo) {
   const RGBAColor& objectColor = info.obj->color;
   const Vector3D& surfaceNormal = info.normal;
-  RGBAColor Li;
-  const Vector3D outDirection = -1.0f * rayDirection;
-  
+  const Vector3D wo = -rayDirection;
+  RGBAColor Le;
+
   for (auto it = lights.begin(); it != lights.end(); ++it) {
     if ((*it)->pointInShadow(info.point, this) == false) {
-      Li += (*it)->intensity(info.point, surfaceNormal);
+      Le += (*it)->intensity(info.point, surfaceNormal);
     }
   }
 
-  return objectColor * Li;
+  // Add global illumination contribution
+  BDF *diffuseBSDF = info.obj->material->diffuseBRDF;
+  float pdf = 0.0f;
+  Vector3D wi;
+  float contribution = diffuseBSDF->sampleFunc(wo, &wi, surfaceNormal, rngInfo, &pdf);
+  if (pdf != 0 && contribution != 0) {
+    RGBAColor Li = raytrace(info.point, wi, depth + 1, rngInfo);
+    Le += contribution * Li / pdf;
+  }
+
+  return objectColor * Le;
 }
 
 RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int depth, UniformRNGInfo &rngInfo) {
@@ -268,24 +278,21 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
     diffuse = material->Kd * illuminate(direction, intersectInfo, depth + 1, rngInfo);
 
   if (specularBSDF != nullptr && material->Ks > 0) {
-    int nSamples = 20;
     // Accumulate specular reflection/transmission
-    for (int i = 0; i < nSamples; ++i) {
       float pdf = 0.0f;
       Vector3D wi;
       float contribution = specularBSDF->sampleFunc(wo, &wi, intersectInfo.normal, rngInfo, &pdf);
       bool exiting = dot(wi, outNormal) > 0;
       point += outNormal * (exiting ? bias_ : -bias_);
-      if (pdf == 0 || contribution == 0)
-        continue;
-      RGBAColor Li = raytrace(point, wi, depth + 1, rngInfo);
-      specular += contribution * Li / pdf;
-    }
-    // Add metallic object specular contribution
-    if (intersectInfo.obj->material->type == MaterialType::Metal)
-      specular *= intersectInfo.obj->color;
+      if (pdf != 0 && contribution != 0) {
+        RGBAColor Li = raytrace(point, wi, depth + 1, rngInfo);
+        specular += contribution * Li / pdf;
+        // Add metallic object specular contribution
+        if (intersectInfo.obj->material->type == MaterialType::Metal)
+          specular *= intersectInfo.obj->color;
+      }
 
-    specular = material->Ks * specular / nSamples;
+    specular = material->Ks * specular;
   }
   return diffuse + specular;
 }

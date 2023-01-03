@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../macros.h"
-#include "../vector3d.h"
-#include "../BDF.h"
+#include "macros.h"
+#include "vector3d.h"
+#include "BDF.h"
 
 enum class MaterialType {
   Dialectric,
@@ -37,17 +37,17 @@ public:
   }
   Material()
     : Kd(1.0f), Ks(0.0f), eta(1.0f),
-      Kr(0.0f), Kt(0.0f), Ka(0.0f),
+      Kr(1.0f), Kt(0.0f), Ka(0.0f),
       roughness(0.0f),
       type(MaterialType::Dialectric),
-      diffuseBRDF(nullptr),
+      diffuseBRDF(new LambertianReflection(Kr)),
       specularBRDF(nullptr) {};
   Material(float Kd, float Ks, float eta, float Kr, float Kt, float Ka, float roughness, MaterialType type)
     : Kd(Kd), Ks(Ks), eta(eta),
       Kr(Kr), Kt(Kt), Ka(Ka),
       roughness(roughness),
       type(type),
-      diffuseBRDF(nullptr) {
+      diffuseBRDF(new LambertianReflection(Kr)) {
     if (type == MaterialType::Metal) {
       specularBRDF = new SpecularReflection(Kr, new FresnelConductor(1.0f, eta, Ka));
     } else if (type == MaterialType::Mirror) {

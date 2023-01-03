@@ -71,7 +71,7 @@ public:
   LambertianReflection(const float Kr)
     : Kr(Kr) {};
   float func(const Vector3D &wo, const Vector3D &wi) const {
-    return Kr / M_1_PI;
+    return Kr * M_1_PI;
   }
 
 private:
@@ -83,7 +83,7 @@ public:
   LambertianTransmission(const float Kt)
     : Kt(Kt) {};
   float func(const Vector3D &wo, const Vector3D &wi) const {
-    return Kt / M_1_PI;
+    return Kt * M_1_PI;
   }
 
 private:

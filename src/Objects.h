@@ -3,7 +3,7 @@
 #include "macros.h"
 #include "vector3d.h"
 #include "PNG.h"
-#include "materials/Material.h"
+#include "Material.h"
 #include "raytracer.h"
 
 class Object;
