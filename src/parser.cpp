@@ -300,7 +300,7 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
       currentMaterial = std::make_unique<Material>(0.23883f, 0.9553f, 0.0f, 1.0f, 0.0447f, 0.078125f, MaterialType::Metal);
     } else if (keyword == "mirror") {
       currentObjectType = ObjectType::Reflective;
-      currentMaterial = std::make_unique<Material>(INF_D, 0.9f, 0.0f, 1.0f, 0.0f, 0.0f, MaterialType::Mirror);
+      currentMaterial = std::make_unique<Material>(0.0f, 0.9f, 0.0f, 1.0f, 0.0f, 0.0f, MaterialType::Mirror);
     } else if (keyword == "diffuse") {
       currentObjectType = ObjectType::Diffuse;
       currentMaterial = std::make_unique<Material>();

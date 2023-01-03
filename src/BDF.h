@@ -6,8 +6,8 @@ class BDF {
 public:
   BDF() {};
   virtual float func(const Vector3D &wo, const Vector3D &wi) const = 0;
-  virtual float sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, const float sample, float *pdf) const = 0;
-  virtual float pdf(const Vector3D &wi, const Vector3D &wo) const = 0;
+  virtual float sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, UniformRNGInfo &rngInfo, float *pdf) const;
+  virtual float pdf(const Vector3D &wo, const Vector3D &wi, const Vector3D &n) const;
 };
 
 class SpecularReflection : public BDF {
@@ -17,8 +17,8 @@ public:
   float func(const Vector3D &wo, const Vector3D &wi) const {
     return 0.0f;
   }
-  float sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, const float sample, float *pdf) const;
-  float pdf(const Vector3D &wo, const Vector3D &wi) const {
+  float sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, UniformRNGInfo &rngInfo, float *pdf) const;
+  float pdf(const Vector3D &wo, const Vector3D &wi, const Vector3D &n) const {
     return 0.0f;
   }
 
@@ -34,8 +34,8 @@ public:
   float func(const Vector3D &wo, const Vector3D &wi) const {
     return 0.0f;
   }
-  float sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, const float sample, float *pdf) const;
-  float pdf(const Vector3D &wo, const Vector3D &wi) const {
+  float sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, UniformRNGInfo &rngInfo, float *pdf) const;
+  float pdf(const Vector3D &wo, const Vector3D &wi, const Vector3D &n) const {
     return 0.0f;
   }
 
@@ -53,8 +53,8 @@ public:
   float func(const Vector3D &wo, const Vector3D &wi) const {
     return 0.0f;
   }
-  float sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, const float sample, float *pdf) const;
-  float pdf(const Vector3D &wo, const Vector3D &wi) const {
+  float sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, UniformRNGInfo &rngInfo, float *pdf) const;
+  float pdf(const Vector3D &wo, const Vector3D &wi, const Vector3D &n) const {
     return 0.0f;
   }
 
@@ -64,4 +64,28 @@ private:
   const float etaI_;
   const float etaT_;
   const FresnelDielectric fresnel;
+};
+
+class LambertianReflection : public BDF {
+public:
+  LambertianReflection(const float Kr)
+    : Kr(Kr) {};
+  float func(const Vector3D &wo, const Vector3D &wi) const {
+    return Kr / M_1_PI;
+  }
+
+private:
+  const float Kr;
+};
+
+class LambertianTransmission : public BDF {
+public:
+  LambertianTransmission(const float Kt)
+    : Kt(Kt) {};
+  float func(const Vector3D &wo, const Vector3D &wi) const {
+    return Kt / M_1_PI;
+  }
+
+private:
+  const float Kt;
 };

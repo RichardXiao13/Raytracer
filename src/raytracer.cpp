@@ -244,15 +244,6 @@ RGBAColor Scene::illuminate(const Vector3D &rayDirection, const IntersectionInfo
     diffuse += (*it)->color * lambert * invDistance;
   }
 
-  // // accumulate global illumination
-  // if (material->Kd > 0.0f) {
-  //   for (int i = 0; i < globalIllumination; ++i) {
-  //     Vector3D inDirection = diffuseBRDF->sample(outDirection, surfaceNormal, rngInfo);
-  //     float attenuation = diffuseBRDF->integrate(inDirection, outDirection, surfaceNormal);
-  //     diffuse += raytrace(info.point, inDirection, depth + 1, rngInfo) * attenuation / globalIllumination;
-  //   }
-  // }
-
   diffuse = M_1_PI * RGBAColor(objectColor.r * diffuse.r, objectColor.g * diffuse.g, objectColor.b * diffuse.b, objectColor.a);
   return diffuse;
 }
@@ -269,44 +260,30 @@ bool Scene::pointInShadow(const Vector3D& point, const std::unique_ptr<Bulb>& bu
   return info.obj != nullptr && objectToIntersect < intersectToBulbDist;
 }
 
-Vector3D refract1(const Vector3D& incident, Vector3D& normal, float ior, Vector3D &point, float bias) {
-  float enteringCosine = -dot(normal, incident);
-  
-  float k = 1.0 - ior * ior * (1.0 - enteringCosine * enteringCosine);
-
-  if (k >= 0) {
-    point = point - bias * normal;
-    return ior * incident + (ior * enteringCosine - sqrt(k)) * normal;
-  } else {
-    // total internal reflection
-    point = point + bias * normal;
-    return reflect(incident, normal);
-  }
-}
-
 RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int depth, UniformRNGInfo &rngInfo) {
   if (depth >= maxBounces)
     return RGBAColor(0, 0, 0, 0);
   
-  Vector3D normalizedDirection = normalized(direction);
-  IntersectionInfo intersectInfo = findClosestObject(origin, normalizedDirection);
+  Vector3D wo = -normalized(direction);
+  IntersectionInfo intersectInfo = findClosestObject(origin, direction);
   if (intersectInfo.obj == nullptr)
     return RGBAColor(0, 0, 0, 0);
 
   Vector3D point = intersectInfo.point;
-  intersectInfo.point += bias_ * intersectInfo.normal;
+  Vector3D outNormal = faceForward(wo, intersectInfo.normal);
+  intersectInfo.point += bias_ * outNormal;
 
   BDF *perfectSpecular = intersectInfo.obj->material->specularBRDF;  
   RGBAColor color = illuminate(direction, intersectInfo, depth + 1, rngInfo);
+  RGBAColor specular;
   if (perfectSpecular != nullptr) {
-    int nSamples = 10;
-    RGBAColor specular;
+    int nSamples = 20;
     for (int i = 0; i < nSamples; ++i) {
-      float sample = rngInfo.distribution(rngInfo.rng);
       float pdf = 0.0f;
       Vector3D wi;
-      float contribution = perfectSpecular->sampleFunc(-normalizedDirection, &wi, intersectInfo.normal, sample, &pdf);
-      point += bias_ * wi;
+      float contribution = perfectSpecular->sampleFunc(wo, &wi, intersectInfo.normal, rngInfo, &pdf);
+      bool exiting = dot(wi, outNormal) > 0;
+      point += outNormal * (exiting ? bias_ : -bias_);
       if (pdf < 1e-8 || contribution < 1e-8)
         continue;
       RGBAColor Li = raytrace(point, wi, depth + 1, rngInfo);

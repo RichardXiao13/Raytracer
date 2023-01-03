@@ -1,13 +1,35 @@
 #include "BDF.h"
 
-float SpecularReflection::sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, const float sample, float *pdf) const {
+float BDF::sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, UniformRNGInfo &rngInfo, float *pdf) const {
+  // sample unit hemisphere and map it to the normal
+  float rand = rngInfo.distribution(rngInfo.rng);
+  float r = std::sqrtf(rand);
+  float theta = rngInfo.distribution(rngInfo.rng) * 2.0f * M_PI;
+
+  float x = r * std::cosf(theta);
+  float y = r * std::sinf(theta);
+
+  // Project z up to the unit hemisphere
+  float z = std::sqrtf(1.0f - x * x - y * y);
+
+  *wi = normalized(transformToWorld(x, y, z, n));
+  *pdf = this->pdf(wo, *wi, n);
+  return func(wo, *wi);
+}
+
+float BDF::pdf(const Vector3D &wo, const Vector3D &wi, const Vector3D &n) const {
+  // Check if wo and wi are in the same direction before returning pdf
+  return (dot(wo, wi) > 0) ? std::abs(dot(wi, n)) * M_1_PI : 0;
+}
+
+float SpecularReflection::sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, UniformRNGInfo &rngInfo, float *pdf) const {
   *wi = reflect(wo, n);
   *pdf = 1.0f;
   float cosThetaI = dot(*wi, n);
   return fresnel->evaluate(cosThetaI) * Kr / std::abs(cosThetaI);
 }
 
-float SpecularTransmission::sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, const float sample, float *pdf) const {
+float SpecularTransmission::sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, UniformRNGInfo &rngInfo, float *pdf) const {
   bool entering = dot(wo, n) > 0;
   float etaI = entering ? etaI_ : etaT_;
   float etaT = entering ? etaT_ : etaI_;
@@ -22,7 +44,8 @@ float SpecularTransmission::sampleFunc(const Vector3D &wo, Vector3D *wi, const V
   return Ft / std::abs(cosThetaI);
 }
 
-float FresnelSpecular::sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, const float sample, float *pdf) const {
+float FresnelSpecular::sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, UniformRNGInfo &rngInfo, float *pdf) const {
+  float sample = rngInfo.distribution(rngInfo.rng);
   float cosThetaI = dot(wo, n);
 
   float Fr = fresnelDielectric(cosThetaI, etaI_, etaT_);
