@@ -54,6 +54,13 @@ RGBAColor &RGBAColor::operator*=(const RGBAColor& c) {
   return *this;
 }
 
+RGBAColor &RGBAColor::operator/=(float scalar) {
+  r *= scalar;
+  g *= scalar;
+  b *= scalar;
+  return *this;
+}
+
 RGBAColor RGBAColor::operator+(const RGBAColor& other) const {
   return RGBAColor(other.r + r, other.g + g, other.b + b, 1.0);
 }

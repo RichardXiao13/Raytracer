@@ -285,20 +285,20 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
       scene->setLens(lens);
     } else if (keyword == "glass") {
       currentObjectType = ObjectType::Refractive;
-      currentMaterial = std::make_unique<Material>(1.5f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, MaterialType::Glass);
+      currentMaterial = std::make_unique<Material>(0.0f, 1.0f, 1.5f, 1.0f, 1.0f, 0.0f, 0.0f, MaterialType::Glass);
     } else if (keyword == "plastic") {
       currentObjectType = ObjectType::Diffuse;
-      currentMaterial = std::make_unique<Material>(1.3f, 0.0f, 0.25f, 0.25f, 0.0f, 0.1f, MaterialType::Dialectric);
+      currentMaterial = std::make_unique<Material>(0.25f, 0.25f, 1.3f, 1.0f, 0.0f, 0.0f, 0.1f, MaterialType::Plastic);
     } else if (keyword == "none") {
       currentObjectType = ObjectType::Diffuse;
       currentMaterial = std::make_unique<Material>();
     } else if (keyword == "copper") {
       currentObjectType = ObjectType::Metal;
       currentColor = RGBAColor(0.95597f, 0.63760f, 0.53948f);
-      currentMaterial = std::make_unique<Material>(0.23883f, 0.9553f, 0.0f, 1.0f, 0.0447f, 0.078125f, MaterialType::Metal);
+      currentMaterial = std::make_unique<Material>(0.0f, 1.0f, 0.23883f, 0.9553f, 0.0f, 0.0447f, 0.078125f, MaterialType::Metal);
     } else if (keyword == "mirror") {
       currentObjectType = ObjectType::Reflective;
-      currentMaterial = std::make_unique<Material>(0.0f, 0.9f, 0.0f, 1.0f, 0.0f, 0.0f, MaterialType::Mirror);
+      currentMaterial = std::make_unique<Material>(0.0f, 1.0f, 0.0f, 0.9f, 0.0f, 0.0f, 0.0f, MaterialType::Mirror);
     } else if (keyword == "diffuse") {
       currentObjectType = ObjectType::Diffuse;
       currentMaterial = std::make_unique<Material>();
@@ -306,7 +306,7 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
       currentObjectType = ObjectType::Refractive;
     } else if (keyword == "reflective") {
       currentObjectType = ObjectType::Reflective;
-      currentMaterial = std::make_unique<Material>(1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, MaterialType::Dialectric);
+      currentMaterial = std::make_unique<Material>(0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, MaterialType::Dialectric);
     }
   }
 

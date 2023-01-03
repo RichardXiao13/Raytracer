@@ -23,6 +23,7 @@ public:
   RGBAColor operator+(const RGBAColor& other) const;
   RGBAColor &operator+=(const RGBAColor& other);
   RGBAColor &operator*=(float scalar);
+  RGBAColor &operator/=(float scalar);
   RGBAColor &operator*=(const RGBAColor& c);
   friend RGBAColor operator*(const RGBAColor& c1, const RGBAColor& c2);
 
