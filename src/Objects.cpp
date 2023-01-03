@@ -3,8 +3,29 @@
 #include "Objects.h"
 #include "vector3d.h"
 
-Vector3D Bulb::getLightDirection(const Vector3D& point) const {
-  return center - point;
+bool DistantLight::pointInShadow(const Vector3D &point, const Scene *scene) const {
+  IntersectionInfo info = scene->findAnyObject(point, direction);
+  return info.obj != nullptr;
+}
+
+RGBAColor DistantLight::intensity(const Vector3D &point, const Vector3D &n) const {
+  return color * clipDot(n, direction);
+}
+
+bool Bulb::pointInShadow(const Vector3D &point, const Scene *scene) const {
+  const Vector3D lightDirection = center - point;
+  float intersectToBulbDist = magnitude(lightDirection);
+  IntersectionInfo info = scene->findClosestObject(point, lightDirection);
+  float objectToIntersect = magnitude(point - info.point);
+  // might be able to get rid of first condition since objectToIntersect is INF if obj doesn't exist
+  return info.obj != nullptr && objectToIntersect < intersectToBulbDist;
+}
+
+RGBAColor Bulb::intensity(const Vector3D &point, const Vector3D &n) const {
+  const Vector3D lightDirection = center - point;
+  float distance = magnitude(lightDirection);
+  float invDistance =  1.0f / (distance * distance);
+  return color * clipDot(n, lightDirection) * invDistance;
 }
 
 Sphere::Sphere(float x1, float y1, float z1, float r1) : center(x1, y1, z1), r(r1) {

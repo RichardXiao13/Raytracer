@@ -21,18 +21,18 @@ struct RenderTask {
 class Scene {
 public: 
   Scene(int w, int h, const std::string& file)
-  : width_(w), height_(h), filename_(file) {};
+    : width_(w), height_(h), filename_(file) {};
+  ~Scene();
   void addObject(std::unique_ptr<Object> obj);
   void addPlane(std::unique_ptr<Plane> plane);
-  void addLight(std::unique_ptr<Light> light);
-  void addBulb(std::unique_ptr<Bulb> bulb);
+  void addLight(Light *light);
   size_t getNumObjects();
   PNG *render(int numThreads=4, int seed=56);
-  bool pointInShadow(const Vector3D& origin, const Vector3D& light);
-  bool pointInShadow(const Vector3D& point, const std::unique_ptr<Bulb>& bulb);
   void setExposure(float value);
   void setMaxBounces(int d);
   void setFilename(const std::string& fname);
+  IntersectionInfo findClosestObject(const Vector3D& origin, const Vector3D& direction) const;
+  IntersectionInfo findAnyObject(const Vector3D& origin, const Vector3D& direction) const;
 
   int width() {
     return width_;
@@ -96,7 +96,6 @@ public:
 private:
   RGBAColor illuminate(const Vector3D &rayDirection, const IntersectionInfo& info, int depth, UniformRNGInfo &rngInfo);
   RGBAColor raytrace(const Vector3D& origin, const Vector3D& direction, int depth, UniformRNGInfo &rngInfo);
-  IntersectionInfo findClosestObject(const Vector3D& origin, const Vector3D& direction);
   void expose(PNG *img);
   /**
    * threadTaskDefault - default worker function for threads.
@@ -111,8 +110,7 @@ private:
 
   std::vector<std::unique_ptr<Object>> objects;
   std::vector<std::unique_ptr<Plane>> planes;
-  std::vector<std::unique_ptr<Light>> lights;
-  std::vector<std::unique_ptr<Bulb>> bulbs;
+  std::vector<Light*> lights;
   
   int width_;
   int height_;

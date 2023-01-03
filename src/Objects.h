@@ -9,6 +9,7 @@
 class Object;
 class Material;
 struct UniformRNGInfo;
+class Scene;
 
 /**
  * IntersectInfo struct
@@ -55,19 +56,35 @@ public:
 
 class Light {
 public:
-  Light(float x, float y, float z, const RGBAColor& color) : color(color), direction(x, y, z) {};
+  Light(const RGBAColor& color)
+    : color(color) {};
+  virtual ~Light() {};
+  virtual bool pointInShadow(const Vector3D &point, const Scene *scene) const = 0;
+  virtual RGBAColor intensity(const Vector3D &point, const Vector3D &n) const = 0;
 
   RGBAColor color;
+};
+
+class DistantLight : public Light {
+public:
+  DistantLight(float x, float y, float z, const RGBAColor& color)
+    : Light(color), direction(x, y, z) {};
+  ~DistantLight() {};
+  bool pointInShadow(const Vector3D &point, const Scene *scene) const;
+  RGBAColor intensity(const Vector3D &point, const Vector3D &n) const;
+
   Vector3D direction;
 };
 
-class Bulb {
+class Bulb : public Light {
 public:
-  Bulb(float x, float y, float z, const RGBAColor& color) : center(x, y, z), color(color) {};
-  Vector3D getLightDirection(const Vector3D& point) const;
+  Bulb(float x, float y, float z, const RGBAColor& color)
+    : Light(color), center(x, y, z) {};
+  ~Bulb() {};
+  bool pointInShadow(const Vector3D &point, const Scene *scene) const;
+  RGBAColor intensity(const Vector3D &point, const Vector3D &n) const;
 
   Vector3D center;
-  RGBAColor color;
 };
 
 class Sphere : public Object {

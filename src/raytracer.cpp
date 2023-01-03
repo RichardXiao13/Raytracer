@@ -8,6 +8,12 @@
 
 #define THRESHOLD 512
 
+Scene::~Scene() {
+  for (auto it = lights.begin(); it != lights.end(); ++it) {
+    delete *it;
+  }
+}
+
 void Scene::threadTaskDefault(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBar *counter) {
   RenderTask task;
   std::mt19937 rng;
@@ -177,12 +183,8 @@ void Scene::addPlane(std::unique_ptr<Plane> plane) {
   planes.push_back(std::move(plane));
 }
 
-void Scene::addLight(std::unique_ptr<Light> light) {
-  lights.push_back(std::move(light));
-}
-
-void Scene::addBulb(std::unique_ptr<Bulb> bulb) {
-  bulbs.push_back(std::move(bulb));
+void Scene::addLight(Light *light) {
+  lights.push_back(light);
 }
 
 size_t Scene::getNumObjects() {
@@ -201,7 +203,22 @@ void Scene::setMaxBounces(int d) {
   maxBounces = d;
 }
 
-IntersectionInfo Scene::findClosestObject(const Vector3D& origin, const Vector3D& direction) {
+IntersectionInfo Scene::findAnyObject(const Vector3D& origin, const Vector3D& direction) const {
+  IntersectionInfo closestInfo = bvh->findClosestObject(origin, direction);
+  if (closestInfo.obj != nullptr) {
+    return closestInfo;
+  }
+
+  for (auto it = planes.begin(); it != planes.end(); ++it) {
+    IntersectionInfo info = (*it)->intersect(origin, direction);
+    if (info.t < closestInfo.t) {
+      return info;
+    }
+  }
+  return closestInfo;
+}
+
+IntersectionInfo Scene::findClosestObject(const Vector3D& origin, const Vector3D& direction) const {
   IntersectionInfo closestInfo = bvh->findClosestObject(origin, direction);
 
   for (auto it = planes.begin(); it != planes.end(); ++it) {
@@ -216,48 +233,16 @@ IntersectionInfo Scene::findClosestObject(const Vector3D& origin, const Vector3D
 RGBAColor Scene::illuminate(const Vector3D &rayDirection, const IntersectionInfo& info, int depth, UniformRNGInfo &rngInfo) {
   const RGBAColor& objectColor = info.obj->color;
   const Vector3D& surfaceNormal = info.normal;
-  RGBAColor diffuse;
-  RGBAColor specular;
-  const std::unique_ptr<Material> &material = info.obj->material;
-  const MaterialType type = material->type;
+  RGBAColor Li;
   const Vector3D outDirection = -1.0f * rayDirection;
   
   for (auto it = lights.begin(); it != lights.end(); ++it) {
-    Vector3D normalizedLightDirection = normalized((*it)->direction);
-    if (pointInShadow(info.point, normalizedLightDirection)) {
-      continue;
+    if ((*it)->pointInShadow(info.point, this) == false) {
+      Li += (*it)->intensity(info.point, surfaceNormal);
     }
-
-    float lambert = clipDot(surfaceNormal, normalizedLightDirection);
-    diffuse += (*it)->color * lambert;
   }
 
-  for (auto it = bulbs.begin(); it != bulbs.end(); ++it) {
-    Vector3D normalizedLightDirection = normalized((*it)->getLightDirection(info.point));
-    if (pointInShadow(info.point, *it)) {
-      continue;
-    }
-    
-    float distance = magnitude((*it)->center - info.point);
-    float invDistance =  1.0f / (distance * distance);
-    float lambert = clipDot(surfaceNormal, normalizedLightDirection);
-    diffuse += (*it)->color * lambert * invDistance;
-  }
-
-  diffuse = M_1_PI * RGBAColor(objectColor.r * diffuse.r, objectColor.g * diffuse.g, objectColor.b * diffuse.b, objectColor.a);
-  return diffuse;
-}
-
-bool Scene::pointInShadow(const Vector3D& point, const Vector3D& lightDirection) {
-  return bvh->findAnyObject(point, lightDirection);
-}
-
-bool Scene::pointInShadow(const Vector3D& point, const std::unique_ptr<Bulb>& bulb) {
-  float intersectToBulbDist = magnitude(bulb->center - point);
-  IntersectionInfo info = bvh->findClosestObject(point, bulb->getLightDirection(point));
-  float objectToIntersect = magnitude(point - info.point);
-  // might be able to get rid of first condition since objectToIntersect is INF if obj doesn't exist
-  return info.obj != nullptr && objectToIntersect < intersectToBulbDist;
+  return objectColor * Li;
 }
 
 RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int depth, UniformRNGInfo &rngInfo) {

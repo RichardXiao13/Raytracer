@@ -121,7 +121,7 @@ std::unique_ptr<Scene> readOBJ(std::istream& in) {
     }
   }
   
-  scene->addLight(std::make_unique<Light>(1, 1, 1, currentColor));
+  scene->addLight(new DistantLight(1, 1, 1, currentColor));
   // All Stanford objs are centered at (0,0,0)
   // so set the eye behind the object and centered based on object's width and height
   std::cout << maxX - minX << ' ' <<  maxY - minY << ' ' << maxZ << std::endl;
@@ -186,8 +186,7 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
       float x = std::stof(lineInfo.at(1));
       float y = std::stof(lineInfo.at(2));
       float z = std::stof(lineInfo.at(3));
-      std::unique_ptr<Light> newLight = std::make_unique<Light>(x, y, z, currentColor);
-      scene->addLight(std::move(newLight));
+      scene->addLight(new DistantLight(x, y, z, currentColor));
     } else if (keyword == "color") {
       float r = std::stof(lineInfo.at(1));
       float g = std::stof(lineInfo.at(2));
@@ -208,8 +207,7 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
       float x = std::stof(lineInfo.at(1));
       float y = std::stof(lineInfo.at(2));
       float z = std::stof(lineInfo.at(3));
-      std::unique_ptr<Bulb> newBulb = std::make_unique<Bulb>(x, y, z, currentColor);
-      scene->addBulb(std::move(newBulb));
+      scene->addLight(new Bulb(x, y, z, currentColor));
     } else if (keyword == "xyz") {
       float x = std::stof(lineInfo.at(1));
       float y = std::stof(lineInfo.at(2));

@@ -42,6 +42,18 @@ RGBAColor &RGBAColor::operator*=(float scalar) {
   return *this;
 }
 
+RGBAColor operator*(const RGBAColor& c1, const RGBAColor& c2) {
+  return RGBAColor(c1.r * c2.r, c1.g * c2.g, c1.b * c2.b, std::max(c1.a, c2.a));
+}
+
+RGBAColor &RGBAColor::operator*=(const RGBAColor& c) {
+  r *= c.r;
+  g *= c.g;
+  b *= c.b;
+  a = std::max(a, c.a);
+  return *this;
+}
+
 RGBAColor RGBAColor::operator+(const RGBAColor& other) const {
   return RGBAColor(other.r + r, other.g + g, other.b + b, 1.0);
 }
