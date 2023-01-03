@@ -50,6 +50,7 @@ RGBAColor &RGBAColor::operator+=(const RGBAColor& other) {
   r += other.r;
   g += other.g;
   b += other.b;
+  a = std::max(other.a, a);
   return *this;
 }
 

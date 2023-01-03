@@ -6,7 +6,7 @@ class BDF {
 public:
   BDF() {};
   virtual float func(const Vector3D &wo, const Vector3D &wi) const = 0;
-  virtual float sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, const Vector3D &sample, float *pdf) const = 0;
+  virtual float sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, const float sample, float *pdf) const = 0;
   virtual float pdf(const Vector3D &wi, const Vector3D &wo) const = 0;
 };
 
@@ -17,7 +17,7 @@ public:
   float func(const Vector3D &wo, const Vector3D &wi) const {
     return 0.0f;
   }
-  float sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, const Vector3D &sample, float *pdf) const;
+  float sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, const float sample, float *pdf) const;
   float pdf(const Vector3D &wo, const Vector3D &wi) const {
     return 0.0f;
   }
@@ -34,7 +34,7 @@ public:
   float func(const Vector3D &wo, const Vector3D &wi) const {
     return 0.0f;
   }
-  float sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, const Vector3D &sample, float *pdf) const;
+  float sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, const float sample, float *pdf) const;
   float pdf(const Vector3D &wo, const Vector3D &wi) const {
     return 0.0f;
   }
@@ -46,14 +46,14 @@ private:
   const FresnelDielectric fresnel;
 };
 
-class FresnelSpecular : BDF {
+class FresnelSpecular : public BDF {
 public:
   FresnelSpecular(const float Kr, const float Kt, const float etaI, const float etaT)
     : Kr(Kr), Kt(Kt), etaI_(etaI), etaT_(etaT), fresnel(etaI, etaT) {};
   float func(const Vector3D &wo, const Vector3D &wi) const {
     return 0.0f;
   }
-  float sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, const Vector3D &sample, float *pdf) const;
+  float sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, const float sample, float *pdf) const;
   float pdf(const Vector3D &wo, const Vector3D &wi) const {
     return 0.0f;
   }

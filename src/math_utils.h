@@ -9,6 +9,10 @@ struct UniformRNGInfo {
   std::uniform_real_distribution<float> &distribution;
 };
 
+Vector3D transformToWorld(float x, float y, float z, const Vector3D &normal);
+
+Vector3D faceForward(const Vector3D &wo, const Vector3D &n);
+
 float clamp(float val, float low, float high);
 
 /**

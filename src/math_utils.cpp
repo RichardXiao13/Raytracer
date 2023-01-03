@@ -1,6 +1,30 @@
 #include "math_utils.h"
 #include "vector3d.h"
 
+Vector3D transformToWorld(float x, float y, float z, const Vector3D &normal) {
+  // Find an axis that is not parallel to normal
+  Vector3D majorAxis;
+  if (abs(normal.x) < M_1_SQRT_3) {
+    majorAxis = Vector3D(1, 0, 0);
+  } else if (abs(normal.y) < M_1_SQRT_3) {
+    majorAxis = Vector3D(0, 1, 0);
+  } else {
+    majorAxis = Vector3D(0, 0, 1);
+  }
+
+  // Use majorAxis to create a coordinate system relative to world space
+  Vector3D u = normalized(cross(normal, majorAxis));
+  Vector3D v = cross(normal, u);
+  Vector3D w = normal;
+
+  // Transform from local coordinates to world coordinates
+  return u * x + v * y + w * z;
+}
+
+Vector3D faceForward(const Vector3D &wo, const Vector3D &n) {
+  return dot(wo, n) < 0.0f ? -n : n;
+}
+
 float clamp(float val, float low, float high) {
   return std::max(std::min(val, high), low);
 }
