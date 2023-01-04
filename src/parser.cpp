@@ -285,14 +285,14 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
       currentMaterial = std::make_unique<Material>(0.0f, 1.0f, 1.5f, 1.0f, 1.0f, 0.0f, 0.0f, MaterialType::Glass);
     } else if (keyword == "plastic") {
       currentObjectType = ObjectType::Diffuse;
-      currentMaterial = std::make_unique<Material>(0.25f, 0.25f, 1.3f, 1.0f, 0.0f, 0.0f, 0.1f, MaterialType::Plastic);
+      currentMaterial = std::make_unique<Material>(0.5f, 0.5f, 1.3f, 1.0f, 0.0f, 0.0f, 0.1f, MaterialType::Plastic);
     } else if (keyword == "none") {
       currentObjectType = ObjectType::Diffuse;
       currentMaterial = std::make_unique<Material>();
     } else if (keyword == "copper") {
       currentObjectType = ObjectType::Metal;
       currentColor = RGBAColor(0.95597f, 0.63760f, 0.53948f);
-      currentMaterial = std::make_unique<Material>(0.0f, 1.0f, 0.23883f, 0.9553f, 0.0f, 0.0447f, 0.078125f, MaterialType::Metal);
+      currentMaterial = std::make_unique<Material>(0.0f, 1.0f, 0.23883f, 0.9553f, 0.0f, 0.0447f, 0.01f, MaterialType::Metal);
     } else if (keyword == "mirror") {
       currentObjectType = ObjectType::Reflective;
       currentMaterial = std::make_unique<Material>(0.0f, 1.0f, 0.0f, 0.9f, 0.0f, 0.0f, 0.0f, MaterialType::Mirror);

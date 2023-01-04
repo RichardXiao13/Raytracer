@@ -49,11 +49,11 @@ public:
       type(type),
       diffuseBRDF(new LambertianReflection(Kr)) {
     if (type == MaterialType::Metal) {
-      specularBRDF = new SpecularReflection(Kr, new FresnelConductor(1.0f, eta, Ka));
+      specularBRDF = new MicrofacetReflection(Kr, new TrowbridgeReitzDistribution(roughness, roughness), new FresnelConductor(1.0f, eta, Ka));
     } else if (type == MaterialType::Mirror) {
       specularBRDF = new SpecularReflection(Kr, new FresnelDielectric(1.0f, eta));
     } else if (type == MaterialType::Plastic) {
-      specularBRDF = new SpecularReflection(Kr, new FresnelDielectric(1.0f, eta));
+      specularBRDF = new MicrofacetReflection(Kr, new TrowbridgeReitzDistribution(roughness, roughness), new FresnelDielectric(1.0f, eta));
     } else {
       specularBRDF = new FresnelSpecular(Kr, Kt, 1.0f, eta);
     }

@@ -5,7 +5,7 @@
 
 class BDF {
 public:
-  BDF() {};
+  virtual ~BDF() {};
   virtual float func(const Vector3D &wo, const Vector3D &wi, const Vector3D &n) const = 0;
   virtual float sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, UniformRNGInfo &rngInfo, float *pdf) const;
   virtual float pdf(const Vector3D &wo, const Vector3D &wi, const Vector3D &n) const;
@@ -96,7 +96,9 @@ public:
   MicrofacetReflection(const float Kr, const MicrofacetDistribution *distribution, const Fresnel *fresnel)
     : Kr(Kr), distribution(distribution), fresnel(fresnel) {};
   float func(const Vector3D &wo, const Vector3D &wi, const Vector3D &n) const;
-
+  float sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, UniformRNGInfo &rngInfo, float *pdf) const;
+  float pdf(const Vector3D &wo, const Vector3D &wi, const Vector3D &n) const;
+  
 private:
   const float Kr;
   const MicrofacetDistribution *distribution;

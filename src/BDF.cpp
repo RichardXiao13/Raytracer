@@ -79,5 +79,23 @@ float MicrofacetReflection::func(const Vector3D &wo, const Vector3D &wi, const V
 
   wh = normalized(wh);
   float F = fresnel->evaluate(dot(wi, wh));
+  // if (distribution->distribution(wh, n) > 1)
+  //   std::cout << distribution->distribution(wh, n) << std::endl;
   return Kr * distribution->distribution(wh, n) * distribution->geometry(wo, wi, n) * F / (4 * cosThetaI * cosThetaO);
+}
+
+float MicrofacetReflection::sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, UniformRNGInfo &rngInfo, float *pdf) const {
+  Vector3D wh = distribution->sample_wh(wo, n, rngInfo);
+  *wi = reflect(wo, wh);
+  if (dot(wo, *wi) < 0)
+    return 0;
+  *pdf = distribution->pdf(wo, wh, n) / (4 * dot(wo, wh));
+  return func(wo, *wi, n);
+}
+
+float MicrofacetReflection::pdf(const Vector3D &wo, const Vector3D &wi, const Vector3D &n) const {
+  if (dot(wo, wi) < 0)
+    return 0;
+  Vector3D wh = normalized(wo + wi);
+  return distribution->pdf(wo, wh, n) / (4 * dot(wo, wh));
 }

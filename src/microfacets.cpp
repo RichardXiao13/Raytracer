@@ -1,10 +1,18 @@
 #include "microfacets.h"
 #include "vector3d.h"
 
+float MicrofacetDistribution::pdf(const Vector3D &wo, const Vector3D &wh, const Vector3D &n) const {
+  return distribution(wh, n) / std::abs(cosineTheta(wh, n));
+}
+
 float TrowbridgeReitzDistribution::distribution(const Vector3D &wh, const Vector3D &n) const {
   float tanTheta2 = tangentTheta(wh, n);
+  tanTheta2 *= tanTheta2;
   if (std::isinf(tanTheta2))
     return 0;
+  
+  if (alphaX * alphaY == 0)
+    return 1;
 
   float cosTheta4 = cosineTheta(wh, n);
   cosTheta4 = cosTheta4 * cosTheta4 * cosTheta4 * cosTheta4;
@@ -22,10 +30,29 @@ float TrowbridgeReitzDistribution::lambda(const Vector3D &w, const Vector3D &n) 
 
   float cosPhi2 = cosinePhi(w, n);
   cosPhi2 *= cosPhi2;
-  float sinPhi2 = sinePhi(w, n);
-  sinPhi2 *= sinPhi2;
+  float sinPhi2 = 1 - cosPhi2;
   float alpha = std::sqrt(cosPhi2 * alphaX * alphaX + sinPhi2 * alphaY * alphaY);
 
   float alpha2Tan2Theta = (alpha * absTanTheta) * (alpha * absTanTheta);
   return (-1 + std::sqrt(1 + alpha2Tan2Theta)) / 2;
+}
+
+Vector3D TrowbridgeReitzDistribution::sample_wh(const Vector3D &wo, const Vector3D &n, UniformRNGInfo &rngInfo) const {
+  float rand = rngInfo.distribution(rngInfo.rng);
+  
+  float theta = atanf(alphaX * alphaY * sqrtf(rand / (1.0f - rand)));
+  float phi = rngInfo.distribution(rngInfo.rng) * 2.0f * M_PI;
+
+  float x = std::sinf(phi) * std::cosf(theta);
+  float y = std::sinf(phi) * std::sinf(theta);
+
+  // Project z up to the unit hemisphere
+  float z = std::cosf(phi);
+
+  Vector3D wi = normalized(transformToWorld(x, y, z, n));
+  return normalized(wo + wi);
+}
+
+float TrowbridgeReitzDistribution::roughnessToAlpha(const float roughness) const {
+  return std::sqrt(roughness);
 }

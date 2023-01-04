@@ -279,18 +279,18 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
 
   if (specularBSDF != nullptr && material->Ks > 0) {
     // Accumulate specular reflection/transmission
-      float pdf = 0.0f;
-      Vector3D wi;
-      float contribution = specularBSDF->sampleFunc(wo, &wi, intersectInfo.normal, rngInfo, &pdf);
-      bool exiting = dot(wi, outNormal) > 0;
-      point += outNormal * (exiting ? bias_ : -bias_);
-      if (pdf != 0 && contribution != 0) {
-        RGBAColor Li = raytrace(point, wi, depth + 1, rngInfo);
-        specular += contribution * Li / pdf;
-        // Add metallic object specular contribution
-        if (intersectInfo.obj->material->type == MaterialType::Metal)
-          specular *= intersectInfo.obj->color;
-      }
+    float pdf = 0.0f;
+    Vector3D wi;
+    float contribution = specularBSDF->sampleFunc(wo, &wi, intersectInfo.normal, rngInfo, &pdf);
+    bool exiting = dot(wi, outNormal) > 0;
+    point += outNormal * (exiting ? bias_ : -bias_);
+    if (pdf != 0 && contribution != 0) {
+      RGBAColor Li = raytrace(point, wi, depth + 1, rngInfo);
+      specular += contribution * Li / pdf;
+      // Add metallic object specular contribution
+      if (intersectInfo.obj->material->type == MaterialType::Metal)
+        specular *= intersectInfo.obj->color;
+    }
 
     specular = material->Ks * specular;
   }

@@ -85,7 +85,7 @@ float dot(const Vector3D& v1, const Vector3D& v2) {
 }
 
 float cosineTheta(const Vector3D& v1, const Vector3D& v2) {
-  return clamp(v1.x * v2.x + v1.y * v2.y + v1.z * v2.z, -1, 1);
+  return clamp(dot(v1, v2), -1, 1);
 }
 
 float sineTheta(const Vector3D& v1, const Vector3D& v2) {
