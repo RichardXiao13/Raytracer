@@ -286,7 +286,7 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
     point += outNormal * (exiting ? bias_ : -bias_);
     if (pdf != 0 && contribution != 0) {
       RGBAColor Li = raytrace(point, wi, depth + 1, rngInfo);
-      specular += contribution * Li / pdf;
+      specular += contribution * Li * std::abs(dot(wi, intersectInfo.normal)) / pdf;
       // Add metallic object specular contribution
       if (intersectInfo.obj->material->type == MaterialType::Metal)
         specular *= intersectInfo.obj->color;

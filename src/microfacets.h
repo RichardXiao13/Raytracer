@@ -19,14 +19,13 @@ public:
 
 class TrowbridgeReitzDistribution : public MicrofacetDistribution {
 public:
-  TrowbridgeReitzDistribution(const float roughX, const float roughY)
-    : alphaX(roughnessToAlpha(roughX)), alphaY(roughnessToAlpha(roughY)) {};
+  TrowbridgeReitzDistribution(const float roughness)
+    : alpha(roughnessToAlpha(roughness)) {};
   float distribution(const Vector3D &wh, const Vector3D &n) const;
   float lambda(const Vector3D &w, const Vector3D &n) const;
   Vector3D sample_wh(const Vector3D &wo, const Vector3D &n, UniformRNGInfo &rngInfo) const;
   float roughnessToAlpha(const float roughness) const;
 
 private:
-  const float alphaX;
-  const float alphaY;
+  const float alpha;
 };
