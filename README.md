@@ -20,6 +20,8 @@ Any feedback or issues found are very much welcome, as well as additional contri
 # TODOs - Version 2: Realistic Rendering
 * Add textures
 
+* Fix artifacting where certain pixels "blow up" due to NaNs?
+
 * Find a better file format or parse other formats into this format
 
 * Implement other materials (plastic, matte surfaces, metals, ...) and update Material interface

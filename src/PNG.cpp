@@ -81,6 +81,10 @@ RGBAColor operator*(const RGBAColor& c, const Vector3D& v) {
   return RGBAColor(c.r * v.x, c.g * v.y, c.b * v.z, c.a);
 }
 
+bool hasInf(RGBAColor &c) {
+  return c.r == INF_D || c.g == INF_D || c.g == INF_D;
+}
+
 RGBAColor clipColor(const RGBAColor& c) {
   return RGBAColor(
     std::max(0.0f, std::min(c.r, 1.0f)),
@@ -90,7 +94,7 @@ RGBAColor clipColor(const RGBAColor& c) {
   );
 }
 
-RGBAColor &PNG::getPixel(int row, int col) {
+RGBAColor &PNG::getPixel(unsigned row, unsigned col) {
   assert(row >= 0 && row < height_);
   assert(col >= 0 && col < width_);
 
@@ -132,7 +136,7 @@ bool PNG::readFromFile(const std::string &filename) {
 
 bool PNG::saveToFile(const std::string& filename) {
   unsigned char *byteData = new unsigned char[width_ * height_ * 4];
-  for (int i = 0; i < width_ * height_; i++) {
+  for (unsigned i = 0; i < width_ * height_; i++) {
     RGBAColor gammaCorrected = image_[i].toSRGB();
     byteData[(i * 4)]     = static_cast<unsigned char>(round(gammaCorrected.r * 255));
     byteData[(i * 4) + 1] = static_cast<unsigned char>(round(gammaCorrected.g * 255));

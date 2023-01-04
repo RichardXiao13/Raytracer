@@ -26,6 +26,7 @@ public:
   RGBAColor &operator/=(float scalar);
   RGBAColor &operator*=(const RGBAColor& c);
   friend RGBAColor operator*(const RGBAColor& c1, const RGBAColor& c2);
+  friend bool hasInf(RGBAColor &c);
 
   float r;
   float g;
@@ -37,7 +38,7 @@ RGBAColor operator*(const Vector3D& v, const RGBAColor& c);
 RGBAColor operator*(const RGBAColor& c, const Vector3D& v);
 class PNG {
 public:
-  PNG(int w, int h) : width_(w), height_(h) {
+  PNG(unsigned w, unsigned h) : width_(w), height_(h) {
     image_ = new RGBAColor[width_ * height_];
   }
 
@@ -49,7 +50,7 @@ public:
     delete[] image_;
   }
 
-  RGBAColor &getPixel(int row, int col);
+  RGBAColor &getPixel(unsigned row, unsigned col);
 
   int width() {
     return width_;

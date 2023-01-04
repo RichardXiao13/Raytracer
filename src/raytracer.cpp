@@ -249,6 +249,7 @@ RGBAColor Scene::illuminate(const Vector3D &rayDirection, const IntersectionInfo
   float contribution = diffuseBSDF->sampleFunc(wo, &wi, surfaceNormal, rngInfo, &pdf);
   if (pdf != 0 && contribution != 0) {
     RGBAColor Li = raytrace(info.point, wi, depth + 1, rngInfo);
+    if (hasInf(Li)) std::cerr << "uh oh" << std::endl;
     Le += contribution * Li / pdf;
   }
 
@@ -286,6 +287,7 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
       point += outNormal * (exiting ? bias_ : -bias_);
       if (pdf != 0 && contribution != 0) {
         RGBAColor Li = raytrace(point, wi, depth + 1, rngInfo);
+        if (hasInf(Li)) std::cerr << "uh oh" << std::endl;
         specular += contribution * Li / pdf;
         // Add metallic object specular contribution
         if (intersectInfo.obj->material->type == MaterialType::Metal)
