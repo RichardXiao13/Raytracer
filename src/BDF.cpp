@@ -14,7 +14,7 @@ float BDF::sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, Unifo
 
   *wi = normalized(transformToWorld(x, y, z, n));
   *pdf = this->pdf(wo, *wi, n);
-  return func(wo, *wi);
+  return func(wo, *wi, n);
 }
 
 float BDF::pdf(const Vector3D &wo, const Vector3D &wi, const Vector3D &n) const {
@@ -66,4 +66,18 @@ float FresnelSpecular::sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector
     Ft *= (etaI * etaI) / (etaT * etaT);
     return Ft / std::abs(dot(*wi, n));
   }
+}
+
+float MicrofacetReflection::func(const Vector3D &wo, const Vector3D &wi, const Vector3D &n) const {
+  float cosThetaO = std::abs(cosineTheta(wo, n));
+  float cosThetaI = std::abs(cosineTheta(wi, n));
+  Vector3D wh = wi + wo;
+  if (cosThetaI == 0 || cosThetaO == 0)
+    return 0;
+  if (wh.x == 0 && wh.y == 0 && wh.z == 0)
+    return 0;
+
+  wh = normalized(wh);
+  float F = fresnel->evaluate(dot(wi, wh));
+  return Kr * distribution->distribution(wh, n) * distribution->geometry(wo, wi, n) * F / (4 * cosThetaI * cosThetaO);
 }

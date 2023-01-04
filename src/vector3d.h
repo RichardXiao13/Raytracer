@@ -26,6 +26,14 @@ public:
   friend Vector3D normalized(const Vector3D& v);
   friend float dot(const Vector3D& v1, const Vector3D& v2);
   friend float clipDot(const Vector3D& v1, const Vector3D& v2);
+  
+  friend float cosineTheta(const Vector3D& v1, const Vector3D& v2);
+  friend float sineTheta(const Vector3D& v1, const Vector3D& v2);
+  friend float tangentTheta(const Vector3D& v1, const Vector3D& v2);
+  friend float cosinePhi(const Vector3D& v, const Vector3D& n);
+  friend float sinePhi(const Vector3D& v, const Vector3D& n);
+  friend float tangentPhi(const Vector3D& v, const Vector3D& n);
+  
   friend Vector3D cross(const Vector3D& v1, const Vector3D& v2);
   friend bool isZero(const Vector3D& v);
   friend float determinant(const Vector3D& v1, const Vector3D& v2, const Vector3D& v3);

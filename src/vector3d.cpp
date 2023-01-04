@@ -1,5 +1,6 @@
 #include "macros.h"
 #include "vector3d.h"
+#include "math_utils.h"
 
 Vector3D::Vector3D(float x1, float y1, float z1) : x(x1), y(y1), z(z1) {};
 
@@ -81,6 +82,39 @@ Vector3D normalized(const Vector3D& v) {
 
 float dot(const Vector3D& v1, const Vector3D& v2) {
   return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
+}
+
+float cosineTheta(const Vector3D& v1, const Vector3D& v2) {
+  return clamp(v1.x * v2.x + v1.y * v2.y + v1.z * v2.z, -1, 1);
+}
+
+float sineTheta(const Vector3D& v1, const Vector3D& v2) {
+  float cosTheta = cosineTheta(v1, v2);
+  return std::sqrt(1 - cosTheta * cosTheta);
+}
+
+float tangentTheta(const Vector3D& v1, const Vector3D& v2) {
+  float cosTheta = cosineTheta(v1, v2);
+  float sinTheta = sineTheta(v1, v2);
+  return sinTheta / cosTheta;
+}
+
+float cosinePhi(const Vector3D& v, const Vector3D& n) {
+  Vector3D vComponent = v - dot(v, n) * n;
+  vComponent = (vComponent - vComponent.z) / magnitude(vComponent);
+  return vComponent.x;
+}
+
+float sinePhi(const Vector3D& v, const Vector3D& n) {
+  Vector3D vComponent = v - dot(v, n) * n;
+  vComponent = (vComponent - vComponent.z) / magnitude(vComponent);
+  return vComponent.y;
+}
+
+float tangentPhi(const Vector3D& v, const Vector3D& n) {
+  Vector3D vComponent = v - dot(v, n) * n;
+  vComponent = (vComponent - vComponent.z) / magnitude(vComponent);
+  return vComponent.y / vComponent.x;
 }
 
 float clipDot(const Vector3D& v1, const Vector3D& v2) {
