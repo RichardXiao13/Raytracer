@@ -28,7 +28,8 @@ RGBAColor Bulb::intensity(const Vector3D &point, const Vector3D &n) const {
   return color * clipDot(n, lightDirection) * invDistance;
 }
 
-Sphere::Sphere(float x1, float y1, float z1, float r1) : center(x1, y1, z1), r(r1) {
+Sphere::Sphere(float x1, float y1, float z1, float r1, const RGBAColor color, const std::shared_ptr<Material> &material)
+  : Object(color, material), center(x1, y1, z1), r(r1) {
   aabbMin.x = x1 - r1;
   aabbMin.y = y1 - r1;
   aabbMin.z = z1 - r1;
@@ -66,7 +67,8 @@ IntersectionInfo Sphere::intersect(const Vector3D& origin, const Vector3D& direc
   return { t, intersectionPoint, normalized(intersectionPoint - center), this };
 }
 
-Plane::Plane(float A, float B, float C, float D) : normal(normalized(Vector3D(A, B, C))) {
+Plane::Plane(float A, float B, float C, float D, const RGBAColor color, const std::shared_ptr<Material> &material)
+  : Object(color, material), normal(normalized(Vector3D(A, B, C))) {
   if (A != 0) {
     point.x = -D/A;
   } else if (B != 0) {
@@ -86,8 +88,8 @@ IntersectionInfo Plane::intersect(const Vector3D& origin, const Vector3D& direct
   : IntersectionInfo{ t, t * normalizedDirection + origin, normal, this };
 }
 
-Triangle::Triangle(const Vector3D& p1, const Vector3D& p2, const Vector3D& p3)
-  : p1(p1) {
+Triangle::Triangle(const Vector3D& p1, const Vector3D& p2, const Vector3D& p3, const RGBAColor color, const std::shared_ptr<Material> &material)
+  : Object(color, material), p1(p1) {
   aabbMin.x = std::min(std::min(p1.x, p2.x), p3.x);
   aabbMin.y = std::min(std::min(p1.y, p2.y), p3.y);
   aabbMin.z = std::min(std::min(p1.z, p2.z), p3.z);

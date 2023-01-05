@@ -242,16 +242,6 @@ RGBAColor Scene::illuminate(const Vector3D &rayDirection, const IntersectionInfo
     }
   }
 
-  // Add global illumination contribution
-  BDF *diffuseBSDF = info.obj->material->diffuseBRDF;
-  float pdf = 0.0f;
-  Vector3D wi;
-  float contribution = diffuseBSDF->sampleFunc(wo, &wi, surfaceNormal, rngInfo, &pdf);
-  if (pdf != 0 && contribution != 0) {
-    RGBAColor Li = raytrace(info.point, wi, depth + 1, rngInfo);
-    Le += contribution * Li / pdf;
-  }
-
   return objectColor * Le;
 }
 
@@ -268,33 +258,27 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
   Vector3D outNormal = faceForward(wo, intersectInfo.normal);
   intersectInfo.point += bias_ * outNormal;
 
-  const std::unique_ptr<Material> &material = intersectInfo.obj->material;
+  const std::shared_ptr<Material> &material = intersectInfo.obj->material;
 
-  BDF *specularBSDF = material->specularBRDF;  
-  RGBAColor diffuse;
-  RGBAColor specular;
+  const BSDF &bsdf = material->bsdf;  
+  RGBAColor color = illuminate(direction, intersectInfo, depth + 1, rngInfo);
 
-  if (material->Kd > 0)
-    diffuse = material->Kd * illuminate(direction, intersectInfo, depth + 1, rngInfo);
+  float pdf = 0.0f;
+  BDFType type{};
+  Vector3D wi;
+  float contribution = bsdf.sampleFunc(wo, &wi, intersectInfo.normal, rngInfo, &pdf, &type);
+  bool exiting = dot(wi, outNormal) > 0;
+  point += outNormal * (exiting ? bias_ : -bias_);
 
-  if (specularBSDF != nullptr && material->Ks > 0) {
-    // Accumulate specular reflection/transmission
-    float pdf = 0.0f;
-    Vector3D wi;
-    float contribution = specularBSDF->sampleFunc(wo, &wi, intersectInfo.normal, rngInfo, &pdf);
-    bool exiting = dot(wi, outNormal) > 0;
-    point += outNormal * (exiting ? bias_ : -bias_);
-    if (pdf != 0 && contribution != 0) {
-      RGBAColor Li = raytrace(point, wi, depth + 1, rngInfo);
-      specular += contribution * Li * std::abs(dot(wi, intersectInfo.normal)) / pdf;
-      // Add metallic object specular contribution
-      if (intersectInfo.obj->material->type == MaterialType::Metal)
-        specular *= intersectInfo.obj->color;
-    }
-
-    specular = material->Ks * specular;
+  if (pdf != 0 && contribution != 0) {
+    RGBAColor Li = raytrace(point, wi, depth + 1, rngInfo);
+    Li = contribution * Li * std::abs(dot(wi, intersectInfo.normal)) / pdf;
+    // Add metallic object specular contribution
+    if (intersectInfo.obj->material->type == MaterialType::Metal)
+      Li *= intersectInfo.obj->color;
+    color += Li;
   }
-  return diffuse + specular;
+  return color;
 }
 
 PNG *Scene::render(std::function<void (Scene *, PNG *, SafeQueue<RenderTask> *, SafeProgressBar *)> worker, int numThreads) {

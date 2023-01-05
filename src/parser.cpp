@@ -51,7 +51,7 @@ std::unique_ptr<Scene> readOBJ(std::istream& in) {
   std::unique_ptr<Scene> scene = std::make_unique<Scene>(1024, 1024, "");
   std::vector<Vector3D> points;
   std::vector<Vector3D> normals;
-  std::unique_ptr<Material> currentMaterial = std::make_unique<Material>();
+  std::shared_ptr<Material> currentMaterial = std::make_shared<Material>();
   RGBAColor currentColor(1, 1, 1, 1);
   float minX = INF_D;
   float minY = INF_D;
@@ -101,10 +101,7 @@ std::unique_ptr<Scene> readOBJ(std::istream& in) {
           std::cout << "Indices out of range: " << i << ' ' << j << ' ' << k << std::endl;
           continue;
         }
-        std::unique_ptr<Triangle> newObject = std::make_unique<Triangle>(points.at(i), points.at(j), points.at(k));
-        std::unique_ptr<Material> material = std::make_unique<Material>(*currentMaterial);
-        newObject->setColor(currentColor);
-        newObject->setMaterial(std::move(material));
+        std::unique_ptr<Triangle> newObject = std::make_unique<Triangle>(points.at(i), points.at(j), points.at(k), currentColor, currentMaterial);
         if (vertex1.size() == 3) {
           newObject->n1 = normals.at(vertex1.at(2) - 1);
           newObject->n2 = normals.at(vertex2.at(2) - 1);
@@ -155,7 +152,7 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
   std::string filename = lineInfo.at(3);
   std::unique_ptr<Scene> scene = std::make_unique<Scene>(width, height, filename);
   std::vector<Vector3D> points;
-  std::unique_ptr<Material> currentMaterial = std::make_unique<Material>();
+  std::shared_ptr<Material> currentMaterial = std::make_shared<Material>();
   RGBAColor currentColor(1, 1, 1, 1);
   ObjectType currentObjectType = ObjectType::Diffuse;
   std::unordered_map<std::string, std::shared_ptr<PNG>> textures;
@@ -173,10 +170,7 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
       float y = std::stof(lineInfo.at(2));
       float z = std::stof(lineInfo.at(3));
       float r = std::stof(lineInfo.at(4));
-      std::unique_ptr<Sphere> newObject = std::make_unique<Sphere>(x, y, z, r);
-      std::unique_ptr<Material> material = std::make_unique<Material>(*currentMaterial);
-      newObject->setColor(currentColor);
-      newObject->setMaterial(std::move(material));
+      std::unique_ptr<Sphere> newObject = std::make_unique<Sphere>(x, y, z, r, currentColor, currentMaterial);
       newObject->type = currentObjectType;
       scene->addObject(std::move(newObject));
     } else if (keyword == "sun") {
@@ -194,10 +188,7 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
       float B = std::stof(lineInfo.at(2));
       float C = std::stof(lineInfo.at(3));
       float D = std::stof(lineInfo.at(4));
-      std::unique_ptr<Plane> newObject = std::make_unique<Plane>(A, B, C, D);
-      std::unique_ptr<Material> material = std::make_unique<Material>(*currentMaterial);
-      newObject->setColor(currentColor);
-      newObject->setMaterial(std::move(material));
+      std::unique_ptr<Plane> newObject = std::make_unique<Plane>(A, B, C, D, currentColor, currentMaterial);
       newObject->type = currentObjectType;
       scene->addPlane(std::move(newObject));
     } else if (keyword == "bulb") {
@@ -223,10 +214,7 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
       if (k < 0) {
         k += points.size() + 1;
       }
-      std::unique_ptr<Triangle> newObject = std::make_unique<Triangle>(points.at(i), points.at(j), points.at(k));
-      std::unique_ptr<Material> material = std::make_unique<Material>(*currentMaterial);
-      newObject->setColor(currentColor);
-      newObject->setMaterial(std::move(material));
+      std::unique_ptr<Triangle> newObject = std::make_unique<Triangle>(points.at(i), points.at(j), points.at(k), currentColor, currentMaterial);
       newObject->type = currentObjectType;
       // Orient the normal if the normal faces with the forward vector and the object is in front of the camera
       // I think this works??
@@ -282,28 +270,28 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
       scene->setLens(lens);
     } else if (keyword == "glass") {
       currentObjectType = ObjectType::Refractive;
-      currentMaterial = std::make_unique<Material>(0.0f, 1.0f, 1.5f, 1.0f, 1.0f, 0.0f, 0.0f, MaterialType::Glass);
+      currentMaterial = std::make_shared<Material>(0.0f, 1.0f, 1.5f, 1.0f, 1.0f, 0.0f, 0.0f, MaterialType::Glass);
     } else if (keyword == "plastic") {
       currentObjectType = ObjectType::Diffuse;
-      currentMaterial = std::make_unique<Material>(0.5f, 0.5f, 1.3f, 1.0f, 0.0f, 0.0f, 0.1f, MaterialType::Plastic);
+      currentMaterial = std::make_shared<Material>(0.5f, 0.5f, 1.3f, 1.0f, 0.0f, 0.0f, 0.1f, MaterialType::Plastic);
     } else if (keyword == "none") {
       currentObjectType = ObjectType::Diffuse;
-      currentMaterial = std::make_unique<Material>();
+      currentMaterial = std::make_shared<Material>();
     } else if (keyword == "copper") {
       currentObjectType = ObjectType::Metal;
       currentColor = RGBAColor(0.95597f, 0.63760f, 0.53948f);
-      currentMaterial = std::make_unique<Material>(0.0f, 1.0f, 0.23883f, 0.9553f, 0.0f, 0.0447f, 0.01f, MaterialType::Metal);
+      currentMaterial = std::make_shared<Material>(0.0f, 1.0f, 0.23883f, 0.9553f, 0.0f, 0.0447f, 0.01f, MaterialType::Metal);
     } else if (keyword == "mirror") {
       currentObjectType = ObjectType::Reflective;
-      currentMaterial = std::make_unique<Material>(0.0f, 1.0f, 0.0f, 0.9f, 0.0f, 0.0f, 0.0f, MaterialType::Mirror);
+      currentMaterial = std::make_shared<Material>(0.0f, 1.0f, 0.0f, 0.9f, 0.0f, 0.0f, 0.0f, MaterialType::Mirror);
     } else if (keyword == "diffuse") {
       currentObjectType = ObjectType::Diffuse;
-      currentMaterial = std::make_unique<Material>();
+      currentMaterial = std::make_shared<Material>();
     } else if (keyword == "refractive") {
       currentObjectType = ObjectType::Refractive;
     } else if (keyword == "reflective") {
       currentObjectType = ObjectType::Reflective;
-      currentMaterial = std::make_unique<Material>(0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, MaterialType::Dialectric);
+      currentMaterial = std::make_shared<Material>(0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, MaterialType::Dialectric);
     } else if (keyword == "texture") {
       textures[lineInfo.at(1)] = std::make_shared<PNG>(lineInfo.at(1));
     }

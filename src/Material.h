@@ -31,33 +31,8 @@ enum class MaterialType {
 */
 class Material {
 public:
-  ~Material() {
-    // delete diffuseBRDF;
-    // delete specularBRDF;
-  }
-  Material()
-    : Kd(1.0f), Ks(0.0f), eta(1.0f),
-      Kr(1.0f), Kt(0.0f), Ka(0.0f),
-      roughness(0.0f),
-      type(MaterialType::Dialectric),
-      diffuseBRDF(new LambertianReflection(Kr)),
-      specularBRDF(nullptr) {};
-  Material(float Kd, float Ks, float eta, float Kr, float Kt, float Ka, float roughness, MaterialType type)
-    : Kd(Kd), Ks(Ks), eta(eta),
-      Kr(Kr), Kt(Kt), Ka(Ka),
-      roughness(roughness),
-      type(type),
-      diffuseBRDF(new LambertianReflection(Kr)) {
-    if (type == MaterialType::Metal) {
-      specularBRDF = new MicrofacetReflection(Kr, new TrowbridgeReitzDistribution(roughness), new FresnelConductor(1.0f, eta, Ka));
-    } else if (type == MaterialType::Mirror) {
-      specularBRDF = new SpecularReflection(Kr, new FresnelDielectric(1.0f, eta));
-    } else if (type == MaterialType::Plastic) {
-      specularBRDF = new MicrofacetReflection(Kr, new TrowbridgeReitzDistribution(roughness), new FresnelDielectric(1.0f, eta));
-    } else {
-      specularBRDF = new FresnelSpecular(Kr, Kt, 1.0f, eta);
-    }
-  };
+  Material();
+  Material(float Kd, float Ks, float eta, float Kr, float Kt, float Ka, float roughness, MaterialType type);
   
   float Kd;
   float Ks;
@@ -67,6 +42,5 @@ public:
   float Ka;
   float roughness;
   MaterialType type;
-  BDF *diffuseBRDF;
-  BDF *specularBRDF;
+  BSDF bsdf;
 };
