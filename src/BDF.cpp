@@ -85,8 +85,9 @@ float MicrofacetReflection::func(const Vector3D &wo, const Vector3D &wi, const V
 float MicrofacetReflection::sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, UniformRNGInfo &rngInfo, float *pdf) const {
   Vector3D wh = distribution->sample_wh(wo, n, rngInfo);
   *wi = reflect(wo, wh);
-  if (dot(wo, *wi) < 0)
-    return 0;
+  // if (dot(wo, *wi) < 0)
+  //   return 0;
+
   *pdf = distribution->pdf(wo, wh, n) / (4 * std::abs(dot(wo, wh)));
   return func(wo, *wi, n);
 }

@@ -19,11 +19,6 @@ float TrowbridgeReitzDistribution::distribution(const Vector3D &wh, const Vector
   float alpha2 = alpha * alpha;
   float t = tanTheta2 / alpha2;
   return 1 / (M_PI * alpha2 * cosTheta4 * (1 + t) * (1 + t));
-  // float alpha2 = alpha * alpha;
-  // float cosTheta2 = cosineTheta(wh, n);
-  // cosTheta2 *= cosTheta2;
-  // float t = cosTheta2 * (alpha2 - 1) + 1;
-  // return alpha2 / (M_PI * t * t);
 }
 
 float TrowbridgeReitzDistribution::lambda(const Vector3D &w, const Vector3D &n) const {
@@ -47,10 +42,9 @@ Vector3D TrowbridgeReitzDistribution::sample_wh(const Vector3D &wo, const Vector
   // Project z up to the unit hemisphere
   float z = std::cosf(phi);
 
-  return normalized(transformToWorld(x, y, z, n));
+  return faceForward(normalized(transformToWorld(x, y, z, n)), n);
 }
 
 float TrowbridgeReitzDistribution::roughnessToAlpha(const float roughness) const {
-  return roughness;
-  return std::sqrt(roughness);
+  return std::sqrt(std::min(1e-4f, roughness));
 }
