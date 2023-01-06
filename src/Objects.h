@@ -8,7 +8,7 @@
 
 class Object;
 class Material;
-struct UniformRNGInfo;
+struct Uniformsampler;
 class Scene;
 
 /**

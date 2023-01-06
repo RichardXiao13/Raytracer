@@ -3,10 +3,17 @@
 #include "macros.h"
 #include "vector3d.h"
 
-struct UniformRNGInfo {
-  UniformRNGInfo(std::mt19937 &rng, std::uniform_real_distribution<float> &distribution) : rng(rng), distribution(distribution) {};
-  std::mt19937 &rng;
-  std::uniform_real_distribution<float> &distribution;
+class UniformDistribution {
+public:
+  UniformDistribution(const std::mt19937 &rng, const std::uniform_real_distribution<float> &distribution)
+    : rng(rng), distribution(distribution) {};
+  float operator()() {
+    return distribution(rng);
+  }
+
+private:
+  std::mt19937 rng;
+  std::uniform_real_distribution<float> distribution;
 };
 
 Vector3D transformToWorld(float x, float y, float z, const Vector3D &normal);

@@ -10,11 +10,11 @@ BDFType operator&(BDFType lhs, BDFType rhs) {
                               static_cast<std::underlying_type<BDFType>::type>(rhs));
 }
 
-float BDF::sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, UniformRNGInfo &rngInfo, float *pdf, BDFType *type) const {
+float BDF::sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, UniformDistribution &sampler, float *pdf, BDFType *type) const {
   // sample unit hemisphere and map it to the normal
-  float rand = rngInfo.distribution(rngInfo.rng);
+  float rand = sampler();
   float r = std::sqrtf(rand);
-  float theta = rngInfo.distribution(rngInfo.rng) * 2.0f * M_PI;
+  float theta = sampler() * 2.0f * M_PI;
 
   float x = r * std::cosf(theta);
   float y = r * std::sinf(theta);
@@ -33,7 +33,7 @@ float BDF::pdf(const Vector3D &wo, const Vector3D &wi, const Vector3D &n) const 
   return (dot(wo, wi) > 0) ? std::abs(dot(wi, n)) * M_1_PI : 0;
 }
 
-float SpecularReflection::sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, UniformRNGInfo &rngInfo, float *pdf, BDFType *type) const {
+float SpecularReflection::sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, UniformDistribution &sampler, float *pdf, BDFType *type) const {
   *wi = reflect(wo, n);
   *pdf = 1.0f;
   *type = BDFType::PERFECT_SPECULAR;
@@ -41,7 +41,7 @@ float SpecularReflection::sampleFunc(const Vector3D &wo, Vector3D *wi, const Vec
   return fresnel->evaluate(cosThetaI) * Kr / std::abs(cosThetaI);
 }
 
-float SpecularTransmission::sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, UniformRNGInfo &rngInfo, float *pdf, BDFType *type) const {
+float SpecularTransmission::sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, UniformDistribution &sampler, float *pdf, BDFType *type) const {
   bool entering = dot(wo, n) > 0;
   float etaI = entering ? etaI_ : etaT_;
   float etaT = entering ? etaT_ : etaI_;
@@ -57,8 +57,8 @@ float SpecularTransmission::sampleFunc(const Vector3D &wo, Vector3D *wi, const V
   return Ft / std::abs(cosThetaI);
 }
 
-float FresnelSpecular::sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, UniformRNGInfo &rngInfo, float *pdf, BDFType *type) const {
-  float sample = rngInfo.distribution(rngInfo.rng);
+float FresnelSpecular::sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, UniformDistribution &sampler, float *pdf, BDFType *type) const {
+  float sample = sampler();
   float cosThetaI = dot(wo, n);
   *type = BDFType::PERFECT_SPECULAR;
 
@@ -96,8 +96,8 @@ float MicrofacetReflection::func(const Vector3D &wo, const Vector3D &wi, const V
   return Kr * distribution->distribution(wh, n) * distribution->geometry(wo, wi, n) * F / (4 * cosThetaI * cosThetaO);
 }
 
-float MicrofacetReflection::sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, UniformRNGInfo &rngInfo, float *pdf, BDFType *type) const {
-  Vector3D wh = distribution->sample_wh(wo, n, rngInfo);
+float MicrofacetReflection::sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, UniformDistribution &sampler, float *pdf, BDFType *type) const {
+  Vector3D wh = distribution->sample_wh(wo, n, sampler);
   *wi = reflect(wo, wh);
   // if (dot(wo, *wi) < 0)
   //   return 0;
@@ -123,16 +123,16 @@ float BSDF::func(const Vector3D &wo, const Vector3D &wi, const Vector3D &n) cons
   return contribution;
 }
 
-float BSDF::sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, UniformRNGInfo &rngInfo, float *pdf, BDFType *type) const {
+float BSDF::sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, UniformDistribution &sampler, float *pdf, BDFType *type) const {
   int numBDFs = bdfs.size();
   // somehow there is a segfault here because idx == numBDFs
   // even though it shouldn't happen because random number is between [0, 1)?
   // so use std::min to fix
-  float rand = std::floor(rngInfo.distribution(rngInfo.rng) * numBDFs);
+  float rand = std::floor(sampler() * numBDFs);
   int idx = std::min(numBDFs - 1, static_cast<int>(rand));
   if (idx >= numBDFs)   std::cout << idx << std::endl;
   BDF *bdf = bdfs[idx];
-  float contribution = bdf->sampleFunc(wo, wi, n, rngInfo, pdf, type);
+  float contribution = bdf->sampleFunc(wo, wi, n, sampler, pdf, type);
   if (*pdf == 0)
     return 0;
   

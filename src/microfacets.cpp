@@ -30,11 +30,11 @@ float TrowbridgeReitzDistribution::lambda(const Vector3D &w, const Vector3D &n) 
   return (-1 + std::sqrt(1 + alpha2Tan2Theta)) / 2;
 }
 
-Vector3D TrowbridgeReitzDistribution::sample_wh(const Vector3D &wo, const Vector3D &n, UniformRNGInfo &rngInfo) const {
-  float rand = rngInfo.distribution(rngInfo.rng);
+Vector3D TrowbridgeReitzDistribution::sample_wh(const Vector3D &wo, const Vector3D &n, UniformDistribution &sampler) const {
+  float rand = sampler();
   
   float theta = atanf(alpha * sqrtf(rand / (1.0f - rand)));
-  float phi = rngInfo.distribution(rngInfo.rng) * 2.0f * M_PI;
+  float phi = sampler() * 2.0f * M_PI;
 
   float x = std::sinf(phi) * std::cosf(theta);
   float y = std::sinf(phi) * std::sinf(theta);

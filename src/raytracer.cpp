@@ -16,14 +16,11 @@ Scene::~Scene() {
 
 void Scene::threadTaskDefault(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBar *counter) {
   RenderTask task;
-  std::mt19937 rng;
   int finishedPixels = 0;
 
   float invNumRays = 1.0 / numRays;
   int allowAntiAliasing = std::min(1, numRays - 1);
-  std::uniform_real_distribution<float> rayDistribution = std::uniform_real_distribution<float>(-0.5, 0.5);
-  std::uniform_real_distribution<float> sampleDistribution = std::uniform_real_distribution<float>(0, 1.0);
-  UniformRNGInfo rngInfo(rng, sampleDistribution);
+  UniformDistribution sampler(std::mt19937(), std::uniform_real_distribution<float>(0, 1.0));
 
   // hacky... but does the job
   while ((task = tasks->dequeue()).x != -1) {
@@ -34,10 +31,10 @@ void Scene::threadTaskDefault(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgre
     int hits = 0;
 
     for (int i = 0; i < numRays; ++i) {
-      float Sx = getRayScaleX(x + rayDistribution(rng) * allowAntiAliasing, width_, height_);
-      float Sy = getRayScaleY(y + rayDistribution(rng) * allowAntiAliasing, width_, height_);
+      float Sx = getRayScaleX(x + (sampler() - 0.5f) * allowAntiAliasing, width_, height_);
+      float Sy = getRayScaleY(y + (sampler() - 0.5f) * allowAntiAliasing, width_, height_);
 
-      RGBAColor color = raytrace(eye, forward + Sx * right + Sy * up, 0, rngInfo);
+      RGBAColor color = raytrace(eye, forward + Sx * right + Sy * up, sampler);
       if (color.a != 0) {
         avgColor += color;
         ++hits;
@@ -60,7 +57,6 @@ void Scene::threadTaskDefault(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgre
 
 void Scene::threadTaskFisheye(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBar *counter) {
   RenderTask task;
-  std::mt19937 rng;
   int finishedPixels = 0;
 
   float invNumRays = 1.0 / numRays;
@@ -72,9 +68,7 @@ void Scene::threadTaskFisheye(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgre
   // Avoid race condiiton
   Vector3D forwardCopy = forward;
 
-  std::uniform_real_distribution<float> rayDistribution = std::uniform_real_distribution<float>(-0.5, 0.5);
-  std::uniform_real_distribution<float> sampleDistribution = std::uniform_real_distribution<float>(0, 1.0);
-  UniformRNGInfo rngInfo(rng, sampleDistribution);
+  UniformDistribution sampler(std::mt19937(), std::uniform_real_distribution<float>(0, 1.0));
 
   // hacky... but does the job
   while ((task = tasks->dequeue()).x != -1) {
@@ -85,8 +79,8 @@ void Scene::threadTaskFisheye(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgre
     int hits = 0;
 
     for (int i = 0; i < numRays; ++i) {
-      float Sx = getRayScaleX(x + rayDistribution(rng) * allowAntiAliasing, width_, height_);
-      float Sy = getRayScaleY(y + rayDistribution(rng) * allowAntiAliasing, width_, height_);
+      float Sx = getRayScaleX(x + (sampler() - 0.5f) * allowAntiAliasing, width_, height_);
+      float Sy = getRayScaleY(y + (sampler() - 0.5f) * allowAntiAliasing, width_, height_);
 
       Sx *= invForwardLength;
       Sy *= invForwardLength;
@@ -96,7 +90,7 @@ void Scene::threadTaskFisheye(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgre
       }
       forwardCopy = sqrt(1 - r_2) * normalizedForward;
 
-      RGBAColor color = raytrace(eye, forwardCopy + Sx * right + Sy * up, 0, rngInfo);
+      RGBAColor color = raytrace(eye, forwardCopy + Sx * right + Sy * up, sampler);
       if (color.a != 0) {
         avgColor += color;
         ++hits;
@@ -119,15 +113,12 @@ void Scene::threadTaskFisheye(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgre
 
 void Scene::threadTaskDOF(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBar *counter) {
   RenderTask task;
-  std::mt19937 rng;
   int finishedPixels = 0;
 
   float invNumRays = 1.0 / numRays;
   int allowAntiAliasing = std::min(1, numRays - 1);
-  std::uniform_real_distribution<float> rayDistribution = std::uniform_real_distribution<float>(-0.5, 0.5);
-  std::uniform_real_distribution<float> lensDistribution = std::uniform_real_distribution<float>(0, 2 * M_PI);
   std::uniform_real_distribution<float> sampleDistribution = std::uniform_real_distribution<float>(0, 1.0);
-  UniformRNGInfo rngInfo(rng, sampleDistribution);
+  UniformDistribution sampler(std::mt19937(), std::uniform_real_distribution<float>(0, 1.0));
 
   // hacky... but does the job
   while ((task = tasks->dequeue()).x != -1) {
@@ -138,16 +129,16 @@ void Scene::threadTaskDOF(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBa
     int hits = 0;
 
     for (int i = 0; i < numRays; ++i) {
-      float Sx = getRayScaleX(x + rayDistribution(rng) * allowAntiAliasing, width_, height_);
-      float Sy = getRayScaleY(y + rayDistribution(rng) * allowAntiAliasing, width_, height_);
+      float Sx = getRayScaleX(x + (sampler() - 0.5f) * allowAntiAliasing, width_, height_);
+      float Sy = getRayScaleY(y + (sampler() - 0.5f) * allowAntiAliasing, width_, height_);
       Vector3D rayDirection = forward + Sx * right + Sy * up;
       Vector3D intersectionPoint = focus_ / magnitude(rayDirection) * rayDirection + eye;
-      float weight = lensDistribution(rng);
-      float r = rayDistribution(rng) + 0.5;
+      float weight = sampler() * 2 * M_PI;
+      float r = sampler() - 0.5f;
       Vector3D origin = r * cos(weight) * lens_ / magnitude(right) * right + r * sin(weight) * lens_ / magnitude(up) * up + eye;
       rayDirection = intersectionPoint - origin;
 
-      RGBAColor color = raytrace(origin, rayDirection, 0, rngInfo);
+      RGBAColor color = raytrace(origin, rayDirection, sampler);
       if (color.a != 0) {
         avgColor += color;
         ++hits;
@@ -230,7 +221,7 @@ IntersectionInfo Scene::findClosestObject(const Vector3D& origin, const Vector3D
   return closestInfo;
 }
 
-RGBAColor Scene::illuminate(const Vector3D &rayDirection, const IntersectionInfo& info, int depth, UniformRNGInfo &rngInfo) {
+RGBAColor Scene::illuminate(const Vector3D &rayDirection, const IntersectionInfo& info, UniformDistribution &sampler) {
   const RGBAColor& objectColor = info.obj->color;
   const Vector3D& surfaceNormal = info.normal;
   const Vector3D wo = -rayDirection;
@@ -245,7 +236,7 @@ RGBAColor Scene::illuminate(const Vector3D &rayDirection, const IntersectionInfo
   return objectColor * L;
 }
 
-RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int depth, UniformRNGInfo &rngInfo) {
+RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, UniformDistribution &sampler) {
   RGBAColor L(0,0,0,0);
   RGBAColor beta(1,1,1,1);
   // bool isSpecular = false;
@@ -263,7 +254,7 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
     intersectInfo.point += bias_ * outNormal;
     const std::shared_ptr<Material> &material = intersectInfo.obj->material;
 
-    L += beta * illuminate(rayDirection, intersectInfo, depth + 1, rngInfo);
+    L += beta * illuminate(rayDirection, intersectInfo, sampler);
     // Add metallic object specular contribution
     if (material->type == MaterialType::Metal)
       beta *= intersectInfo.obj->color;
@@ -271,7 +262,7 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
     float pdf = 0.0f;
     BDFType type{};
     Vector3D wi;
-    float contribution = material->bsdf.sampleFunc(wo, &wi, intersectInfo.normal, rngInfo, &pdf, &type);
+    float contribution = material->bsdf.sampleFunc(wo, &wi, intersectInfo.normal, sampler, &pdf, &type);
     if (pdf == 0 || contribution == 0)
       break;
 

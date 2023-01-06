@@ -94,8 +94,8 @@ public:
   Vector3D up{0, 1, 0}; // NORMALIZED
 
 private:
-  RGBAColor illuminate(const Vector3D &rayDirection, const IntersectionInfo& info, int depth, UniformRNGInfo &rngInfo);
-  RGBAColor raytrace(const Vector3D& origin, const Vector3D& direction, int depth, UniformRNGInfo &rngInfo);
+  RGBAColor illuminate(const Vector3D &rayDirection, const IntersectionInfo& info, UniformDistribution &sampler);
+  RGBAColor raytrace(const Vector3D& origin, const Vector3D& direction, UniformDistribution &sampler);
   void expose(PNG *img);
   /**
    * threadTaskDefault - default worker function for threads.

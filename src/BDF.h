@@ -17,7 +17,7 @@ public:
   BDF(BDFType type) : type(type) {};
   virtual ~BDF() {};
   virtual float func(const Vector3D &wo, const Vector3D &wi, const Vector3D &n) const = 0;
-  virtual float sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, UniformRNGInfo &rngInfo, float *pdf, BDFType *type) const;
+  virtual float sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, UniformDistribution &sampler, float *pdf, BDFType *type) const;
   virtual float pdf(const Vector3D &wo, const Vector3D &wi, const Vector3D &n) const;
 
   BDFType type;
@@ -30,7 +30,7 @@ public:
   float func(const Vector3D &wo, const Vector3D &wi, const Vector3D &n) const {
     return 0.0f;
   }
-  float sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, UniformRNGInfo &rngInfo, float *pdf, BDFType *type) const;
+  float sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, UniformDistribution &sampler, float *pdf, BDFType *type) const;
   float pdf(const Vector3D &wo, const Vector3D &wi, const Vector3D &n) const {
     return 0.0f;
   }
@@ -47,7 +47,7 @@ public:
   float func(const Vector3D &wo, const Vector3D &wi, const Vector3D &n) const {
     return 0.0f;
   }
-  float sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, UniformRNGInfo &rngInfo, float *pdf, BDFType *type) const;
+  float sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, UniformDistribution &sampler, float *pdf, BDFType *type) const;
   float pdf(const Vector3D &wo, const Vector3D &wi, const Vector3D &n) const {
     return 0.0f;
   }
@@ -66,7 +66,7 @@ public:
   float func(const Vector3D &wo, const Vector3D &wi, const Vector3D &n) const {
     return 0.0f;
   }
-  float sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, UniformRNGInfo &rngInfo, float *pdf, BDFType *type) const;
+  float sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, UniformDistribution &sampler, float *pdf, BDFType *type) const;
   float pdf(const Vector3D &wo, const Vector3D &wi, const Vector3D &n) const {
     return 0.0f;
   }
@@ -108,7 +108,7 @@ public:
   MicrofacetReflection(const float Kr, const MicrofacetDistribution *distribution, const Fresnel *fresnel)
     : BDF(BDFType::REFLECTION), Kr(Kr), distribution(distribution), fresnel(fresnel) {};
   float func(const Vector3D &wo, const Vector3D &wi, const Vector3D &n) const;
-  float sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, UniformRNGInfo &rngInfo, float *pdf, BDFType *type) const;
+  float sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, UniformDistribution &sampler, float *pdf, BDFType *type) const;
   float pdf(const Vector3D &wo, const Vector3D &wi, const Vector3D &n) const;
   
 private:
@@ -128,7 +128,7 @@ public:
     bdfs.push_back(bdf);
   }
   float func(const Vector3D &wo, const Vector3D &wi, const Vector3D &n) const;
-  float sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, UniformRNGInfo &rngInfo, float *pdf, BDFType *type) const;
+  float sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, UniformDistribution &sampler, float *pdf, BDFType *type) const;
   float pdf(const Vector3D &wo, const Vector3D &wi, const Vector3D &n) const;
 
 private:
