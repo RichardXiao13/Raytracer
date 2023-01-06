@@ -36,7 +36,7 @@ enum class ObjectType {
 class Object {
 public:
   virtual ~Object() {};
-  Object(const RGBAColor &color, const std::shared_ptr<Material> &material)
+  Object(const RGBAColor &color, std::shared_ptr<Material> material)
     : color(color), material(material) {};
   virtual IntersectionInfo intersect(const Vector3D& origin, const Vector3D& direction) = 0;
 
@@ -87,7 +87,7 @@ public:
 
 class Sphere : public Object {
 public:
-  Sphere(float x1, float y1, float z1, float r1, const RGBAColor color, const std::shared_ptr<Material> &material);
+  Sphere(float x1, float y1, float z1, float r1, const RGBAColor &color, std::shared_ptr<Material> material);
   IntersectionInfo intersect(const Vector3D& origin, const Vector3D& direction);
 
   Vector3D center;
@@ -96,7 +96,7 @@ public:
 
 class Plane : public Object {
 public:
-  Plane(float A1, float B1, float C1, float D1, const RGBAColor color, const std::shared_ptr<Material> &material);
+  Plane(float A1, float B1, float C1, float D1, const RGBAColor &color, std::shared_ptr<Material> material);
   IntersectionInfo intersect(const Vector3D& origin, const Vector3D& direction);
 
   Vector3D normal;
@@ -105,7 +105,7 @@ public:
 
 class Triangle : public Object {
 public:
-  Triangle(const Vector3D& p1, const Vector3D& p2, const Vector3D& p3, const RGBAColor color, const std::shared_ptr<Material> &material);
+  Triangle(const Vector3D& p1, const Vector3D& p2, const Vector3D& p3, const RGBAColor &color, std::shared_ptr<Material> material);
   IntersectionInfo intersect(const Vector3D& origin, const Vector3D& direction);
 
   Vector3D p1;

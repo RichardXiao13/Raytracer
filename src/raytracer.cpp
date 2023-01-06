@@ -259,14 +259,12 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
   intersectInfo.point += bias_ * outNormal;
 
   const std::shared_ptr<Material> &material = intersectInfo.obj->material;
-
-  const BSDF &bsdf = material->bsdf;  
   RGBAColor color = illuminate(direction, intersectInfo, depth + 1, rngInfo);
 
   float pdf = 0.0f;
   BDFType type{};
   Vector3D wi;
-  float contribution = bsdf.sampleFunc(wo, &wi, intersectInfo.normal, rngInfo, &pdf, &type);
+  float contribution = material->bsdf.sampleFunc(wo, &wi, intersectInfo.normal, rngInfo, &pdf, &type);
   bool exiting = dot(wi, outNormal) > 0;
   point += outNormal * (exiting ? bias_ : -bias_);
 
@@ -274,7 +272,7 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int
     RGBAColor Li = raytrace(point, wi, depth + 1, rngInfo);
     Li = contribution * Li * std::abs(dot(wi, intersectInfo.normal)) / pdf;
     // Add metallic object specular contribution
-    if (intersectInfo.obj->material->type == MaterialType::Metal)
+    if (material->type == MaterialType::Metal)
       Li *= intersectInfo.obj->color;
     color += Li;
   }
