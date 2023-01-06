@@ -269,6 +269,7 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
       scene->setFocus(focus);
       scene->setLens(lens);
     } else if (keyword == "glass") {
+      currentColor = RGBAColor(0,0,0,0);
       currentObjectType = ObjectType::Refractive;
       currentMaterial = std::make_shared<Material>(0.0f, 1.0f, 1.5f, 1.0f, 1.0f, 0.0f, 0.0f, MaterialType::Glass);
     } else if (keyword == "plastic") {
@@ -282,6 +283,7 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
       currentColor = RGBAColor(0.95597f, 0.63760f, 0.53948f);
       currentMaterial = std::make_shared<Material>(0.0f, 1.0f, 0.23883f, 0.9553f, 0.0f, 0.0447f, 0.01f, MaterialType::Metal);
     } else if (keyword == "mirror") {
+      currentColor = RGBAColor(0,0,0,0);
       currentObjectType = ObjectType::Reflective;
       currentMaterial = std::make_shared<Material>(0.0f, 1.0f, 0.0f, 0.9f, 0.0f, 0.0f, 0.0f, MaterialType::Mirror);
     } else if (keyword == "diffuse") {

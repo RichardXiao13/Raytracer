@@ -5,6 +5,11 @@ BDFType operator|(BDFType lhs, BDFType rhs) {
                               static_cast<std::underlying_type<BDFType>::type>(rhs));
 }
 
+BDFType operator&(BDFType lhs, BDFType rhs) {
+  return static_cast<BDFType>(static_cast<std::underlying_type<BDFType>::type>(lhs) & 
+                              static_cast<std::underlying_type<BDFType>::type>(rhs));
+}
+
 float BDF::sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, UniformRNGInfo &rngInfo, float *pdf, BDFType *type) const {
   // sample unit hemisphere and map it to the normal
   float rand = rngInfo.distribution(rngInfo.rng);

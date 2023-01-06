@@ -11,6 +11,7 @@ enum class BDFType : char {
 };
 
 BDFType operator|(BDFType lhs, BDFType rhs);
+BDFType operator&(BDFType lhs, BDFType rhs);
 class BDF {
 public:
   BDF(BDFType type) : type(type) {};

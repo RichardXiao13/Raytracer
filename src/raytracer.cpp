@@ -234,49 +234,55 @@ RGBAColor Scene::illuminate(const Vector3D &rayDirection, const IntersectionInfo
   const RGBAColor& objectColor = info.obj->color;
   const Vector3D& surfaceNormal = info.normal;
   const Vector3D wo = -rayDirection;
-  RGBAColor Le;
+  RGBAColor L;
 
   for (auto it = lights.begin(); it != lights.end(); ++it) {
     if ((*it)->pointInShadow(info.point, this) == false) {
-      Le += (*it)->intensity(info.point, surfaceNormal);
+      L += (*it)->intensity(info.point, surfaceNormal);
     }
   }
 
-  return objectColor * Le;
+  return objectColor * L;
 }
 
 RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, int depth, UniformRNGInfo &rngInfo) {
-  if (depth >= maxBounces)
-    return RGBAColor(0, 0, 0, 0);
-  
-  Vector3D wo = -normalized(direction);
-  IntersectionInfo intersectInfo = findClosestObject(origin, direction);
-  if (intersectInfo.obj == nullptr)
-    return RGBAColor(0, 0, 0, 0);
+  RGBAColor L(0,0,0,0);
+  RGBAColor beta(1,1,1,1);
+  // bool isSpecular = false;
+  Vector3D rayOrigin = origin;
+  Vector3D rayDirection = direction;
 
-  Vector3D point = intersectInfo.point;
-  Vector3D outNormal = faceForward(wo, intersectInfo.normal);
-  intersectInfo.point += bias_ * outNormal;
+  for (int bounces = 0; bounces < maxBounces; ++bounces) {
+    IntersectionInfo intersectInfo = findClosestObject(rayOrigin, rayDirection);
+    if (intersectInfo.obj == nullptr)
+      break;
+    
+    Vector3D point = intersectInfo.point;
+    Vector3D wo = -normalized(rayDirection);
+    Vector3D outNormal = faceForward(wo, intersectInfo.normal);
+    intersectInfo.point += bias_ * outNormal;
+    const std::shared_ptr<Material> &material = intersectInfo.obj->material;
 
-  const std::shared_ptr<Material> &material = intersectInfo.obj->material;
-  RGBAColor color = illuminate(direction, intersectInfo, depth + 1, rngInfo);
-
-  float pdf = 0.0f;
-  BDFType type{};
-  Vector3D wi;
-  float contribution = material->bsdf.sampleFunc(wo, &wi, intersectInfo.normal, rngInfo, &pdf, &type);
-  bool exiting = dot(wi, outNormal) > 0;
-  point += outNormal * (exiting ? bias_ : -bias_);
-
-  if (pdf != 0 && contribution != 0) {
-    RGBAColor Li = raytrace(point, wi, depth + 1, rngInfo);
-    Li = contribution * Li * std::abs(dot(wi, intersectInfo.normal)) / pdf;
+    L += beta * illuminate(rayDirection, intersectInfo, depth + 1, rngInfo);
     // Add metallic object specular contribution
     if (material->type == MaterialType::Metal)
-      Li *= intersectInfo.obj->color;
-    color += Li;
+      beta *= intersectInfo.obj->color;
+    
+    float pdf = 0.0f;
+    BDFType type{};
+    Vector3D wi;
+    float contribution = material->bsdf.sampleFunc(wo, &wi, intersectInfo.normal, rngInfo, &pdf, &type);
+    if (pdf == 0 || contribution == 0)
+      break;
+
+    beta *= contribution * std::abs(dot(wi, intersectInfo.normal)) / pdf;
+    bool exiting = dot(wi, outNormal) > 0;
+    rayOrigin = point + outNormal * (exiting ? bias_ : -bias_);
+    rayDirection = wi;
+    // isSpecular = static_cast<bool>(type & BDFType::PERFECT_SPECULAR);
   }
-  return color;
+
+  return L;
 }
 
 PNG *Scene::render(std::function<void (Scene *, PNG *, SafeQueue<RenderTask> *, SafeProgressBar *)> worker, int numThreads) {
