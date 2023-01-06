@@ -37,6 +37,7 @@ public:
   friend Vector3D cross(const Vector3D& v1, const Vector3D& v2);
   friend bool isZero(const Vector3D& v);
   friend float determinant(const Vector3D& v1, const Vector3D& v2, const Vector3D& v3);
+  friend float maxDimension(const Vector3D &v);
 
   float x;
   float y;

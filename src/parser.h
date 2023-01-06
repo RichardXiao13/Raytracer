@@ -14,6 +14,13 @@ std::vector<int> parseOBJPoint(const std::string &s);
 
 std::unique_ptr<Scene> readDataFromStream(std::istream& in);
 
-std::unique_ptr<Scene> readOBJ(std::istream& in);
+bool loadOBJ(
+  const Vector3D &center,
+  float scale,
+  const std::string &filename,
+  std::unique_ptr<Scene> &scene,
+  const RGBAColor &color,
+  const std::shared_ptr<Material> material
+);
 
 std::unique_ptr<Scene> readFromFile(const std::string& filename);

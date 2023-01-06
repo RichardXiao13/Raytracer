@@ -42,25 +42,26 @@ std::vector<int> parseOBJPoint(const std::string &s) {
   return indices;
 }
 
-std::unique_ptr<Scene> readOBJ(std::istream& in) {
-  std::string line;
-  std::getline(in, line);
-  std::vector<std::string> lineInfo = split(line, ' ');
+bool loadOBJ(
+  const Vector3D &center,
+  float scale,
+  const std::string &filename,
+  std::unique_ptr<Scene> &scene,
+  const RGBAColor &color,
+  const std::shared_ptr<Material> material)
+{
+  std::ifstream infile(filename);
+  if (!infile) {
+    std::cerr << "Couldn't open file " << filename << std::endl;
+    return false;
+  }
 
-  // Will set scene filename later
-  std::unique_ptr<Scene> scene = std::make_unique<Scene>(1024, 1024, "");
   std::vector<Vector3D> points;
   std::vector<Vector3D> normals;
-  std::shared_ptr<Material> currentMaterial = std::make_shared<Material>();
-  RGBAColor currentColor(1, 1, 1, 1);
-  float minX = INF_D;
-  float minY = INF_D;
-  float minZ = INF_D;
-  float maxX = -INF_D;
-  float maxY = -INF_D;
-  float maxZ = -INF_D;
+  std::vector<std::string> lineInfo;
+  Box extent;
 
-  for (; std::getline(in, line);) {
+  for (std::string line; std::getline(infile, line);) {
     lineInfo = split(line, ' ');
     if (lineInfo.size() == 0) {
       continue;
@@ -72,19 +73,35 @@ std::unique_ptr<Scene> readOBJ(std::istream& in) {
       float x = std::stof(lineInfo.at(1));
       float y = std::stof(lineInfo.at(2));
       float z = std::stof(lineInfo.at(3));
-      minX = std::min(x, minX);
-      minY = std::min(y, minY);
-      minZ = std::min(z, minZ);
-      maxX = std::max(x, maxX);
-      maxY = std::max(y, maxY);
-      maxZ = std::max(z, maxZ);
+      extent.shrink(Vector3D(x, y, z));
+      extent.expand(Vector3D(x, y, z));
       points.emplace_back(x, y, z);
     } else if (keyword == "vn") {
       float x = std::stof(lineInfo.at(1));
       float y = std::stof(lineInfo.at(2));
       float z = std::stof(lineInfo.at(3));
       normals.emplace_back(x, y, z);
-    } else if (keyword == "f") {
+    }
+  }
+
+  // We want to center the object at 'center', so shift each point by 'center - (extent.maxPoint + extent.minPoint / 2)'
+  // Also want to scale the obj down to a max of 1 along the biggest dimension to normalize,
+  // so divide each point by 'max(extent.maxPoint - extent.minPoint)'
+  // Then scale up by the 'scale' factor
+  Vector3D shift = center - (extent.maxPoint + extent.minPoint) / 2;
+  float scaleFactor = scale / maxDimension(extent.maxPoint - extent.minPoint);
+  int numObjects = 0;
+  infile = std::ifstream(filename);
+
+  for (std::string line; std::getline(infile, line);) {
+    lineInfo = split(line, ' ');
+    if (lineInfo.size() == 0) {
+      continue;
+    }
+
+    std::string keyword = lineInfo.at(0);
+
+    if (keyword == "f") {
       // didn't deal with negative indices yet
       int numPoints = points.size();
       std::vector<int> vertex1 = parseOBJPoint(lineInfo.at(1));
@@ -101,34 +118,25 @@ std::unique_ptr<Scene> readOBJ(std::istream& in) {
           std::cout << "Indices out of range: " << i << ' ' << j << ' ' << k << std::endl;
           continue;
         }
-        std::unique_ptr<Triangle> newObject = std::make_unique<Triangle>(points.at(i), points.at(j), points.at(k), currentColor, currentMaterial);
+
+        Vector3D v1 = scaleFactor * points.at(i) + shift;
+        Vector3D v2 = scaleFactor * points.at(j) + shift;
+        Vector3D v3 = scaleFactor * points.at(k) + shift;
+
+        std::unique_ptr<Triangle> newObject = std::make_unique<Triangle>(v1, v2, v3, color, material);
         if (vertex1.size() == 3) {
           newObject->n1 = normals.at(vertex1.at(2) - 1);
           newObject->n2 = normals.at(vertex2.at(2) - 1);
           newObject->n3 = normals.at(vertex3.at(2) - 1);
         }
         scene->addObject(std::move(newObject));
+        ++numObjects;
       }
-    } else {
-      // std::cout << "Unknown keyword " << keyword << std::endl;
     }
   }
   
-  scene->addLight(new DistantLight(0.4, 0.4, 0.4, currentColor));
-  // All Stanford objs are centered at (0,0,0)
-  // so set the eye behind the object and centered based on object's width and height
-  std::cout << maxX - minX << ' ' <<  maxY - minY << ' ' << maxZ << std::endl;
-  float zExtent = std::max(maxZ,std::max(maxX-minX, maxY-minY));
-  if (abs(zExtent - maxZ) < 1e-4) {
-    zExtent *= 1.2;
-  } else {
-    zExtent = maxZ + zExtent/2;
-  }
-  scene->setEye({(minX + maxX) / 2, (minY + maxY) / 2, zExtent});
-  scene->setNumRays(200);
-  std::cout << "Scanned " << points.size() << " points and " << scene->getNumObjects() << " objects" << std::endl;
-
-  return scene;
+  std::cout << "Scanned " << points.size() << " points and " << numObjects << " objects" << std::endl;
+  return true;
 }
 
 std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
@@ -280,7 +288,16 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
       currentMaterial = std::make_shared<Material>();
     } else if (keyword == "copper") {
       currentObjectType = ObjectType::Metal;
-      currentColor = RGBAColor(0.95597f, 0.63760f, 0.53948f);
+      // currentColor = RGBAColor(0.95597f, 0.63760f, 0.53948f);
+      // https://en.wikipedia.org/wiki/Copper_(color)
+      // Copper
+      // currentColor = RGBAColor(0.4793201831f, 0.1714411007f, 0.03310476657f);
+      // Pale Copper
+      currentColor = RGBAColor(0.7011018919f, 0.2541520943f, 0.1356333297f);
+      // Copper Red
+      // currentColor = RGBAColor(0.5972017884f, 0.152926152f, 0.08228270713f);
+      // Copper Penny
+      // currentColor = RGBAColor(0.4178850708f, 0.1589608351f, 0.1412632911f);
       currentMaterial = std::make_shared<Material>(0.0f, 1.0f, 0.23883f, 0.9553f, 0.0f, 0.0447f, 0.01f, MaterialType::Metal);
     } else if (keyword == "mirror") {
       currentColor = RGBAColor(0,0,0,0);
@@ -296,6 +313,12 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
       currentMaterial = std::make_shared<Material>(0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, MaterialType::Dialectric);
     } else if (keyword == "texture") {
       textures[lineInfo.at(1)] = std::make_shared<PNG>(lineInfo.at(1));
+    } else if (keyword == "obj") {
+      float x = std::stof(lineInfo.at(1));
+      float y = std::stof(lineInfo.at(2));
+      float z = std::stof(lineInfo.at(3));
+      float s = std::stof(lineInfo.at(4));
+      bool error = loadOBJ(Vector3D(x, y, z), s, lineInfo.at(5), scene, currentColor, currentMaterial);
     }
   }
 
@@ -312,11 +335,6 @@ std::unique_ptr<Scene> readFromFile(const std::string& filename) {
   }
   if (ends_with(filename, ".txt")) {
     return readDataFromStream(infile);
-  } else if (ends_with(filename, ".obj")) {
-    std::unique_ptr<Scene> scene = readOBJ(infile);
-    std::string pngFilename = filename.substr(0, filename.size() - 3) + "png";
-    scene->setFilename(pngFilename);
-    return scene;
   } else {
     std::cerr << "Unrecognized file format " << filename << std::endl;
     return nullptr;
