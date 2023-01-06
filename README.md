@@ -22,15 +22,15 @@ Any feedback or issues found are very much welcome, as well as additional contri
 
 * Fix artifacting where certain pixels "blow up" due to NaNs?
 
-* Fix MicrofacetReflection - Reflections achieved but sampling looks wrong?
+* Fix MicrofacetReflection - Reflections achieved but sampling looks wrong? - Done!!
 
 * Find a better file format or parse other formats into this format
 
 * Implement other materials (plastic, matte surfaces, metals, ...) and update Material interface
 
-* Add microfacet distributions to BDFs
+* Add microfacet distributions to BDFs - Done!!
 
-* Refactor raytrace to path tracing method
+* Refactor raytrace to iterative path tracing method - Done!!
 
 * Add more benchmarking scenes (Gruesome... Unless a generous soul wants to do this by hand, I'll probably find a better file format and parse those instead)
     * Need scenes with lots of primitives, dense, overlapping, or evenly distributed throughout the scene
