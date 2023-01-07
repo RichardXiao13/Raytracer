@@ -298,7 +298,15 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
       // currentColor = RGBAColor(0.5972017884f, 0.152926152f, 0.08228270713f);
       // Copper Penny
       // currentColor = RGBAColor(0.4178850708f, 0.1589608351f, 0.1412632911f);
-      currentMaterial = std::make_shared<Material>(0.0f, 1.0f, 0.23883f, 0.9553f, 0.0f, 0.0447f, 0.01f, MaterialType::Metal);
+      currentMaterial = std::make_shared<Material>(0.0f, 1.0f, 0.23883f, 0.9553f, 0.0f, 3.415658f, 0.01f, MaterialType::Metal);
+    } else if (keyword == "gold") {
+      currentObjectType = ObjectType::Metal;
+      // https://en.wikipedia.org/wiki/Gold_(color)
+      // Gold (golden)
+      // currentColor = RGBAColor(1.0f, 0.6795424696330938f, 0.0f);
+      // Metallic Gold
+      currentColor = RGBAColor(0.6583748172794485f, 0.4286904966139066f, 0.0382043715953465f);
+      currentMaterial = std::make_shared<Material>(0.0f, 1.0f, 0.18104f, 0.99f, 0.0f, 3.068099f, 0.01f, MaterialType::Metal);
     } else if (keyword == "mirror") {
       currentColor = RGBAColor(0,0,0,0);
       currentObjectType = ObjectType::Reflective;
