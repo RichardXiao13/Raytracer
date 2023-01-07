@@ -91,7 +91,7 @@ void Scene::threadTaskFisheye(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgre
       forwardCopy = sqrt(1 - r_2) * normalizedForward;
 
       RGBAColor color = raytrace(eye, forwardCopy + Sx * right + Sy * up, sampler);
-      if (color.a != 0) {
+      if (hasNaN(color) == false && color.a != 0) {
         avgColor += color;
         ++hits;
       }
@@ -139,7 +139,7 @@ void Scene::threadTaskDOF(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBa
       rayDirection = intersectionPoint - origin;
 
       RGBAColor color = raytrace(origin, rayDirection, sampler);
-      if (color.a != 0) {
+      if (hasNaN(color) == false && color.a != 0) {
         avgColor += color;
         ++hits;
       }
