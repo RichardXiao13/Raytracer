@@ -82,6 +82,24 @@ float FresnelSpecular::sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector
   }
 }
 
+float OrenNayarReflection::func(const Vector3D &wo, const Vector3D &wi, const Vector3D &n) const {
+  float maxCos;
+  float phiDiff = std::acos(cosinePhi(wi, n)) - std::acos(cosinePhi(wo, n));
+  maxCos = std::max(0.0f, phiDiff);
+
+  float sinAlpha = sineTheta(wi, n);
+  float tanBeta = tangentTheta(wo, n);
+  float absCosO = std::abs(cosineTheta(wo, n));
+  float absCosI = std::abs(cosineTheta(wi, n));
+  
+  if (absCosI > absCosO) {
+    tanBeta = sinAlpha / absCosI;
+    sinAlpha = sineTheta(wo, n);
+  }
+
+  return Kr * M_1_PI * (A + B * maxCos * sinAlpha * tanBeta);
+}
+
 float MicrofacetReflection::func(const Vector3D &wo, const Vector3D &wi, const Vector3D &n) const {
   float cosThetaO = std::abs(cosineTheta(wo, n));
   float cosThetaI = std::abs(cosineTheta(wi, n));

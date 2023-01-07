@@ -103,6 +103,24 @@ private:
   const float Kt;
 };
 
+class OrenNayarReflection : public BDF {
+public:
+  OrenNayarReflection(const float Kr, float sigma)
+    : BDF(BDFType::REFLECTION | BDFType::DIFFUSE), Kr(Kr)
+  {
+    sigma *= M_PI / 180;
+    float sigma2 = sigma * sigma;
+    A = 1.0f - 0.5 * sigma2 / (sigma2 + 0.33);
+    B = 0.45 * sigma2 / (sigma2 + 0.09);
+  };
+  float func(const Vector3D &wo, const Vector3D &wi, const Vector3D &n) const;
+
+private:
+  const float Kr;
+  float A;
+  float B;
+};
+
 class MicrofacetReflection : public BDF {
 public:
   MicrofacetReflection(const float Kr, const MicrofacetDistribution *distribution, const Fresnel *fresnel)

@@ -23,7 +23,8 @@ Material::Material(float Kd, float Ks, float eta, float Kr, float Kt, float Ka, 
   } else if (type == MaterialType::Mirror) {
     specular = new SpecularReflection(Kr, new FresnelDielectric(1.0f, eta));
   } else if (type == MaterialType::Plastic) {
-    bsdf.addBDF(new LambertianReflection(Kd));
+    // bsdf.addBDF(new LambertianReflection(Kd));
+    bsdf.addBDF(new OrenNayarReflection(Kd, 20));
     specular = new MicrofacetReflection(Kr, new TrowbridgeReitzDistribution(roughness), new FresnelDielectric(1.0f, eta));
   } else if (type == MaterialType::Glass) {
     specular = new FresnelSpecular(Kr, Kt, 1.0f, eta);
