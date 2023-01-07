@@ -18,6 +18,8 @@ make
 Any feedback or issues found are very much welcome, as well as additional contributors!
 
 # TODOs - Version 2: Realistic Rendering
+* Add Oren-Nayar model for diffuse reflections
+
 * Add textures
 
 * Fix artifacting where certain pixels "blow up" due to NaNs?
