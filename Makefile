@@ -8,7 +8,7 @@ Material.o Profiler.o macros.o BDF.o microfacets.o
 
 
 # Optimization level:
-OPT = -Ofast
+OPT = -O3
 
 # Compiler/linker config and object/depfile directory:
 CXX = clang++

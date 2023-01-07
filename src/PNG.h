@@ -26,7 +26,7 @@ public:
   RGBAColor &operator/=(float scalar);
   RGBAColor &operator*=(const RGBAColor& c);
   friend RGBAColor operator*(const RGBAColor& c1, const RGBAColor& c2);
-  friend bool hasInf(RGBAColor &c);
+  friend bool hasNaN(RGBAColor &c);
 
   float r;
   float g;

@@ -35,7 +35,7 @@ void Scene::threadTaskDefault(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgre
       float Sy = getRayScaleY(y + (sampler() - 0.5f) * allowAntiAliasing, width_, height_);
 
       RGBAColor color = raytrace(eye, forward + Sx * right + Sy * up, sampler);
-      if (color.a != 0) {
+      if (hasNaN(color) == false && color.a != 0) {
         avgColor += color;
         ++hits;
       }
@@ -272,7 +272,7 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, Uni
     rayDirection = wi;
     // isSpecular = static_cast<bool>(type & BDFType::PERFECT_SPECULAR);
   }
-
+  
   return L;
 }
 

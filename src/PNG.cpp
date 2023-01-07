@@ -81,8 +81,8 @@ RGBAColor operator*(const RGBAColor& c, const Vector3D& v) {
   return RGBAColor(c.r * v.x, c.g * v.y, c.b * v.z, c.a);
 }
 
-bool hasInf(RGBAColor &c) {
-  return c.r == INF_D || c.g == INF_D || c.g == INF_D;
+bool hasNaN(RGBAColor &c) {
+  return std::isnan(c.r) || std::isnan(c.g) || std::isnan(c.b);
 }
 
 RGBAColor clipColor(const RGBAColor& c) {

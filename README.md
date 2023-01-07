@@ -18,11 +18,11 @@ make
 Any feedback or issues found are very much welcome, as well as additional contributors!
 
 # TODOs - Version 2: Realistic Rendering
-* Add Oren-Nayar model for diffuse reflections
+* Add Oren-Nayar model for diffuse reflections - Done!!
 
 * Add textures
 
-* Fix artifacting where certain pixels "blow up" due to NaNs?
+* Fix artifacting where certain pixels "blow up" due to NaNs? Done!! - Was due to Ofast optimization; Changed to O3
 
 * Fix MicrofacetReflection - Reflections achieved but sampling looks wrong? - Done!!
 
