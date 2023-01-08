@@ -59,6 +59,9 @@ public:
   virtual ~Light() {};
   virtual bool pointInShadow(const Vector3D &point, const Scene *scene) const = 0;
   virtual RGBAColor intensity(const Vector3D &point, const Vector3D &n) const = 0;
+  virtual RGBAColor emittedLight(const Vector3D &point) const {
+    return RGBAColor(0,0,0,0);
+  }
 
   RGBAColor color;
 };
@@ -76,13 +79,26 @@ public:
 
 class Bulb : public Light {
 public:
-  Bulb(float x, float y, float z, const RGBAColor& color)
+  Bulb(float x, float y, float z, const RGBAColor &color)
     : Light(color), center(x, y, z) {};
   ~Bulb() {};
   bool pointInShadow(const Vector3D &point, const Scene *scene) const;
   RGBAColor intensity(const Vector3D &point, const Vector3D &n) const;
 
   Vector3D center;
+};
+
+class EnvironmentLight : public Light {
+public:
+  EnvironmentLight(float x, float y, float z, const RGBAColor &color, std::shared_ptr<PNG> luminanceMap)
+    : Light(color), center(x, y, z), luminanceMap(luminanceMap) {};
+  ~EnvironmentLight() {};
+  bool pointInShadow(const Vector3D &point, const Scene *scene) const;
+  RGBAColor intensity(const Vector3D &point, const Vector3D &n) const;
+  RGBAColor emittedLight(const Vector3D &point) const;
+
+  Vector3D center;
+  std::shared_ptr<PNG> luminanceMap;
 };
 
 class Sphere : public Object {

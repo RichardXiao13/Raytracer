@@ -159,52 +159,15 @@ void Scene::threadTaskDOF(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBa
   counter->increment(finishedPixels % THRESHOLD);
 }
 
-float getRayScaleX(float x, int w, int h) {
-  return (2 * x - w) / std::max(w, h);
-}
-float getRayScaleY(float y, int w, int h) {
-  return (h - 2 * y) / std::max(w, h);
-}
-
-void Scene::addObject(std::unique_ptr<Object> obj) {
-  objects.push_back(std::move(obj));
-}
-
-void Scene::addPlane(std::unique_ptr<Plane> plane) {
-  planes.push_back(std::move(plane));
-}
-
-void Scene::addLight(Light *light) {
-  lights.push_back(light);
-}
-
-size_t Scene::getNumObjects() {
-  return objects.size();
-}
-
-void Scene::setFilename(const std::string& fname) {
-  filename_ = fname;
-}
-
-void Scene::setExposure(float value) {
-  exposure = value;
-}
-
-void Scene::setMaxBounces(int d) {
-  maxBounces = d;
-}
-
 IntersectionInfo Scene::findAnyObject(const Vector3D& origin, const Vector3D& direction) const {
   IntersectionInfo closestInfo = bvh->findClosestObject(origin, direction);
-  if (closestInfo.obj != nullptr) {
+  if (closestInfo.obj != nullptr)
     return closestInfo;
-  }
 
   for (auto it = planes.begin(); it != planes.end(); ++it) {
     IntersectionInfo info = (*it)->intersect(origin, direction);
-    if (info.t < closestInfo.t) {
+    if (info.t < closestInfo.t)
       return info;
-    }
   }
   return closestInfo;
 }
@@ -214,26 +177,22 @@ IntersectionInfo Scene::findClosestObject(const Vector3D& origin, const Vector3D
 
   for (auto it = planes.begin(); it != planes.end(); ++it) {
     IntersectionInfo info = (*it)->intersect(origin, direction);
-    if (info.t < closestInfo.t) {
+    if (info.t < closestInfo.t)
       closestInfo = info;
-    }
   }
   return closestInfo;
 }
 
-RGBAColor Scene::illuminate(const Vector3D &rayDirection, const IntersectionInfo& info, UniformDistribution &sampler) {
-  const RGBAColor& objectColor = info.obj->color;
-  const Vector3D& surfaceNormal = info.normal;
-  const Vector3D wo = -rayDirection;
+RGBAColor Scene::illuminate(const IntersectionInfo& info) {
   RGBAColor L;
 
   for (auto it = lights.begin(); it != lights.end(); ++it) {
     if ((*it)->pointInShadow(info.point, this) == false) {
-      L += (*it)->intensity(info.point, surfaceNormal);
+      L += (*it)->intensity(info.point, info.normal);
     }
   }
 
-  return objectColor * L;
+  return info.obj->color * L;
 }
 
 RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, UniformDistribution &sampler) {
@@ -254,7 +213,7 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, Uni
     intersectInfo.point += bias_ * outNormal;
     const std::shared_ptr<Material> &material = intersectInfo.obj->material;
 
-    L += beta * illuminate(rayDirection, intersectInfo, sampler);
+    L += beta * illuminate(intersectInfo);
     // Add metallic object specular contribution
     if (material->type == MaterialType::Metal)
       beta *= intersectInfo.obj->color;

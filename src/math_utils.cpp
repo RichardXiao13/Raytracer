@@ -1,5 +1,4 @@
 #include "math_utils.h"
-#include "vector3d.h"
 
 Vector3D transformToWorld(float x, float y, float z, const Vector3D &normal) {
   // Find an axis that is not parallel to normal
@@ -21,8 +20,17 @@ Vector3D transformToWorld(float x, float y, float z, const Vector3D &normal) {
   return u * x + v * y + w * z;
 }
 
-Vector3D faceForward(const Vector3D &wo, const Vector3D &n) {
-  return dot(wo, n) < 0.0f ? -n : n;
+Vector3D sphericalToUV(const Vector3D &point, std::shared_ptr<PNG> textureMap) {
+  float radius = magnitude(point);
+  float theta = std::acos(point.z / radius);
+  float phi = std::asin(radius * std::sin(theta));
+  float x = textureMap->width() * 0.5 * M_1_PI * (theta + M_PI);
+  float y = textureMap->height() * 0.5 * M_1_PI * (M_PI - std::log(std::tan(M_PI_4 + phi * 0.5)));
+  return Vector3D(x, y, 0.0f);
+}
+
+Vector3D faceForward(const Vector3D &w, const Vector3D &n) {
+  return dot(w, n) < 0.0f ? -n : n;
 }
 
 float clamp(float val, float low, float high) {

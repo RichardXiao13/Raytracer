@@ -28,6 +28,20 @@ RGBAColor Bulb::intensity(const Vector3D &point, const Vector3D &n) const {
   return color * clipDot(n, lightDirection) * invDistance;
 }
 
+bool EnvironmentLight::pointInShadow(const Vector3D &point, const Scene *scene) const {
+  // @TODO: need to figure this out...
+  return false;
+}
+
+RGBAColor EnvironmentLight::intensity(const Vector3D &point, const Vector3D &n) const {
+  return color;
+}
+
+RGBAColor EnvironmentLight::emittedLight(const Vector3D &point) const {
+  const Vector3D mapCoordinates = sphericalToUV(point - center, luminanceMap);
+  return luminanceMap->getPixel(mapCoordinates.y, mapCoordinates.x);
+}
+
 Sphere::Sphere(float x1, float y1, float z1, float r1, const RGBAColor &color, std::shared_ptr<Material> material)
   : Object(color, material), center(x1, y1, z1), r(r1) {
   aabbMin.x = x1 - r1;

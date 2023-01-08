@@ -18,6 +18,8 @@ make
 Any feedback or issues found are very much welcome, as well as additional contributors!
 
 # TODOs - Version 2: Realistic Rendering
+* Add environment lighting (Requires spherical textures)
+
 * Add Oren-Nayar model for diffuse reflections - Done!!
 
 * Add textures

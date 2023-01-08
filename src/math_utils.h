@@ -2,6 +2,7 @@
 
 #include "macros.h"
 #include "vector3d.h"
+#include "PNG.h"
 
 class UniformDistribution {
 public:
@@ -18,15 +19,36 @@ private:
 
 Vector3D transformToWorld(float x, float y, float z, const Vector3D &normal);
 
-Vector3D faceForward(const Vector3D &wo, const Vector3D &n);
+/**
+ * sphericalToUV
+ * 
+ * Takes a point in 3D space representing a point on a sphere centered at the origin
+ * and maps it to a texture coordinate on the textureMap using longitude and latitude.
+ * 
+ * point      - point in 3D space
+ * textureMap - PNG image to be used as the texture to map into
+*/
+Vector3D sphericalToUV(const Vector3D &point, std::shared_ptr<PNG> textureMap);
+
+/**
+ * faceForward
+ * 
+ * Orients a ray to point in the same direction as a reference ray.
+ * 
+ * w - ray to orient
+ * n - reference ray
+*/
+Vector3D faceForward(const Vector3D &w, const Vector3D &n);
 
 float clamp(float val, float low, float high);
 
 /**
- * reflect - reflect a ray using the incident direction and surface normal.
+ * reflect
+ * 
+ * Reflects a ray using the incident direction and surface normal.
  * 
  * incident - normalized vector
- * normal - normalized vector
+ * normal   - normalized vector
 */
 Vector3D reflect(const Vector3D& incident, const Vector3D& normal);
 
