@@ -23,7 +23,7 @@ Vector3D transformToWorld(float x, float y, float z, const Vector3D &normal) {
 Vector3D sphericalToUV(const Vector3D &point, std::shared_ptr<PNG> textureMap) {
   Vector3D normalizedPoint = normalized(point);
   float x = (normalizedPoint.x + 1.0f) * 0.5 * textureMap->width();;
-  float y = (normalizedPoint.y + 1.0f) * 0.5 * textureMap->height();
+  float y = (1 - (normalizedPoint.y + 1.0f) * 0.5) * textureMap->height();
   return Vector3D(x, y, 0.0f);
 }
 

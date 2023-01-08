@@ -212,8 +212,13 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, Uni
 
   for (int bounces = 0; bounces < maxBounces; ++bounces) {
     IntersectionInfo intersectInfo = findClosestObject(rayOrigin, rayDirection);
-    if (intersectInfo.obj == nullptr)
+    if (intersectInfo.obj == nullptr) {
+      // Add environment lighting on miss
+      for (auto it = lights.begin(); it != lights.end(); ++it) {
+        L += (*it)->emittedLight(rayOrigin);
+      }
       break;
+    }
     
     Vector3D point = intersectInfo.point;
     Vector3D wo = -normalized(rayDirection);

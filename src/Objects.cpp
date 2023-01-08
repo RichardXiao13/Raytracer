@@ -39,7 +39,9 @@ RGBAColor EnvironmentLight::intensity(const Vector3D &point, const Vector3D &n) 
 
 RGBAColor EnvironmentLight::emittedLight(const Vector3D &point) const {
   const Vector3D mapCoordinates = sphericalToUV(point - center, luminanceMap);
-  return luminanceMap->getPixel(mapCoordinates.y, mapCoordinates.x);
+  unsigned x = static_cast<unsigned>(mapCoordinates.x);
+  unsigned y = static_cast<unsigned>(mapCoordinates.y);
+  return luminanceMap->getPixel(y, x);
 }
 
 Sphere::Sphere(
