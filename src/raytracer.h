@@ -8,6 +8,7 @@
 #include "SafeQueue.h"
 #include "SafeProgressBar.h"
 #include "math_utils.h"
+#include "Camera.h"
 
 // A ray has origin 'eye' and direction 'forward' + Sx * 'right' + Sy * 'up'
 float getRayScaleX(float x, int w, int h);
@@ -16,6 +17,16 @@ float getRayScaleY(float y, int w, int h);
 struct RenderTask {
   int x;
   int y;
+};
+
+struct SceneOptions {
+  float bias       = 1e-4;
+  float exposure   = -1;
+  int   maxBounces = 4;
+  int   numRays    = 1;
+  bool  fisheye    = false;
+  float focus      = -1;
+  float lens       = 0;
 };
 
 class Scene {
@@ -39,20 +50,8 @@ public:
     lights.push_back(light);
   }
 
-  size_t getNumObjects() {
-    return objects.size();
-  }
-
   void setFilename(const std::string& fname) {
     filename_ = fname;
-  }
-
-  void setExposure(float value) {
-    exposure = value;
-  }
-
-  void setMaxBounces(int d) {
-    maxBounces = d;
   }
 
   int width() {
@@ -67,52 +66,8 @@ public:
     return filename_;
   }
 
-  void setEye(const Vector3D& e) {
-    eye = e;
-  }
-
-  void setForward(const Vector3D& f) {
-    forward = f;
-    right = normalized(cross(forward, up));
-    up = normalized(cross(right, forward));
-  }
-
-  void setUp(const Vector3D& u) {
-    right = normalized(cross(forward, u));
-    up = normalized(cross(right, forward));
-  }
-
-  void setNumRays(int n) {
-    numRays = n;
-  }
-
-  void enableFisheye() {
-    fisheye = true;
-  }
-
-  Vector3D getEye() {
-    return eye;
-  }
-
-  void setGlobalIllumination(int gi) {
-    globalIllumination = gi;
-  }
-  void setSpecularRays(int specular) {
-    specularRays = specular;
-  }
-
-  void setFocus(float f) {
-    focus_ = f;
-  }
-
-  void setLens(float l) {
-    lens_ = l;
-  }
-
-  Vector3D eye{0, 0, 0}; // POINT; NOT NORMALIZED
-  Vector3D forward{0, 0, -1}; // NOT NORMALIZED; LONGER VECTOR FOR NARROWER FIELD OF VIEW
-  Vector3D right{1, 0, 0}; // NORMALIZED
-  Vector3D up{0, 1, 0}; // NORMALIZED
+  Camera camera;
+  SceneOptions options;
 
 private:
   RGBAColor illuminate(const Vector3D &direction, const IntersectionInfo& info);
@@ -136,14 +91,5 @@ private:
   int width_;
   int height_;
   std::string filename_;
-  float bias_ = 1e-4;
-  float exposure = -1.0;
-  int maxBounces = 4;
-  int numRays = 1;
   std::unique_ptr<BVH> bvh;
-  bool fisheye = false;
-  int globalIllumination = 0;
-  int specularRays = 4;
-  float focus_ = -1.0;
-  float lens_ = 0;
 };

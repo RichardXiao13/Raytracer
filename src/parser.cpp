@@ -165,6 +165,8 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
   ObjectType currentObjectType = ObjectType::Diffuse;
   std::unordered_map<std::string, std::shared_ptr<PNG>> textures;
   std::shared_ptr<PNG> currentTexture = nullptr;
+  Camera camera;
+  SceneOptions options;
 
   for (; std::getline(in, line);) {
     lineInfo = split(line, ' ');
@@ -227,7 +229,7 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
       newObject->type = currentObjectType;
       // Orient the normal if the normal faces with the forward vector and the object is in front of the camera
       // I think this works??
-      if (dot(scene->forward, newObject->centroid - scene->eye) > 0 && dot(scene->forward, newObject->normal) > 0) {
+      if (dot(camera.forward, newObject->centroid - camera.eye) > 0 && dot(camera.forward, newObject->normal) > 0) {
         newObject->normal *= -1.0f;
       }
       newObject->n1 = newObject->normal;
@@ -236,13 +238,13 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
       scene->addObject(std::move(newObject));
     } else if (keyword == "expose") {
       float exposure = std::stof(lineInfo.at(1));
-      scene->setExposure(exposure);
+      options.exposure = exposure;
     } else if (keyword == "bounces") {
       float d = std::stoi(lineInfo.at(1));
-      scene->setMaxBounces(d);
+      options.maxBounces = d;
     } else if (keyword == "aa") {
       int n = std::stoi(lineInfo.at(1));
-      scene->setNumRays(n);
+      options.numRays = n;
     } else if (keyword == "roughness") {
       float roughness = std::stof(lineInfo.at(1));
       currentMaterial->roughness = roughness;
@@ -250,33 +252,27 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
       float x = std::stof(lineInfo.at(1));
       float y = std::stof(lineInfo.at(2));
       float z = std::stof(lineInfo.at(3));
-      scene->setEye(Vector3D(x, y, z));
+      camera.setEye(Vector3D(x, y, z));
     } else if (keyword == "forward") {
       float x = std::stof(lineInfo.at(1));
       float y = std::stof(lineInfo.at(2));
       float z = std::stof(lineInfo.at(3));
-      scene->setForward(Vector3D(x, y, z));
+      camera.setForward(Vector3D(x, y, z));
     } else if (keyword == "up") {
       float x = std::stof(lineInfo.at(1));
       float y = std::stof(lineInfo.at(2));
       float z = std::stof(lineInfo.at(3));
-      scene->setUp(Vector3D(x, y, z));
+      camera.setUp(Vector3D(x, y, z));
     } else if (keyword == "fisheye") {
-      scene->enableFisheye();
+      options.fisheye = true;
     } else if (keyword == "ior") {
       float eta = std::stof(lineInfo.at(1));
       currentMaterial->eta = eta;
-    } else if (keyword == "gi") {
-      int gi = std::stoi(lineInfo.at(1));
-      scene->setGlobalIllumination(gi);
-    } else if (keyword == "specular") {
-      int specularRays = std::stoi(lineInfo.at(1));
-      scene->setSpecularRays(specularRays);
     } else if (keyword == "dof") {
       float focus = std::stof(lineInfo.at(1));
       float lens = std::stof(lineInfo.at(2));
-      scene->setFocus(focus);
-      scene->setLens(lens);
+      options.focus = focus;
+      options.lens = lens;
     } else if (keyword == "glass") {
       currentColor = RGBAColor(0,0,0,0);
       currentObjectType = ObjectType::Refractive;
@@ -338,6 +334,8 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
     }
   }
 
+  scene->camera = camera;
+  scene->options = options;
   return scene;
 }
 

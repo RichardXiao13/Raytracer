@@ -26,8 +26,8 @@ void Scene::threadTaskDefault(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgre
   RenderTask task;
   int finishedPixels = 0;
 
-  float invNumRays = 1.0 / numRays;
-  int allowAntiAliasing = std::min(1, numRays - 1);
+  float invNumRays = 1.0 / options.numRays;
+  int allowAntiAliasing = std::min(1, options.numRays - 1);
   UniformDistribution sampler(std::mt19937(), std::uniform_real_distribution<float>(0, 1.0));
 
   // hacky... but does the job
@@ -38,11 +38,11 @@ void Scene::threadTaskDefault(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgre
     RGBAColor avgColor(0, 0, 0, 0);
     int hits = 0;
 
-    for (int i = 0; i < numRays; ++i) {
+    for (int i = 0; i < options.numRays; ++i) {
       float Sx = getRayScaleX(x + (sampler() - 0.5f) * allowAntiAliasing, width_, height_);
       float Sy = getRayScaleY(y + (sampler() - 0.5f) * allowAntiAliasing, width_, height_);
 
-      RGBAColor color = raytrace(eye, forward + Sx * right + Sy * up, sampler);
+      RGBAColor color = raytrace(camera.eye, camera.forward + Sx * camera.right + Sy * camera.up, sampler);
       if (hasNaN(color) == false && color.a != 0) {
         avgColor += color;
         ++hits;
@@ -67,14 +67,14 @@ void Scene::threadTaskFisheye(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgre
   RenderTask task;
   int finishedPixels = 0;
 
-  float invNumRays = 1.0 / numRays;
-  int allowAntiAliasing = std::min(1, numRays - 1);
+  float invNumRays = 1.0 / options.numRays;
+  int allowAntiAliasing = std::min(1, options.numRays - 1);
 
-  float invForwardLength = 1.0 / magnitude(forward);
-  Vector3D normalizedForward = normalized(forward);
+  float invForwardLength = 1.0 / magnitude(camera.forward);
+  Vector3D normalizedForward = normalized(camera.forward);
 
   // Avoid race condiiton
-  Vector3D forwardCopy = forward;
+  Vector3D forwardCopy = camera.forward;
 
   UniformDistribution sampler(std::mt19937(), std::uniform_real_distribution<float>(0, 1.0));
 
@@ -86,7 +86,7 @@ void Scene::threadTaskFisheye(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgre
     RGBAColor avgColor(0, 0, 0, 0);
     int hits = 0;
 
-    for (int i = 0; i < numRays; ++i) {
+    for (int i = 0; i < options.numRays; ++i) {
       float Sx = getRayScaleX(x + (sampler() - 0.5f) * allowAntiAliasing, width_, height_);
       float Sy = getRayScaleY(y + (sampler() - 0.5f) * allowAntiAliasing, width_, height_);
 
@@ -98,7 +98,7 @@ void Scene::threadTaskFisheye(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgre
       }
       forwardCopy = sqrt(1 - r_2) * normalizedForward;
 
-      RGBAColor color = raytrace(eye, forwardCopy + Sx * right + Sy * up, sampler);
+      RGBAColor color = raytrace(camera.eye, forwardCopy + Sx * camera.right + Sy * camera.up, sampler);
       if (hasNaN(color) == false && color.a != 0) {
         avgColor += color;
         ++hits;
@@ -123,8 +123,8 @@ void Scene::threadTaskDOF(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBa
   RenderTask task;
   int finishedPixels = 0;
 
-  float invNumRays = 1.0 / numRays;
-  int allowAntiAliasing = std::min(1, numRays - 1);
+  float invNumRays = 1.0 / options.numRays;
+  int allowAntiAliasing = std::min(1, options.numRays - 1);
   std::uniform_real_distribution<float> sampleDistribution = std::uniform_real_distribution<float>(0, 1.0);
   UniformDistribution sampler(std::mt19937(), std::uniform_real_distribution<float>(0, 1.0));
 
@@ -136,14 +136,16 @@ void Scene::threadTaskDOF(PNG *img, SafeQueue<RenderTask> *tasks, SafeProgressBa
     RGBAColor avgColor(0, 0, 0, 0);
     int hits = 0;
 
-    for (int i = 0; i < numRays; ++i) {
+    for (int i = 0; i < options.numRays; ++i) {
       float Sx = getRayScaleX(x + (sampler() - 0.5f) * allowAntiAliasing, width_, height_);
       float Sy = getRayScaleY(y + (sampler() - 0.5f) * allowAntiAliasing, width_, height_);
-      Vector3D rayDirection = forward + Sx * right + Sy * up;
-      Vector3D intersectionPoint = focus_ / magnitude(rayDirection) * rayDirection + eye;
+      Vector3D rayDirection = camera.forward + Sx * camera.right + Sy * camera.up;
+      Vector3D intersectionPoint = options.focus / magnitude(rayDirection) * rayDirection + camera.eye;
       float weight = sampler() * 2 * M_PI;
       float r = sampler() - 0.5f;
-      Vector3D origin = r * cos(weight) * lens_ / magnitude(right) * right + r * sin(weight) * lens_ / magnitude(up) * up + eye;
+      Vector3D origin = r * cos(weight) * options.lens / magnitude(camera.right) * camera.right
+                      + r * sin(weight) * options.lens / magnitude(camera.up) * camera.up
+                      + camera.eye;
       rayDirection = intersectionPoint - origin;
 
       RGBAColor color = raytrace(origin, rayDirection, sampler);
@@ -210,7 +212,7 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, Uni
   Vector3D rayOrigin = origin;
   Vector3D rayDirection = direction;
 
-  for (int bounces = 0; bounces < maxBounces; ++bounces) {
+  for (int bounces = 0; bounces < options.maxBounces; ++bounces) {
     IntersectionInfo intersectInfo = findClosestObject(rayOrigin, rayDirection);
     if (intersectInfo.obj == nullptr) {
       // Add environment lighting on miss
@@ -223,7 +225,7 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, Uni
     Vector3D point = intersectInfo.point;
     Vector3D wo = -normalized(rayDirection);
     Vector3D outNormal = faceForward(wo, intersectInfo.normal);
-    intersectInfo.point += bias_ * outNormal;
+    intersectInfo.point += options.bias * outNormal;
     const std::shared_ptr<Material> &material = intersectInfo.obj->material;
 
     L += beta * illuminate(rayDirection, intersectInfo);
@@ -240,7 +242,7 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, Uni
 
     beta *= contribution * std::abs(dot(wi, intersectInfo.normal)) / pdf;
     bool exiting = dot(wi, outNormal) > 0;
-    rayOrigin = point + outNormal * (exiting ? bias_ : -bias_);
+    rayOrigin = point + outNormal * (exiting ? options.bias : -options.bias);
     rayDirection = wi;
     // isSpecular = static_cast<bool>(type & BDFType::PERFECT_SPECULAR);
   }
@@ -276,7 +278,7 @@ PNG *Scene::render(std::function<void (Scene *, PNG *, SafeQueue<RenderTask> *, 
     threads[i].join();
   }
 
-  if (exposure >= 0)
+  if (options.exposure >= 0)
     expose(img);
   
   return img;
@@ -285,10 +287,10 @@ PNG *Scene::render(std::function<void (Scene *, PNG *, SafeQueue<RenderTask> *, 
 PNG *Scene::render(int numThreads, int seed) {
   bvh = std::make_unique<BVH>(objects, numThreads);
 
-  if (fisheye) {
+  if (options.fisheye) {
     std::cout << "Fisheye enabled." << std::endl;
     return render(&Scene::threadTaskFisheye, numThreads);
-  } else if (focus_ > 0) {
+  } else if (options.focus > 0) {
     std::cout << "Depth of Field enabled." << std::endl;
     return render(&Scene::threadTaskDOF, numThreads);
   } else {
@@ -302,9 +304,9 @@ void Scene::expose(PNG *img) {
   for (int y = 0; y < height_; ++y) {
     for (int x = 0; x < width_; ++x) {
         RGBAColor &pixel = img->getPixel(y, x);
-        pixel.r = exponentialExposure(pixel.r, exposure);
-        pixel.g = exponentialExposure(pixel.g, exposure);
-        pixel.b = exponentialExposure(pixel.b, exposure);
+        pixel.r = exponentialExposure(pixel.r, options.exposure);
+        pixel.g = exponentialExposure(pixel.g, options.exposure);
+        pixel.b = exponentialExposure(pixel.b, options.exposure);
     }
   }
 }
