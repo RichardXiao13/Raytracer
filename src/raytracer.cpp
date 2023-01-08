@@ -8,6 +8,14 @@
 
 #define THRESHOLD 512
 
+float getRayScaleX(float x, int w, int h) {
+  return (2 * x - w) / std::max(w, h);
+}
+
+float getRayScaleY(float y, int w, int h) {
+  return (h - 2 * y) / std::max(w, h);
+}
+
 Scene::~Scene() {
   for (auto it = lights.begin(); it != lights.end(); ++it) {
     delete *it;
@@ -183,7 +191,7 @@ IntersectionInfo Scene::findClosestObject(const Vector3D& origin, const Vector3D
   return closestInfo;
 }
 
-RGBAColor Scene::illuminate(const IntersectionInfo& info) {
+RGBAColor Scene::illuminate(const Vector3D &direction, const IntersectionInfo& info) {
   RGBAColor L;
 
   for (auto it = lights.begin(); it != lights.end(); ++it) {
@@ -192,7 +200,7 @@ RGBAColor Scene::illuminate(const IntersectionInfo& info) {
     }
   }
 
-  return info.obj->color * L;
+  return info.obj->getColor(info.point + direction * info.t) * L;
 }
 
 RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, UniformDistribution &sampler) {
@@ -213,7 +221,7 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, Uni
     intersectInfo.point += bias_ * outNormal;
     const std::shared_ptr<Material> &material = intersectInfo.obj->material;
 
-    L += beta * illuminate(intersectInfo);
+    L += beta * illuminate(rayDirection, intersectInfo);
     // Add metallic object specular contribution
     if (material->type == MaterialType::Metal)
       beta *= intersectInfo.obj->color;

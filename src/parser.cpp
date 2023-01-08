@@ -164,6 +164,7 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
   RGBAColor currentColor(1, 1, 1, 1);
   ObjectType currentObjectType = ObjectType::Diffuse;
   std::unordered_map<std::string, std::shared_ptr<PNG>> textures;
+  std::shared_ptr<PNG> currentTexture = nullptr;
 
   for (; std::getline(in, line);) {
     lineInfo = split(line, ' ');
@@ -178,7 +179,7 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
       float y = std::stof(lineInfo.at(2));
       float z = std::stof(lineInfo.at(3));
       float r = std::stof(lineInfo.at(4));
-      std::unique_ptr<Sphere> newObject = std::make_unique<Sphere>(x, y, z, r, currentColor, currentMaterial);
+      std::unique_ptr<Sphere> newObject = std::make_unique<Sphere>(x, y, z, r, currentColor, currentMaterial, currentTexture);
       newObject->type = currentObjectType;
       scene->addObject(std::move(newObject));
     } else if (keyword == "sun") {
@@ -285,6 +286,7 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
       currentMaterial = std::make_shared<Material>(0.5f, 0.5f, 1.3f, 1.0f, 0.0f, 0.0f, 0.1f, MaterialType::Plastic);
     } else if (keyword == "none") {
       currentObjectType = ObjectType::Diffuse;
+      currentTexture = nullptr;
       currentMaterial = std::make_shared<Material>();
     } else if (keyword == "copper") {
       currentObjectType = ObjectType::Metal;
@@ -320,7 +322,13 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
       currentObjectType = ObjectType::Reflective;
       currentMaterial = std::make_shared<Material>(0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, MaterialType::Dialectric);
     } else if (keyword == "texture") {
-      textures[lineInfo.at(1)] = std::make_shared<PNG>(lineInfo.at(1));
+      const std::string &textureName = lineInfo.at(1);
+      if (textures.find(textureName) != textures.end()) {
+        currentTexture = textures[textureName];
+      } else {
+        currentTexture = std::make_shared<PNG>(textureName);
+        textures[textureName] = currentTexture;
+      }
     } else if (keyword == "obj") {
       float x = std::stof(lineInfo.at(1));
       float y = std::stof(lineInfo.at(2));

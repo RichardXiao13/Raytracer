@@ -23,7 +23,7 @@ struct IntersectionInfo {
   float t;
   Vector3D point;
   Vector3D normal;
-  Object *obj;
+  const Object *obj;
 };
 
 enum class ObjectType {
@@ -36,16 +36,16 @@ enum class ObjectType {
 class Object {
 public:
   virtual ~Object() {};
-  Object(const RGBAColor &color, std::shared_ptr<Material> material)
-    : color(color), material(material) {};
-  virtual IntersectionInfo intersect(const Vector3D& origin, const Vector3D& direction) = 0;
-
-  void setColor(const RGBAColor& c) {
-    color = c;
+  Object(const RGBAColor &color, std::shared_ptr<Material> material, std::shared_ptr<PNG> textureMap)
+    : color(color), material(material), textureMap(textureMap) {};
+  virtual IntersectionInfo intersect(const Vector3D& origin, const Vector3D& direction) const = 0;
+  virtual RGBAColor getColor(const Vector3D &intersectionPoint) const {
+    return color;
   }
 
   RGBAColor color;
   std::shared_ptr<Material> material;
+  std::shared_ptr<PNG> textureMap;
   Vector3D aabbMin;
   Vector3D aabbMax;
   Vector3D centroid;
@@ -103,8 +103,17 @@ public:
 
 class Sphere : public Object {
 public:
-  Sphere(float x1, float y1, float z1, float r1, const RGBAColor &color, std::shared_ptr<Material> material);
-  IntersectionInfo intersect(const Vector3D& origin, const Vector3D& direction);
+  Sphere(
+    float x,
+    float y,
+    float z,
+    float r,
+    const RGBAColor &color,
+    std::shared_ptr<Material> material,
+    std::shared_ptr<PNG> textureMap=nullptr
+  );
+  IntersectionInfo intersect(const Vector3D& origin, const Vector3D& direction) const;
+  RGBAColor getColor(const Vector3D &intersectionPoint) const;
 
   Vector3D center;
   float r;
@@ -112,8 +121,16 @@ public:
 
 class Plane : public Object {
 public:
-  Plane(float A1, float B1, float C1, float D1, const RGBAColor &color, std::shared_ptr<Material> material);
-  IntersectionInfo intersect(const Vector3D& origin, const Vector3D& direction);
+  Plane(
+    float A,
+    float B,
+    float C,
+    float D,
+    const RGBAColor &color,
+    std::shared_ptr<Material> material,
+    std::shared_ptr<PNG> textureMap=nullptr
+  );
+  IntersectionInfo intersect(const Vector3D& origin, const Vector3D& direction) const;
 
   Vector3D normal;
   Vector3D point;
@@ -121,8 +138,15 @@ public:
 
 class Triangle : public Object {
 public:
-  Triangle(const Vector3D& p1, const Vector3D& p2, const Vector3D& p3, const RGBAColor &color, std::shared_ptr<Material> material);
-  IntersectionInfo intersect(const Vector3D& origin, const Vector3D& direction);
+  Triangle(
+    const Vector3D& p1,
+    const Vector3D& p2,
+    const Vector3D& p3,
+    const RGBAColor &color,
+    std::shared_ptr<Material> material,
+    std::shared_ptr<PNG> textureMap=nullptr
+  );
+  IntersectionInfo intersect(const Vector3D& origin, const Vector3D& direction) const;
 
   Vector3D p1;
   Vector3D normal;

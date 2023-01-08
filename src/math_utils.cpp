@@ -21,11 +21,9 @@ Vector3D transformToWorld(float x, float y, float z, const Vector3D &normal) {
 }
 
 Vector3D sphericalToUV(const Vector3D &point, std::shared_ptr<PNG> textureMap) {
-  float radius = magnitude(point);
-  float theta = std::acos(point.z / radius);
-  float phi = std::asin(radius * std::sin(theta));
-  float x = textureMap->width() * 0.5 * M_1_PI * (theta + M_PI);
-  float y = textureMap->height() * 0.5 * M_1_PI * (M_PI - std::log(std::tan(M_PI_4 + phi * 0.5)));
+  Vector3D normalizedPoint = normalized(point);
+  float x = (normalizedPoint.x + 1.0f) * 0.5 * textureMap->width();;
+  float y = (normalizedPoint.y + 1.0f) * 0.5 * textureMap->height();
   return Vector3D(x, y, 0.0f);
 }
 

@@ -125,10 +125,10 @@ bool PNG::readFromFile(const std::string &filename) {
 
   for (unsigned i = 0; i < byteData.size(); i += 4) {
     RGBAColor &pixel = image_[i/4];
-    pixel.r = byteData[i];
-    pixel.g = byteData[i + 1];
-    pixel.b = byteData[i + 2];
-    pixel.a = byteData[i + 3];
+    pixel.r = byteData[i + 0] / 255.0f;
+    pixel.g = byteData[i + 1] / 255.0f;
+    pixel.b = byteData[i + 2] / 255.0f;
+    pixel.a = byteData[i + 3] / 255.0f;
   }
 
   return true;

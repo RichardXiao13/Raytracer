@@ -42,20 +42,27 @@ RGBAColor EnvironmentLight::emittedLight(const Vector3D &point) const {
   return luminanceMap->getPixel(mapCoordinates.y, mapCoordinates.x);
 }
 
-Sphere::Sphere(float x1, float y1, float z1, float r1, const RGBAColor &color, std::shared_ptr<Material> material)
-  : Object(color, material), center(x1, y1, z1), r(r1) {
-  aabbMin.x = x1 - r1;
-  aabbMin.y = y1 - r1;
-  aabbMin.z = z1 - r1;
-  aabbMax.x = x1 + r1;
-  aabbMax.y = y1 + r1;
-  aabbMax.z = z1 + r1;
-  centroid.x = x1;
-  centroid.y = y1;
-  centroid.z = z1;
+Sphere::Sphere(
+  float x,
+  float y,
+  float z,
+  float r,
+  const RGBAColor &color,
+  std::shared_ptr<Material> material,
+  std::shared_ptr<PNG> textureMap
+)
+  : Object(color, material, textureMap), center(x, y, z), r(r)
+{
+  aabbMin.x = x - r;
+  aabbMin.y = y - r;
+  aabbMin.z = z - r;
+  aabbMax.x = x + r;
+  aabbMax.y = y + r;
+  aabbMax.z = z + r;
+  centroid = center;
 }
 
-IntersectionInfo Sphere::intersect(const Vector3D& origin, const Vector3D& direction) {
+IntersectionInfo Sphere::intersect(const Vector3D& origin, const Vector3D& direction) const {
   float radiusSquared = r * r;
   Vector3D distanceFromSphere = center - origin;
   bool isInsideSphere = dot(distanceFromSphere, distanceFromSphere) < radiusSquared;
@@ -81,8 +88,26 @@ IntersectionInfo Sphere::intersect(const Vector3D& origin, const Vector3D& direc
   return { t, intersectionPoint, normalized(intersectionPoint - center), this };
 }
 
-Plane::Plane(float A, float B, float C, float D, const RGBAColor &color, std::shared_ptr<Material> material)
-  : Object(color, material), normal(normalized(Vector3D(A, B, C))) {
+RGBAColor Sphere::getColor(const Vector3D &intersectionPoint) const {
+  if (textureMap == nullptr)
+    return color;
+  const Vector3D textureCoordinates = sphericalToUV(intersectionPoint, textureMap);
+  unsigned x = static_cast<unsigned>(textureCoordinates.x);
+  unsigned y = static_cast<unsigned>(textureCoordinates.y);
+  return textureMap->getPixel(y, x);
+}
+
+Plane::Plane(
+  float A,
+  float B,
+  float C,
+  float D,
+  const RGBAColor &color,
+  std::shared_ptr<Material> material,
+  std::shared_ptr<PNG> textureMap
+)
+  : Object(color, material, textureMap), normal(normalized(Vector3D(A, B, C)))
+{
   if (A != 0) {
     point.x = -D/A;
   } else if (B != 0) {
@@ -92,7 +117,7 @@ Plane::Plane(float A, float B, float C, float D, const RGBAColor &color, std::sh
   }
 }
 
-IntersectionInfo Plane::intersect(const Vector3D& origin, const Vector3D& direction) {
+IntersectionInfo Plane::intersect(const Vector3D& origin, const Vector3D& direction) const {
   Vector3D normalizedDirection = normalized(direction);
 
   float t = dot((point - origin), normal) / dot(normalizedDirection, normal);
@@ -102,8 +127,16 @@ IntersectionInfo Plane::intersect(const Vector3D& origin, const Vector3D& direct
   : IntersectionInfo{ t, t * normalizedDirection + origin, normal, this };
 }
 
-Triangle::Triangle(const Vector3D& p1, const Vector3D& p2, const Vector3D& p3, const RGBAColor &color, std::shared_ptr<Material> material)
-  : Object(color, material), p1(p1) {
+Triangle::Triangle(
+  const Vector3D& p1,
+  const Vector3D& p2,
+  const Vector3D& p3,
+  const RGBAColor &color,
+  std::shared_ptr<Material> material,
+  std::shared_ptr<PNG> textureMap
+)
+  : Object(color, material, textureMap), p1(p1)
+{
   aabbMin.x = std::min(std::min(p1.x, p2.x), p3.x);
   aabbMin.y = std::min(std::min(p1.y, p2.y), p3.y);
   aabbMin.z = std::min(std::min(p1.z, p2.z), p3.z);
@@ -126,7 +159,7 @@ Triangle::Triangle(const Vector3D& p1, const Vector3D& p2, const Vector3D& p3, c
   e2 = 1.0 / dot(a2, p3p1Diff) * a2;
 }
 
-IntersectionInfo Triangle::intersect(const Vector3D& origin, const Vector3D& direction) {
+IntersectionInfo Triangle::intersect(const Vector3D& origin, const Vector3D& direction) const {
   Vector3D normalizedDirection = normalized(direction);
 
   float t = dot((p1 - origin), normal) / dot(normalizedDirection, normal);

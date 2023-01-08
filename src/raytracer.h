@@ -10,13 +10,8 @@
 #include "math_utils.h"
 
 // A ray has origin 'eye' and direction 'forward' + Sx * 'right' + Sy * 'up'
-float getRayScaleX(float x, int w, int h) {
-  return (2 * x - w) / std::max(w, h);
-}
-
-float getRayScaleY(float y, int w, int h) {
-  return (h - 2 * y) / std::max(w, h);
-}
+float getRayScaleX(float x, int w, int h);
+float getRayScaleY(float y, int w, int h);
 
 struct RenderTask {
   int x;
@@ -32,9 +27,9 @@ public:
   IntersectionInfo findClosestObject(const Vector3D& origin, const Vector3D& direction) const;
   IntersectionInfo findAnyObject(const Vector3D& origin, const Vector3D& direction) const;
 
-  void Scene::addObject(std::unique_ptr<Object> obj) {
-  objects.push_back(std::move(obj));
-}
+  void addObject(std::unique_ptr<Object> obj) {
+    objects.push_back(std::move(obj));
+  }
 
   void addPlane(std::unique_ptr<Plane> plane) {
     planes.push_back(std::move(plane));
@@ -120,7 +115,7 @@ public:
   Vector3D up{0, 1, 0}; // NORMALIZED
 
 private:
-  RGBAColor illuminate(const IntersectionInfo& info);
+  RGBAColor illuminate(const Vector3D &direction, const IntersectionInfo& info);
   RGBAColor raytrace(const Vector3D& origin, const Vector3D& direction, UniformDistribution &sampler);
   void expose(PNG *img);
   /**
