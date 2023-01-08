@@ -354,3 +354,208 @@ std::unique_ptr<Scene> readFromFile(const std::string& filename) {
     return nullptr;
   }
 }
+
+// https://stackoverflow.com/questions/216823/how-to-trim-an-stdstring
+// trim from start (in place)
+static inline void ltrim(std::string &s) {
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
+        return !std::isspace(ch);
+    }));
+}
+
+// trim from end (in place)
+static inline void rtrim(std::string &s) {
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
+        return !std::isspace(ch);
+    }).base(), s.end());
+}
+
+// trim from both ends (in place)
+static inline void trim(std::string &s) {
+    rtrim(s);
+    ltrim(s);
+}
+
+// trim from start (copying)
+static inline std::string ltrim_copy(std::string s) {
+    ltrim(s);
+    return s;
+}
+
+// trim from end (copying)
+static inline std::string rtrim_copy(std::string s) {
+    rtrim(s);
+    return s;
+}
+
+// trim from both ends (copying)
+static inline std::string trim_copy(std::string s) {
+    trim(s);
+    return s;
+}
+
+Tag getTagType(const std::string &line) {
+  for (size_t i = 0; i < TagNames.size(); ++i) {
+    if (line.rfind(TagNames[i], 1) == 0)
+      return static_cast<Tag>(i);
+  }
+  return Tag::Unknown;
+}
+
+bool findOptions(const std::string &line, std::vector<std::string> *options) {
+  size_t start = line.find("options={");
+  if (start == std::string::npos)
+    return false;
+
+  size_t end = line.find("}");
+  if (end == std::string::npos)
+    return false;
+  
+  // skip over "options={"
+  std::string optionsString = line.substr(start + 9, end - start - 1);
+  *options = split(optionsString, ';');
+  return true;
+}
+
+bool parseSceneTag(std::ifstream &filestream, std::string &line, Scene *scene) {
+  std::vector<std::string> options;
+  if (findOptions(line, &options) == false)
+    return false;
+  
+  SceneOptions sceneOptions;
+
+  for (const std::string &option : options) {
+    std::vector<std::string> keyValue = split(option, ':');
+    if (keyValue.size() != 2)
+      return false;
+    
+    std::string key = trim_copy(keyValue[0]);
+    std::string value = trim_copy(keyValue[1]);
+    
+    if (key == "bias") {
+      sceneOptions.bias = std::stof(value);
+    } else if (key == "exposure") {
+      sceneOptions.exposure = std::stof(value);
+    } else if (key == "maxBounces") {
+      sceneOptions.maxBounces = std::stoi(value);
+    } else if (key == "numRays") {
+      sceneOptions.numRays = std::stoi(value);
+    } else if (key == "fisheye") {
+      sceneOptions.fisheye = std::stoi(value);
+    } else if (key == "focus") {
+      sceneOptions.focus = std::stof(value);
+    } else if (key == "lens") {
+      sceneOptions.lens = std::stof(value);
+    } else {
+      // unknown scene option
+      return false;
+    }
+  }
+
+  scene->options = sceneOptions;
+  return true;
+}
+
+bool stringTupleToVector3D(const std::string &string, Vector3D *vector) {
+  size_t end = string.size();
+  if (string[0] != '(' || string[end - 1] != ')')
+    return false;
+  
+  std::vector<std::string> values = split(string.substr(1, end - 1), ',');
+  if (values.size() != 3)
+    return false;
+
+  vector->x = std::stof(trim_copy(values[0]));
+  vector->y = std::stof(trim_copy(values[1]));
+  vector->z = std::stof(trim_copy(values[2]));
+  return true;
+}
+
+bool parseCameraTag(std::ifstream &filestream, std::string &line, Scene *scene) {
+  std::vector<std::string> options;
+  if (findOptions(line, &options) == false)
+    return false;
+
+  Camera camera;
+  
+  for (const std::string &option : options) {
+    std::vector<std::string> keyValue = split(option, ':');
+    if (keyValue.size() != 2)
+      return false;
+    
+    std::string key = trim_copy(keyValue[0]);
+    std::string value = trim_copy(keyValue[1]);
+
+    if (option == "eye") {
+      Vector3D eye;
+      if (stringTupleToVector3D(value, &eye) == false)
+        return false;
+      camera.setEye(eye);
+    } else if (option == "forward") {
+      Vector3D forward;
+      if (stringTupleToVector3D(value, &forward) == false)
+        return false;
+      camera.setForward(forward);
+    } else if (option == "up") {
+      Vector3D up;
+      if (stringTupleToVector3D(value, &up) == false)
+        return false;
+      camera.setForward(up);
+    } else {
+      // unknown camera option
+      return false;
+    }
+  }
+
+  scene->camera = camera;
+  return true;
+}
+
+bool parseLightTag(std::ifstream &filestream, std::string &line, Scene *scene) {
+  return true;
+}
+
+bool parseShapeTag(std::ifstream &filestream, std::string &line, Scene *scene) {
+  return true;
+}
+
+bool parseWavefrontTag(std::ifstream &filestream, std::string &line, Scene *scene) {
+  return true;
+}
+
+bool parseFile(std::ifstream &filestream, std::string &line, Scene *scene) {
+  std::getline(filestream, line); // retrieve next line in file
+  
+  Tag tag = getTagType(line);
+  switch (tag) {
+    case Tag::Scene:
+      parseSceneTag(filestream, line, scene);
+      break;
+    
+    case Tag::Camera:
+      parseCameraTag(filestream, line, scene);
+      break;
+
+    case Tag::Light:
+      parseLightTag(filestream, line, scene);
+      break;
+    
+    case Tag::Shape:
+      parseShapeTag(filestream, line, scene);
+      break;
+    
+    case Tag::Wavefront:
+      parseWavefrontTag(filestream, line, scene);
+      break;
+    
+    default: // Unknown or missing tag
+      return false;
+      break;
+  }
+}
+
+std::unique_ptr<Scene> parseFile(std::ifstream &filestream) {
+  std::string line;
+  Scene *scene = new Scene();
+  parseFile(filestream, line, scene);
+}

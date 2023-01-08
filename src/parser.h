@@ -3,6 +3,27 @@
 #include "macros.h"
 #include "raytracer.h"
 
+enum class Tag {
+  Scene,
+  Camera,
+  Light,
+  Shape,
+  Material,
+  Texture,
+  Wavefront,
+  Unknown
+};
+
+static const std::vector<std::string> TagNames = {
+  "Scene",
+  "Camera",
+  "Light",
+  "Shape",
+  "Material",
+  "Texture",
+  "Wavefront"
+};
+
 template <typename Out>
 void split(const std::string &s, char delim, Out result);
 

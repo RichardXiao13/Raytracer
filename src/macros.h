@@ -25,6 +25,8 @@
 #include <ctime>
 #include <mutex>
 #include <unordered_map>
+#include <cctype>
+#include <locale>
 
 #define DEBUG
 // #define PROFILE_RAYTRACE

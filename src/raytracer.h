@@ -30,7 +30,8 @@ struct SceneOptions {
 };
 
 class Scene {
-public: 
+public:
+  Scene() {};
   Scene(int w, int h, const std::string& file)
     : width_(w), height_(h), filename_(file) {};
   ~Scene();
