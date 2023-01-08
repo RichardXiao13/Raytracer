@@ -4,18 +4,28 @@
 #include "vector3d.h"
 
 float linearToGamma(float channel) {
-  if (channel < 0.0031308) {
+  if (channel < 0.0031308) 
     return 12.92 * channel;
-  }
-  return 1.055 * pow(channel, 1/2.4) - 0.055;
+
+  return 1.055 * std::pow(channel, 1/2.4) - 0.055;
+}
+
+float gammaToLinear(float channel) {
+  if (channel < 0.04045)
+    return channel / 12.92;
+  return std::pow((channel + 0.055) / 1.055, 2.4);
 }
 
 float exponentialExposure(float channel, float exposure) {
   return 1.0 - exp(-1 * channel * exposure);
 }
 
-RGBAColor RGBAColor::toSRGB() {
+RGBAColor RGBAColor::toSRGB() const {
   return RGBAColor(linearToGamma(r), linearToGamma(g), linearToGamma(b), a);
+}
+
+RGBAColor RGBAColor::toLinear() const {
+  return RGBAColor(gammaToLinear(r), gammaToLinear(g), gammaToLinear(b), a);
 }
 
 RGBAColor operator*(float scalar, const RGBAColor& c) {
@@ -73,16 +83,16 @@ RGBAColor &RGBAColor::operator+=(const RGBAColor& other) {
   return *this;
 }
 
+bool hasNaN(RGBAColor &c) {
+  return std::isnan(c.r) || std::isnan(c.g) || std::isnan(c.b);
+}
+
 RGBAColor operator*(const Vector3D& v, const RGBAColor& c) {
   return RGBAColor(c.r * v.x, c.g * v.y, c.b * v.z, c.a);
 }
 
 RGBAColor operator*(const RGBAColor& c, const Vector3D& v) {
   return RGBAColor(c.r * v.x, c.g * v.y, c.b * v.z, c.a);
-}
-
-bool hasNaN(RGBAColor &c) {
-  return std::isnan(c.r) || std::isnan(c.g) || std::isnan(c.b);
 }
 
 RGBAColor clipColor(const RGBAColor& c) {
@@ -129,6 +139,7 @@ bool PNG::readFromFile(const std::string &filename) {
     pixel.g = byteData[i + 1] / 255.0f;
     pixel.b = byteData[i + 2] / 255.0f;
     pixel.a = byteData[i + 3] / 255.0f;
+    pixel = pixel.toLinear();
   }
 
   return true;
@@ -138,7 +149,7 @@ bool PNG::saveToFile(const std::string& filename) {
   unsigned char *byteData = new unsigned char[width_ * height_ * 4];
   for (unsigned i = 0; i < width_ * height_; i++) {
     RGBAColor gammaCorrected = image_[i].toSRGB();
-    byteData[(i * 4)]     = static_cast<unsigned char>(round(gammaCorrected.r * 255));
+    byteData[(i * 4) + 0] = static_cast<unsigned char>(round(gammaCorrected.r * 255));
     byteData[(i * 4) + 1] = static_cast<unsigned char>(round(gammaCorrected.g * 255));
     byteData[(i * 4) + 2] = static_cast<unsigned char>(round(gammaCorrected.b * 255));
     byteData[(i * 4) + 3] = static_cast<unsigned char>(round(gammaCorrected.a * 255));

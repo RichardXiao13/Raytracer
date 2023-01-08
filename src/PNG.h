@@ -14,7 +14,8 @@ public:
   RGBAColor() : r(0), g(0), b(0), a(1.0) {};
   RGBAColor(float r1, float g1, float b1) : r(r1), g(g1), b(b1), a(1.0) {};
   RGBAColor(float r1, float g1, float b1, float a1) : r(r1), g(g1), b(b1), a(a1) {};
-  RGBAColor toSRGB();
+  RGBAColor toSRGB() const;
+  RGBAColor toLinear() const;
 
   friend RGBAColor operator*(float scalar, const RGBAColor& c);
   friend RGBAColor operator*(const RGBAColor& c, float scalar);
@@ -26,7 +27,6 @@ public:
   RGBAColor &operator/=(float scalar);
   RGBAColor &operator*=(const RGBAColor& c);
   friend RGBAColor operator*(const RGBAColor& c1, const RGBAColor& c2);
-  friend bool hasNaN(RGBAColor &c);
 
   float r;
   float g;
@@ -34,8 +34,12 @@ public:
   float a;
 };
 
+bool hasNaN(RGBAColor &c);
+
 RGBAColor operator*(const Vector3D& v, const RGBAColor& c);
+
 RGBAColor operator*(const RGBAColor& c, const Vector3D& v);
+
 class PNG {
 public:
   PNG(unsigned w, unsigned h) : width_(w), height_(h) {
@@ -71,6 +75,11 @@ private:
 };
 
 std::ostream& operator<<(std::ostream& out, const RGBAColor& color);
+
 float linearToGamma(float channel);
+
+float gammaToLinear(float channel);
+
 float exponentialExposure(float channel, float exposure);
+
 RGBAColor clipColor(const RGBAColor& c);

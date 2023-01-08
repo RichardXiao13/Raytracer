@@ -275,7 +275,10 @@ PNG *Scene::render(std::function<void (Scene *, PNG *, SafeQueue<RenderTask> *, 
   for (size_t i = 0; i < threads.size(); ++i) {
     threads[i].join();
   }
-  expose(img);
+
+  if (exposure >= 0)
+    expose(img);
+  
   return img;
 }
 
@@ -298,12 +301,10 @@ PNG *Scene::render(int numThreads, int seed) {
 void Scene::expose(PNG *img) {
   for (int y = 0; y < height_; ++y) {
     for (int x = 0; x < width_; ++x) {
-      if (exposure >= 0) {
         RGBAColor &pixel = img->getPixel(y, x);
         pixel.r = exponentialExposure(pixel.r, exposure);
         pixel.g = exponentialExposure(pixel.g, exposure);
         pixel.b = exponentialExposure(pixel.b, exposure);
-      }
     }
   }
 }
