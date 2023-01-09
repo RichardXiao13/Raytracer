@@ -39,7 +39,7 @@ bool loadOBJ(
   const Vector3D &center,
   float scale,
   const std::string &filename,
-  std::unique_ptr<Scene> &scene,
+  Scene *scene,
   const RGBAColor &color,
   const std::shared_ptr<Material> material
 );

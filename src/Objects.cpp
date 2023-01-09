@@ -12,7 +12,7 @@ RGBAColor DistantLight::intensity(const Vector3D &point, const Vector3D &n) cons
   return color * clipDot(n, direction);
 }
 
-bool Bulb::pointInShadow(const Vector3D &point, const Scene *scene) const {
+bool PointLight::pointInShadow(const Vector3D &point, const Scene *scene) const {
   const Vector3D lightDirection = center - point;
   float intersectToBulbDist = magnitude(lightDirection);
   IntersectionInfo info = scene->findClosestObject(point, lightDirection);
@@ -21,7 +21,7 @@ bool Bulb::pointInShadow(const Vector3D &point, const Scene *scene) const {
   return info.obj != nullptr && objectToIntersect < intersectToBulbDist;
 }
 
-RGBAColor Bulb::intensity(const Vector3D &point, const Vector3D &n) const {
+RGBAColor PointLight::intensity(const Vector3D &point, const Vector3D &n) const {
   const Vector3D lightDirection = center - point;
   float distance = magnitude(lightDirection);
   float invDistance =  1.0f / (distance * distance);
@@ -45,22 +45,20 @@ RGBAColor EnvironmentLight::emittedLight(const Vector3D &point) const {
 }
 
 Sphere::Sphere(
-  float x,
-  float y,
-  float z,
+  const Vector3D &center,
   float r,
   const RGBAColor &color,
   std::shared_ptr<Material> material,
   std::shared_ptr<PNG> textureMap
 )
-  : Object(color, material, textureMap), center(x, y, z), r(r)
+  : Object(color, material, textureMap), center(center), r(r)
 {
-  aabbMin.x = x - r;
-  aabbMin.y = y - r;
-  aabbMin.z = z - r;
-  aabbMax.x = x + r;
-  aabbMax.y = y + r;
-  aabbMax.z = z + r;
+  aabbMin.x = center.x - r;
+  aabbMin.y = center.y - r;
+  aabbMin.z = center.z - r;
+  aabbMax.x = center.x + r;
+  aabbMax.y = center.y + r;
+  aabbMax.z = center.z + r;
   centroid = center;
 }
 
@@ -100,22 +98,20 @@ RGBAColor Sphere::getColor(const Vector3D &intersectionPoint) const {
 }
 
 Plane::Plane(
-  float A,
-  float B,
-  float C,
+  const Vector3D &normal,
   float D,
   const RGBAColor &color,
   std::shared_ptr<Material> material,
   std::shared_ptr<PNG> textureMap
 )
-  : Object(color, material, textureMap), normal(normalized(Vector3D(A, B, C)))
+  : Object(color, material, textureMap), normal(normalized(normal))
 {
-  if (A != 0) {
-    point.x = -D/A;
-  } else if (B != 0) {
-    point.y = -D/B;
+  if (normal.x != 0) {
+    point.x = -D/normal.x;
+  } else if (normal.y != 0) {
+    point.y = -D/normal.y;
   } else {
-    point.z = -D/C;
+    point.z = -D/normal.z;
   }
 }
 

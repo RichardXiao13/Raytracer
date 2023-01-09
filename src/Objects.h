@@ -68,8 +68,8 @@ public:
 
 class DistantLight : public Light {
 public:
-  DistantLight(float x, float y, float z, const RGBAColor& color)
-    : Light(color), direction(x, y, z) {};
+  DistantLight(const Vector3D &direction, const RGBAColor& color)
+    : Light(color), direction(direction) {};
   ~DistantLight() {};
   bool pointInShadow(const Vector3D &point, const Scene *scene) const;
   RGBAColor intensity(const Vector3D &point, const Vector3D &n) const;
@@ -77,11 +77,11 @@ public:
   Vector3D direction;
 };
 
-class Bulb : public Light {
+class PointLight : public Light {
 public:
-  Bulb(float x, float y, float z, const RGBAColor &color)
-    : Light(color), center(x, y, z) {};
-  ~Bulb() {};
+  PointLight(const Vector3D &center, const RGBAColor &color)
+    : Light(color), center(center) {};
+  ~PointLight() {};
   bool pointInShadow(const Vector3D &point, const Scene *scene) const;
   RGBAColor intensity(const Vector3D &point, const Vector3D &n) const;
 
@@ -104,9 +104,7 @@ public:
 class Sphere : public Object {
 public:
   Sphere(
-    float x,
-    float y,
-    float z,
+    const Vector3D &center,
     float r,
     const RGBAColor &color,
     std::shared_ptr<Material> material,
@@ -122,9 +120,7 @@ public:
 class Plane : public Object {
 public:
   Plane(
-    float A,
-    float B,
-    float C,
+    const Vector3D &normal,
     float D,
     const RGBAColor &color,
     std::shared_ptr<Material> material,

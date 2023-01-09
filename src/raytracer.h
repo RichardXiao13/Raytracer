@@ -55,12 +55,20 @@ public:
     filename_ = fname;
   }
 
-  int width() {
+  int width() const {
     return width_;
   }
 
-  int height() {
+  int height() const {
     return height_;
+  }
+
+  void setWidth(int width) {
+    width_ = width;
+  }
+
+  void setHeight(int height) {
+    height_ = height;
   }
 
   std::string filename() {
