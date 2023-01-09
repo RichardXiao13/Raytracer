@@ -112,11 +112,11 @@ bool findPath(const std::string &line, std::string *type) {
   if (start == std::string::npos)
     return false;
 
-  size_t end = line.find('"');
+  size_t end = line.find('"', start);
   if (end == std::string::npos)
     return false;
   
-  *type = line.substr(start, end - start - 1);
+  *type = line.substr(start, end - start);
   return true;
 }
 
@@ -530,7 +530,7 @@ void ParserTree::parseWavefrontNode(Node *node, Scene *scene) {
     return;
   
   std::string path;
-  if (findType(node->content, &path) == false)
+  if (findPath(node->content, &path) == false)
     return;
 
   RGBAColor color(1,1,1,1);

@@ -29,6 +29,7 @@ Any feedback or issues found are very much welcome, as well as additional contri
 * Fix MicrofacetReflection - Reflections achieved but sampling looks wrong? - Done!!
 
 * Find a better file format or parse other formats into this format
+    * Configured a custom format dubbed SDML (Scene Description Markup Language); Still needs a lot of work but basic interface is implemented for all except textures
 
 * Implement other materials (plastic, matte surfaces, metals, ...) and update Material interface
 
