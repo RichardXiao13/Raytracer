@@ -123,7 +123,7 @@ EnvironmentLight *parseEnvironmentLightOptions(const std::unordered_map<std::str
   };
   float radius = getDefaultOptionOrApply<float>(options, "radius", stof, 1.0f);
 
-  if (path.empty() == false) {
+  if (path.empty()) {
     Vector3D temp = getDefaultOptionOrApply<Vector3D>(options, "color", &stringTupleToVector3D, Vector3D(1, 1, 1));
     RGBAColor color(temp.x, temp.y, temp.z, 1);
     return new EnvironmentLight(center, radius, color);
