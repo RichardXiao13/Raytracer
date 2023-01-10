@@ -1,4 +1,5 @@
 #include "ParserTree.h"
+#include "material_colors.h"
 
 // https://stackoverflow.com/questions/216823/how-to-trim-an-stdstring
 // trim from start (in place)
@@ -41,7 +42,7 @@ static inline std::string trim_copy(std::string s) {
 
 Tag getTagType(const std::string &line) {
   for (size_t i = 0; i < TagNames.size(); ++i) {
-    if (line.rfind(TagNames[i]) == 0)
+    if (line.find(TagNames[i]) == 0)
       return static_cast<Tag>(i);
   }
   return Tag::Unknown;
@@ -204,8 +205,8 @@ ParserTree::ParserTree(std::ifstream &filestream) {
   std::string line;
   std::getline(filestream, line);
 
-  size_t start = line.rfind('<');
-  size_t end = line.rfind('>');
+  size_t start = line.find('<');
+  size_t end = line.find('>');
   std::string content = line.substr(start + 1, end - start - 1);
 
   root = new Node();
@@ -318,26 +319,13 @@ std::shared_ptr<Material> ParserTree::parseMaterialNode(Node *node, RGBAColor *c
   } else if (name == "plastic") {
       *type = ObjectType::Diffuse;
       return std::make_shared<Material>(0.5f, 0.5f, 1.3f, 1.0f, 0.0f, 0.0f, 0.1f, MaterialType::Plastic);
-  } else if (name == "copper") {
+  } else if (name.find("copper") != std::string::npos) {
     *type = ObjectType::Metal;
-    // *color = RGBAColor(0.95597f, 0.63760f, 0.53948f);
-    // https://en.wikipedia.org/wiki/Copper_(color)
-    // Copper
-    // *color = RGBAColor(0.4793201831f, 0.1714411007f, 0.03310476657f);
-    // Pale Copper
-    *color = RGBAColor(0.7011018919f, 0.2541520943f, 0.1356333297f);
-    // Copper Red
-    // *color = RGBAColor(0.5972017884f, 0.152926152f, 0.08228270713f);
-    // Copper Penny
-    // *color = RGBAColor(0.4178850708f, 0.1589608351f, 0.1412632911f);
+    *color = MaterialColors.at(name);
     return std::make_shared<Material>(0.0f, 1.0f, 0.23883f, 0.9553f, 0.0f, 3.415658f, 0.01f, MaterialType::Metal);
-  } else if (name == "gold") {
+  } else if (name.find("copper") != std::string::npos) {
     *type = ObjectType::Metal;
-    // https://en.wikipedia.org/wiki/Gold_(color)
-    // Gold (golden)
-    // *color = RGBAColor(1.0f, 0.6795424696330938f, 0.0f);
-    // Metallic Gold
-    *color = RGBAColor(0.6583748172794485f, 0.4286904966139066f, 0.0382043715953465f);
+    *color = MaterialColors.at(name);
     return std::make_shared<Material>(0.0f, 1.0f, 0.18104f, 0.99f, 0.0f, 3.068099f, 0.01f, MaterialType::Metal);
   } else if (name == "mirror") {
     *color = RGBAColor(0,0,0,0);
@@ -471,8 +459,8 @@ void ParserTree::build(std::ifstream &filestream, Node *node) {
         return;
     }
 
-    size_t start = line.rfind('<');
-    size_t end = line.rfind('>');
+    size_t start = line.find('<');
+    size_t end = line.find('>');
     std::string content = line.substr(start + 1, end - start - 1);
     Tag tag = getTagType(content);
     // if line is a closing tag and tag type matches current node, return

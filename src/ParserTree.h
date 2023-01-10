@@ -3,6 +3,27 @@
 #include "macros.h"
 #include "parser.h"
 
+enum class Tag {
+  Scene,
+  Camera,
+  Light,
+  Shape,
+  Material,
+  Texture,
+  Wavefront,
+  Unknown
+};
+
+static const std::vector<std::string> TagNames = {
+  "Scene",
+  "Camera",
+  "Light",
+  "Shape",
+  "Material",
+  "Texture",
+  "Wavefront"
+};
+
 inline void ltrim(std::string &s);
 inline void rtrim(std::string &s);
 inline void trim(std::string &s);
