@@ -510,6 +510,7 @@ void ParserTree::build(std::ifstream &filestream, Node *node) {
       // get next tag to process
       if (!std::getline(filestream, line))
         return;
+      trim(line);
     }
 
     size_t start = line.find('<');
