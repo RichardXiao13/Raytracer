@@ -102,10 +102,27 @@ Plane options
 ## Materials
 ```<Material name="" options={}/>```
 
-name can be empty or if provided, finds the corresponding material with the given name if it exists.
-Otherwise, it creates a default material.
+name is optional. If provided, it finds the corresponding material with the given name if it exists. Otherwise, it creates a default material. If name isn't provided, options are used to create the material.
 
 options is a key-value pairing of options specific to the Material interface.
+
+Available options are 
+
+```Kd:        [float]```
+
+```Ks:        [float]```
+
+```eta:       [float]```
+
+```Kr:        [float]```
+
+```Kt:        [float]```
+
+```Ka:        [float]```
+
+```roughness: [float]```
+
+```type:      [string]```
 
 ## Textures
 ```<Texture path=""/>```

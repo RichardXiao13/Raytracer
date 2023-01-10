@@ -4,7 +4,7 @@ EXE = raytracer
 # Add all object files needed for compiling:
 EXE_OBJ = main.o
 OBJS = main.o lodepng.o vector3d.o raytracer.o parser.o PNG.o BVH.o SafeQueue.o Objects.o math_utils.o SafeProgressBar.o \
-Material.o Profiler.o macros.o BDF.o microfacets.o Camera.o ParserTree.o material_colors.o
+Material.o Profiler.o macros.o BDF.o microfacets.o Camera.o ParserTree.o
 
 
 # Optimization level:

@@ -1,5 +1,4 @@
 #include "ParserTree.h"
-#include "material_colors.h"
 
 // https://stackoverflow.com/questions/216823/how-to-trim-an-stdstring
 // trim from start (in place)
@@ -49,7 +48,11 @@ Tag getTagType(const std::string &line) {
 }
 
 std::string parseKeyword(const std::string &line, const std::string &keyword) {
-  size_t start = line.find(keyword + "=\"") + keyword.size() + 2;
+  size_t start = line.find(keyword + "=\"");
+  if (start == std::string::npos)
+    return "";
+
+  start += keyword.size() + 2;
   size_t end = line.find('"', start);
   return line.substr(start, end - start);
 }
@@ -335,28 +338,54 @@ void ParserTree::parseLightNode(Node *node, Scene *scene) {
 
 std::shared_ptr<Material> ParserTree::parseMaterialNode(Node *node, RGBAColor *color, ObjectType *type) {
   std::string name = parseKeyword(node->content, "name");
+  if (name.empty()) {
+    std::unordered_map<std::string, std::string> options = parseOptions(node->content);
+
+    auto stof = [](const std::string &str) {
+      return std::stof(str);
+    };
+
+    auto stoi = [](const std::string &str) {
+      return std::stoi(str);
+    };
+
+    auto toMaterialType = [](const std::string &str) {
+      return NameToMaterialType.at(str);
+    };
+
+    float Kd          = getDefaultOptionOrApply<float>(options, "Kd", stof, 1e-4f);
+    float Ks          = getDefaultOptionOrApply<float>(options, "Ks", stof, -1.0f);
+    float eta         = getDefaultOptionOrApply<float>(options, "eta", stof, -1.0f);
+    float Kr          = getDefaultOptionOrApply<float>(options, "Kr", stof, -1.0f);
+    float Kt          = getDefaultOptionOrApply<float>(options, "Kt", stof, -1.0f);
+    float Ka          = getDefaultOptionOrApply<float>(options, "Ka", stof, -1.0f);
+    float roughness   = getDefaultOptionOrApply<float>(options, "roughness", stof, -1.0f);
+    MaterialType type = getDefaultOptionOrApply<MaterialType>(options, "type", toMaterialType, MaterialType::Dialectric);
+    return std::make_shared<Material>(Kd, Ks, eta, Kr, Kt, Ka, roughness, type);
+  }
 
   if (name == "glass") {
     *color = RGBAColor(0,0,0,0);
     *type = ObjectType::Refractive;
-    return std::make_shared<Material>(0.0f, 1.0f, 1.5f, 1.0f, 1.0f, 0.0f, 0.0f, MaterialType::Glass);
+    return NamedMaterials.at("glass");
   } else if (name == "plastic") {
       *type = ObjectType::Diffuse;
-      return std::make_shared<Material>(0.5f, 0.5f, 1.3f, 1.0f, 0.0f, 0.0f, 0.1f, MaterialType::Plastic);
+      return NamedMaterials.at("plastic");
   } else if (name.find("copper") != std::string::npos) {
     *type = ObjectType::Metal;
     *color = MaterialColors.at(name);
-    return std::make_shared<Material>(0.0f, 1.0f, 0.23883f, 0.9553f, 0.0f, 3.415658f, 0.01f, MaterialType::Metal);
+    return NamedMaterials.at("copper");
   } else if (name.find("gold") != std::string::npos) {
     *type = ObjectType::Metal;
     *color = MaterialColors.at(name);
-    return std::make_shared<Material>(0.0f, 1.0f, 0.18104f, 0.99f, 0.0f, 3.068099f, 0.01f, MaterialType::Metal);
+    return NamedMaterials.at("gold");
   } else if (name == "mirror") {
     *color = RGBAColor(0,0,0,0);
     *type = ObjectType::Reflective;
-    return std::make_shared<Material>(0.0f, 1.0f, 0.0f, 0.9f, 0.0f, 0.0f, 0.0f, MaterialType::Mirror);
+    return NamedMaterials.at("mirror");
+  } else {
+    return NamedMaterials.at("default");
   }
-  return nullptr;
 }
 
 std::shared_ptr<PNG> ParserTree::parseTextureNode(Node *node) {
@@ -370,7 +399,7 @@ void ParserTree::parseShapeNode(Node *node, Scene *scene) {
 
   RGBAColor color(1,1,1,1);
   ObjectType objectType = ObjectType::Diffuse;
-  std::shared_ptr<Material> material = std::make_unique<Material>();
+  std::shared_ptr<Material> material = NamedMaterials.at("default");
   std::shared_ptr<PNG> texture = nullptr;
 
   for (Node *child : node->children) {
