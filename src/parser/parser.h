@@ -1,7 +1,7 @@
 #pragma once
 
-#include "macros.h"
-#include "raytracer.h"
+#include "../macros.h"
+#include "../scene/raytracer.h"
 
 template <typename Out>
 void split(const std::string &s, char delim, Out result);

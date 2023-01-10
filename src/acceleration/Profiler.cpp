@@ -1,5 +1,6 @@
-#include "macros.h"
 #include "Profiler.h"
+
+#include "../macros.h"
 
 static Stats stats;
 

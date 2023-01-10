@@ -1,14 +1,13 @@
 #pragma once
 
-#include "macros.h"
-#include "vector3d.h"
-#include "PNG.h"
 #include "Material.h"
 #include "raytracer.h"
 
+#include "../macros.h"
+#include "../vector/vector3d.h"
+#include "../image/PNG.h"
+
 class Object;
-class Material;
-struct Uniformsampler;
 class Scene;
 
 /**

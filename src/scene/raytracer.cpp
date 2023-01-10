@@ -1,10 +1,12 @@
-#include "macros.h"
-#include "lodepng.h"
 #include "raytracer.h"
-#include "SafeQueue.h"
-#include "math_utils.h"
-#include "SafeProgressBar.h"
-#include "Profiler.h"
+
+#include "../macros.h"
+
+#include "../image/lodepng.h"
+#include "../bsdf/math_utils.h"
+#include "../acceleration/SafeQueue.h"
+#include "../acceleration/SafeProgressBar.h"
+#include "../acceleration/Profiler.h"
 
 #define THRESHOLD 512
 
@@ -309,4 +311,9 @@ void Scene::expose(PNG *img) {
         pixel.b = exponentialExposure(pixel.b, options.exposure);
     }
   }
+}
+
+void Scene::addObject(std::unique_ptr<Object> obj) {
+  centroidSum += obj->centroid;
+  objects.push_back(std::move(obj));
 }

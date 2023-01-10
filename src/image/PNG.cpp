@@ -1,7 +1,8 @@
-#include "macros.h"
-#include "PNG.h"
 #include "lodepng.h"
-#include "vector3d.h"
+#include "PNG.h"
+
+#include "../macros.h"
+#include "../vector/vector3d.h"
 
 float linearToGamma(float channel) {
   if (channel < 0.0031308) 

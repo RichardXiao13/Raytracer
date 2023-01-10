@@ -1,7 +1,8 @@
-#include "macros.h"
 #include "raytracer.h"
-#include "Objects.h"
-#include "vector3d.h"
+#include "Object.h"
+
+#include "../macros.h"
+#include "../vector/vector3d.h"
 
 bool DistantLight::pointInShadow(const Vector3D &point, const Scene *scene) const {
   IntersectionInfo info = scene->findAnyObject(point, direction);

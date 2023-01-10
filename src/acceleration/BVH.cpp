@@ -1,8 +1,9 @@
-#include "macros.h"
-#include "raytracer.h"
 #include "BVH.h"
 #include "SafeProgressBar.h"
 #include "Profiler.h"
+
+#include "../macros.h"
+#include "../scene/Object.h"
 
 #define MIN_THREAD_WORK 64
 #define N_BUCKETS 16

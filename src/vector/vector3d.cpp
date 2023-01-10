@@ -1,6 +1,6 @@
-#include "macros.h"
+#include "../macros.h"
+#include "../bsdf/math_utils.h"
 #include "vector3d.h"
-#include "math_utils.h"
 
 Vector3D::Vector3D(float x1, float y1, float z1) : x(x1), y(y1), z(z1) {};
 

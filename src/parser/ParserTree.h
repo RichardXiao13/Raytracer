@@ -1,7 +1,7 @@
 #pragma once
 
-#include "macros.h"
 #include "parser.h"
+#include "../macros.h"
 
 enum class Tag {
   Scene,

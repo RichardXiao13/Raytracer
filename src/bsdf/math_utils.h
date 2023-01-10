@@ -1,8 +1,8 @@
 #pragma once
 
-#include "macros.h"
-#include "vector3d.h"
-#include "PNG.h"
+#include "../macros.h"
+#include "../vector/vector3d.h"
+#include "../image/PNG.h"
 
 class UniformDistribution {
 public:

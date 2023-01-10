@@ -1,18 +1,30 @@
 #pragma once
 
-#include "macros.h"
-#include "PNG.h"
-#include "vector3d.h"
-#include "BVH.h"
-#include "Objects.h"
-#include "SafeQueue.h"
-#include "SafeProgressBar.h"
-#include "math_utils.h"
+#include "Object.h"
 #include "Camera.h"
+
+#include "../macros.h"
+#include "../image/PNG.h"
+#include "../vector/vector3d.h"
+#include "../acceleration/BVH.h"
+#include "../acceleration/SafeQueue.h"
+#include "../acceleration/SafeProgressBar.h"
+#include "../bsdf/math_utils.h"
 
 // A ray has origin 'eye' and direction 'forward' + Sx * 'right' + Sy * 'up'
 float getRayScaleX(float x, int w, int h);
 float getRayScaleY(float y, int w, int h);
+
+struct IntersectionInfo;
+class Object;
+class Triangle;
+class Sphere;
+class Plane;
+class Light;
+class DistantLight;
+class PointLight;
+class EnvironmentLight;
+class BVH;
 
 struct RenderTask {
   int x;
@@ -39,10 +51,7 @@ public:
   IntersectionInfo findClosestObject(const Vector3D& origin, const Vector3D& direction) const;
   IntersectionInfo findAnyObject(const Vector3D& origin, const Vector3D& direction) const;
 
-  void addObject(std::unique_ptr<Object> obj) {
-    centroidSum += obj->centroid;
-    objects.push_back(std::move(obj));
-  }
+  void addObject(std::unique_ptr<Object> obj);
 
   void addPlane(std::unique_ptr<Plane> plane) {
     planes.push_back(std::move(plane));

@@ -1,5 +1,6 @@
 #include "microfacets.h"
-#include "vector3d.h"
+
+#include "../vector/vector3d.h"
 
 float MicrofacetDistribution::pdf(const Vector3D &wo, const Vector3D &wh, const Vector3D &n) const {
   return distribution(wh, n) * std::abs(cosineTheta(wh, n));

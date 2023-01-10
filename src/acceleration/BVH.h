@@ -1,9 +1,10 @@
 #pragma once 
 
-#include "macros.h"
-#include "raytracer.h"
-#include "vector3d.h"
 #include "SafeProgressBar.h"
+
+#include "../macros.h"
+#include "../vector/vector3d.h"
+#include "../scene/Object.h"
 
 class Object;
 struct IntersectionInfo;

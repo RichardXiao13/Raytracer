@@ -1,7 +1,8 @@
 #pragma once
 
-#include "vector3d.h"
 #include "math_utils.h"
+
+#include "../vector/vector3d.h"
 
 class MicrofacetDistribution {
 public:

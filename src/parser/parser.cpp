@@ -1,10 +1,11 @@
-#include "macros.h"
 #include "parser.h"
-#include "raytracer.h"
-#include "Objects.h"
-#include "Material.h"
-#include "Profiler.h"
 #include "ParserTree.h"
+
+#include "../macros.h"
+#include "../scene/raytracer.h"
+#include "../scene/Object.h"
+#include "../scene/Material.h"
+#include "../acceleration/Profiler.h"
 
 // From StackOverflow https://stackoverflow.com/questions/874134/find-out-if-string-ends-with-another-string-in-c
 inline bool ends_with(std::string const & value, std::string const & ending) {

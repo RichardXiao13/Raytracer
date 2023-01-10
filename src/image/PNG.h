@@ -1,8 +1,7 @@
 #pragma once
 
-#include <string>
-
-#include "vector3d.h"
+#include "../macros.h"
+#include "../vector/vector3d.h"
 
 /**
  * RGBAColor class

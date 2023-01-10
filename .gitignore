@@ -3,8 +3,7 @@
 
 !src/
 !src/*
-!src/materials
-!src/materials/*
+!src/*/*
 
 .DS_Store
 

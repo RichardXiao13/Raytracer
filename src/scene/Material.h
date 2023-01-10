@@ -1,9 +1,9 @@
 #pragma once
 
-#include "macros.h"
-#include "vector3d.h"
-#include "BDF.h"
-#include "PNG.h"
+#include "../macros.h"
+#include "../vector/vector3d.h"
+#include "../bsdf/BDF.h"
+#include "../image/PNG.h"
 
 enum class MaterialType {
   Dialectric,

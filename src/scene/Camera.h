@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vector3d.h"
+#include "../vector/vector3d.h"
 
 class Camera {
 public:

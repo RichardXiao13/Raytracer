@@ -1,5 +1,6 @@
-#include "macros.h"
 #include "SafeProgressBar.h"
+
+#include "../macros.h"
 
 void displayRenderProgress(float progress, int barWidth) {
   // https://stackoverflow.com/questions/14539867/how-to-display-a-progress-indicator-in-pure-c-c-cout-printf
