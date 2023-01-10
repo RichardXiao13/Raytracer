@@ -12,32 +12,37 @@ static inline std::string rtrim_copy(std::string s);
 static inline std::string trim_copy(std::string s);
 
 Tag getTagType(const std::string &line);
-bool findOptions(const std::string &line, std::vector<std::string> *options);
-bool stringTupleToVector3D(const std::string &string, Vector3D *vector);
-bool findType(const std::string &line, std::string *type);
+std::string parseKeyword(const std::string &line, const std::string &keyword);
+std::unordered_map<std::string, std::string> parseOptions(const std::string &line);
+Vector3D stringTupleToVector3D(const std::string &string);
 
-bool parseDistantLightOptions(const std::vector<std::string> &options, Light **light);
-bool parsePointLightOptions(const std::vector<std::string> &options, Light **light);
+template <typename T>
+T getDefaultOptionOrApply(
+  const std::unordered_map<std::string, std::string> &options,
+  const std::string &key,
+  std::function<T (const std::string &)> func,
+  const T &value
+);
 
-bool parseSphereOptions(
-  const std::vector<std::string> &options,
-  Sphere **sphere,
+DistantLight *parseDistantLightOptions(const std::unordered_map<std::string, std::string> &options);
+PointLight *parsePointLightOptions(const std::unordered_map<std::string, std::string> &options);
+
+Sphere *parseSphereOptions(
+  const std::unordered_map<std::string, std::string> &options,
   RGBAColor color,
   ObjectType objectType,
   std::shared_ptr<Material> material,
   std::shared_ptr<PNG> texture
 );
-bool parseTriangleOptions(
-  const std::vector<std::string> &options,
-  Triangle **triangle,
+Triangle *parseTriangleOptions(
+  const std::unordered_map<std::string, std::string> &options,
   RGBAColor color,
   ObjectType objectType,
   std::shared_ptr<Material> material,
   std::shared_ptr<PNG> texture
 );
-bool parsePlaneOptions(
-  const std::vector<std::string> &options,
-  Plane **plane,
+Plane *parsePlaneOptions(
+  const std::unordered_map<std::string, std::string> &options,
   RGBAColor color,
   ObjectType objectType,
   std::shared_ptr<Material> material,

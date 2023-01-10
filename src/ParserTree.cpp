@@ -47,263 +47,155 @@ Tag getTagType(const std::string &line) {
   return Tag::Unknown;
 }
 
-bool findOptions(const std::string &line, std::vector<std::string> *options) {
-  // don't add here, otherwise overflow!!
+std::string parseKeyword(const std::string &line, const std::string &keyword) {
+  size_t start = line.find(keyword + "=\"") + keyword.size() + 2;
+  size_t end = line.find('"', start);
+  return line.substr(start, end - start);
+}
+
+std::unordered_map<std::string, std::string> parseOptions(const std::string &line) {
   size_t start = line.find("options={") + 9;
-  if (start == std::string::npos)
-    return false;
-
-  size_t end = line.find("}", start);
-  if (end == std::string::npos)
-    return false;
-  
-  // skip over "options={"
+  size_t end = line.find('}', start);
   std::string optionsString = line.substr(start, end - start);
-  *options = split(optionsString, ';');
-  return true;
+  std::vector<std::string> optionsList = split(optionsString, ';');
+
+  std::unordered_map<std::string, std::string> options;
+
+  // Parse each option and add the pairs to the options table
+  std::for_each(optionsList.begin(), optionsList.end(),
+  [&](const std::string &option) {
+    std::vector<std::string> keyValuePair = split(option, ':');
+    std::string key = trim_copy(keyValuePair[0]);
+    std::string value = trim_copy(keyValuePair[1]);
+
+    options.insert({ key, value });
+  });
+
+  return options;
 }
 
-bool stringTupleToVector3D(const std::string &string, Vector3D *vector) {
+Vector3D stringTupleToVector3D(const std::string &string) {
   size_t end = string.size();
-  if (string[0] != '(' || string[end - 1] != ')')
-    return false;
-  
+  // string is in format like '(x, x, x)'
   std::vector<std::string> values = split(string.substr(1, end - 1), ',');
-  if (values.size() != 3)
-    return false;
 
-  vector->x = std::stof(trim_copy(values[0]));
-  vector->y = std::stof(trim_copy(values[1]));
-  vector->z = std::stof(trim_copy(values[2]));
-  return true;
+  Vector3D vector;
+  vector.x = std::stof(trim_copy(values[0]));
+  vector.y = std::stof(trim_copy(values[1]));
+  vector.z = std::stof(trim_copy(values[2]));
+  return vector;
 }
 
-bool findType(const std::string &line, std::string *type) {
-  // don't add here, otherwise overflow!!
-  size_t start = line.find("type=\"") + 6;
-  if (start == std::string::npos)
-    return false;
+template <typename T>
+T getDefaultOptionOrApply(
+  const std::unordered_map<std::string, std::string> &options,
+  const std::string &key,
+  std::function<T (const std::string &)> func,
+  const T &value
+)
+{
+  auto it = options.find(key);
+  return (it != options.end()) ? func(it->second) : value;
+};
 
-  size_t end = line.find('"', start);
-  if (end == std::string::npos)
-    return false;
-  
-  *type = line.substr(start, end - start);
-  return true;
-}
-
-bool findName(const std::string &line, std::string *type) {
-  // don't add here, otherwise overflow!!
-  size_t start = line.find("name=\"") + 6;
-  if (start == std::string::npos)
-    return false;
-
-  size_t end = line.find('"', start);
-  if (end == std::string::npos)
-    return false;
-  
-  *type = line.substr(start, end - start);
-  return true;
-}
-
-bool findPath(const std::string &line, std::string *type) {
-  // don't add here, otherwise overflow!!
-  size_t start = line.find("path=\"") + 6;
-  if (start == std::string::npos)
-    return false;
-
-  size_t end = line.find('"', start);
-  if (end == std::string::npos)
-    return false;
-  
-  *type = line.substr(start, end - start);
-  return true;
-}
-
-bool parseDistantLightOptions(const std::vector<std::string> &options, Light **light) {
+DistantLight *parseDistantLightOptions(const std::unordered_map<std::string, std::string> &options) {
   RGBAColor color;
-  Vector3D direction;
-  for (const std::string &option : options) {
-    std::vector<std::string> keyValue = split(option, ':');
-    if (keyValue.size() != 2)
-      return false;
-    
-    std::string key = trim_copy(keyValue[0]);
-    std::string value = trim_copy(keyValue[1]);
+  Vector3D direction = getDefaultOptionOrApply<Vector3D>(options, "direction", &stringTupleToVector3D, Vector3D(0, 0, 0));
+  Vector3D temp      = getDefaultOptionOrApply<Vector3D>(options, "color", &stringTupleToVector3D, Vector3D(1, 1, 1));
+  color.r = temp.x;
+  color.g = temp.y;
+  color.b = temp.z;
 
-    if (key == "color") {
-      Vector3D temp;
-      if (stringTupleToVector3D(value, &temp) == false)
-        return false;
-      color.r = temp.x;
-      color.g = temp.y;
-      color.b = temp.z;
-    } else if (key == "direction") {
-      if (stringTupleToVector3D(value, &direction) == false)
-        return false;
-    } else {
-      return false;
-    }
-  }
   // @TODO make sure direction and color are both set, otherwise return false
-  *light = new DistantLight(direction, color);
-  return true;
+  return new DistantLight(direction, color);
 }
 
-bool parsePointLightOptions(const std::vector<std::string> &options, Light **light) {
+PointLight *parsePointLightOptions(const std::unordered_map<std::string, std::string> &options) {
   RGBAColor color;
-  Vector3D center;
-  for (const std::string &option : options) {
-    std::vector<std::string> keyValue = split(option, ':');
-    if (keyValue.size() != 2)
-      return false;
-    
-    std::string key = trim_copy(keyValue[0]);
-    std::string value = trim_copy(keyValue[1]);
+  Vector3D center = getDefaultOptionOrApply<Vector3D>(options, "center", &stringTupleToVector3D, Vector3D(0, 0, 0));
+  Vector3D temp   = getDefaultOptionOrApply<Vector3D>(options, "color", &stringTupleToVector3D, Vector3D(1, 1, 1));
+  color.r = temp.x;
+  color.g = temp.y;
+  color.b = temp.z;
 
-    if (key == "color") {
-      Vector3D temp;
-      if (stringTupleToVector3D(value, &temp) == false)
-        return false;
-      color.r = temp.x;
-      color.g = temp.y;
-      color.b = temp.z;
-    } else if (key == "center") {
-      if (stringTupleToVector3D(value, &center) == false)
-        return false;
-    } else {
-      return false;
-    }
-  }
   // @TODO make sure center and color are both set, otherwise return false
-  *light = new PointLight(center, color);
-  return true;
+  return new PointLight(center, color);
 }
 
-bool parseSphereOptions(
-  const std::vector<std::string> &options,
-  Sphere **sphere,
+Sphere *parseSphereOptions(
+  const std::unordered_map<std::string, std::string> &options,
   RGBAColor color,
   ObjectType objectType,
   std::shared_ptr<Material> material,
   std::shared_ptr<PNG> texture
 )
 {
-  Vector3D center;
-  float radius = 1;
-  for (const std::string &option : options) {
-    std::vector<std::string> keyValue = split(option, ':');
-    if (keyValue.size() != 2)
-      return false;
-    
-    std::string key = trim_copy(keyValue[0]);
-    std::string value = trim_copy(keyValue[1]);
+  auto stof = [](const std::string &str) {
+    return std::stof(str);
+  };
 
-    if (key == "color") {
-      Vector3D temp;
-      if (stringTupleToVector3D(value, &temp) == false)
-        return false;
-      color.r = temp.x;
-      color.g = temp.y;
-      color.b = temp.z;
-    } else if (key == "center") {
-      if (stringTupleToVector3D(value, &center) == false)
-        return false;
-    } else if (key == "radius") {
-      radius = std::stof(value);
-    } else {
-      return false;
-    }
+  Vector3D center = getDefaultOptionOrApply<Vector3D>(options, "center", &stringTupleToVector3D, Vector3D(0, 0, 0));
+  float radius    = getDefaultOptionOrApply<float>(options, "radius", stof, 1.0f);
+  auto it = options.find("color");
+  if (it != options.end()) {
+    Vector3D temp = stringTupleToVector3D(it->second);
+    color.r = temp.x;
+    color.g = temp.y;
+    color.b = temp.z;
   }
 
   // @TODO make sure center, color, and radius are set, otherwise return false
-  *sphere = new Sphere(center, radius, color, material, texture);
-  return true;
+  return new Sphere(center, radius, color, material, texture);
 }
 
-bool parseTriangleOptions(
-  const std::vector<std::string> &options,
-  Triangle **triangle,
+Triangle *parseTriangleOptions(
+  const std::unordered_map<std::string, std::string> &options,
   RGBAColor color,
   ObjectType objectType,
   std::shared_ptr<Material> material,
   std::shared_ptr<PNG> texture
 )
 {
-  Vector3D p1, p2, p3;
-  for (const std::string &option : options) {
-    std::vector<std::string> keyValue = split(option, ':');
-    if (keyValue.size() != 2)
-      return false;
-    
-    std::string key = trim_copy(keyValue[0]);
-    std::string value = trim_copy(keyValue[1]);
 
-    if (key == "color") {
-      Vector3D temp;
-      if (stringTupleToVector3D(value, &temp) == false)
-        return false;
-      color.r = temp.x;
-      color.g = temp.y;
-      color.b = temp.z;
-    } else if (key == "p1") {
-      if (stringTupleToVector3D(value, &p1) == false)
-        return false;
-    } else if (key == "p2") {
-      if (stringTupleToVector3D(value, &p2) == false)
-        return false;
-    } else if (key == "p3") {
-      if (stringTupleToVector3D(value, &p3) == false)
-        return false;
-    } else {
-      return false;
-    }
+  Vector3D p1 = getDefaultOptionOrApply<Vector3D>(options, "p1", &stringTupleToVector3D, Vector3D(0, 0, 0));
+  Vector3D p2 = getDefaultOptionOrApply<Vector3D>(options, "p2", &stringTupleToVector3D, Vector3D(0, 0, 0));
+  Vector3D p3 = getDefaultOptionOrApply<Vector3D>(options, "p3", &stringTupleToVector3D, Vector3D(0, 0, 0));
+  auto it = options.find("color");
+  if (it != options.end()) {
+    Vector3D temp = stringTupleToVector3D(it->second);
+    color.r = temp.x;
+    color.g = temp.y;
+    color.b = temp.z;
   }
 
   // @TODO make sure p1, p2, and p3 are set, otherwise return false
-  *triangle = new Triangle(p1, p2, p3, color, material, texture);
-  return true;
+  return new Triangle(p1, p2, p3, color, material, texture);
 }
 
-bool parsePlaneOptions(
-  const std::vector<std::string> &options,
-  Plane **plane,
+Plane *parsePlaneOptions(
+  const std::unordered_map<std::string, std::string> &options,
   RGBAColor color,
   ObjectType objectType,
   std::shared_ptr<Material> material,
   std::shared_ptr<PNG> texture
 )
 {
-  Vector3D normal;
-  float D;
-  for (const std::string &option : options) {
-    std::vector<std::string> keyValue = split(option, ':');
-    if (keyValue.size() != 2)
-      return false;
-    
-    std::string key = trim_copy(keyValue[0]);
-    std::string value = trim_copy(keyValue[1]);
+  auto stof = [](const std::string &str) {
+    return std::stof(str);
+  };
 
-    if (key == "color") {
-      Vector3D temp;
-      if (stringTupleToVector3D(value, &temp) == false)
-        return false;
-      color.r = temp.x;
-      color.g = temp.y;
-      color.b = temp.z;
-    } else if (key == "normal") {
-      if (stringTupleToVector3D(value, &normal) == false)
-        return false;
-    } else if (key == "D") {
-      D = std::stof(value);
-    } else {
-      return false;
-    }
+  Vector3D normal = getDefaultOptionOrApply<Vector3D>(options, "normal", &stringTupleToVector3D, Vector3D(0, 0, 0));
+  float D         = getDefaultOptionOrApply<float>(options, "D", stof, 1.0f);
+  auto it = options.find("color");
+  if (it != options.end()) {
+    Vector3D temp = stringTupleToVector3D(it->second);
+    color.r = temp.x;
+    color.g = temp.y;
+    color.b = temp.z;
   }
 
   // @TODO make sure center, color, and radius are set, otherwise return false
-  *plane = new Plane(normal, D, color, material, texture);
-  return true;
+  return new Plane(normal, D, color, material, texture);
 }
 
 ParserTree::ParserTree(std::ifstream &filestream) {
@@ -330,45 +222,50 @@ std::unique_ptr<Scene> ParserTree::parseIntoScene() {
 }
 
 void ParserTree::parseSceneNode(Node *node, Scene *scene) {
-  std::vector<std::string> options;
-  if (findOptions(node->content, &options) == false)
-    return;
-  
+  std::unordered_map<std::string, std::string> options = parseOptions(node->content);
   SceneOptions sceneOptions;
 
-  for (const std::string &option : options) {
-    std::vector<std::string> keyValue = split(option, ':');
-    if (keyValue.size() != 2)
-      return;
-    
-    std::string key = trim_copy(keyValue[0]);
-    std::string value = trim_copy(keyValue[1]);
-    
-    if (key == "bias") {
-      sceneOptions.bias = std::stof(value);
-    } else if (key == "exposure") {
-      sceneOptions.exposure = std::stof(value);
-    } else if (key == "maxBounces") {
-      sceneOptions.maxBounces = std::stoi(value);
-    } else if (key == "numRays") {
-      sceneOptions.numRays = std::stoi(value);
-    } else if (key == "fisheye") {
-      sceneOptions.fisheye = std::stoi(value);
-    } else if (key == "focus") {
-      sceneOptions.focus = std::stof(value);
-    } else if (key == "lens") {
-      sceneOptions.lens = std::stof(value);
-    } else if (key == "width") {
-      scene->setWidth(std::stoi(value));
-    } else if (key == "height") {
-      scene->setHeight(std::stoi(value));
-    } else if (key == "filename") {
-      scene->setFilename(value);
-    } else {
-      // unknown scene option
-      return;
-    }
+  auto stof = [](const std::string &str) {
+    return std::stof(str);
+  };
+
+  auto stoi = [](const std::string &str) {
+    return std::stoi(str);
+  };
+
+  sceneOptions.bias       = getDefaultOptionOrApply<float>(options, "bias", stof, 1e-4f);
+  sceneOptions.exposure   = getDefaultOptionOrApply<float>(options, "exposure", stof, -1.0f);
+  sceneOptions.maxBounces = getDefaultOptionOrApply<int>(options, "maxBounces", stoi, 4);
+  sceneOptions.numRays    = getDefaultOptionOrApply<int>(options, "numRays", stoi, 1);
+  sceneOptions.fisheye    = getDefaultOptionOrApply<int>(options, "fisheye", stoi, 0);
+  sceneOptions.focus      = getDefaultOptionOrApply<float>(options, "focus", stof, -1.0f);
+  sceneOptions.lens       = getDefaultOptionOrApply<float>(options, "lens", stoi, 0.0f);
+
+  int width;
+  int height;
+  std::string filename;
+
+  auto it = options.find("width");
+  if (it == options.end()) {
+    std::cerr << "Render image width not provided." << std::endl;
+    exit(1);
   }
+  width = std::stoi(it->second);
+  it = options.find("height");
+  if (it == options.end()) {
+    std::cerr << "Render image height not provided." << std::endl;
+    exit(1);
+  }
+  height = std::stoi(it->second);
+  it = options.find("filename");
+  if (it == options.end()) {
+    std::cerr << "Render image file name not provided." << std::endl;
+    exit(1);
+  }
+  filename = it->second;
+  scene->setWidth(width);
+  scene->setHeight(height);
+  scene->setFilename(filename);
 
   scene->options = sceneOptions;
   for (Node *child : node->children) {
@@ -377,61 +274,31 @@ void ParserTree::parseSceneNode(Node *node, Scene *scene) {
 }
 
 void ParserTree::parseCameraNode(Node *node, Scene *scene) {
-  std::vector<std::string> options;
-  if (findOptions(node->content, &options) == false)
-    return;
-
+  std::unordered_map<std::string, std::string> options = parseOptions(node->content);
   Camera camera;
-  
-  for (const std::string &option : options) {
-    std::vector<std::string> keyValue = split(option, ':');
-    if (keyValue.size() != 2)
-      return;
-    
-    std::string key = trim_copy(keyValue[0]);
-    std::string value = trim_copy(keyValue[1]);
 
-    if (option == "eye") {
-      Vector3D eye;
-      if (stringTupleToVector3D(value, &eye) == false)
-        return;
-      camera.setEye(eye);
-    } else if (option == "forward") {
-      Vector3D forward;
-      if (stringTupleToVector3D(value, &forward) == false)
-        return;
-      camera.setForward(forward);
-    } else if (option == "up") {
-      Vector3D up;
-      if (stringTupleToVector3D(value, &up) == false)
-        return;
-      camera.setForward(up);
-    } else {
-      // unknown camera option
-      return;
-    }
-  }
+  Vector3D eye     = getDefaultOptionOrApply<Vector3D>(options, "eye", &stringTupleToVector3D, Vector3D(0, 0, 0));
+  Vector3D forward = getDefaultOptionOrApply<Vector3D>(options, "forward", &stringTupleToVector3D, Vector3D(0, 0, -1));
+  Vector3D up      = getDefaultOptionOrApply<Vector3D>(options, "up", &stringTupleToVector3D, Vector3D(0, 1, 0));
+
+  camera.setEye(eye);
+  camera.setForward(forward);
+  camera.setUp(up);
 
   scene->camera = camera;
 }
 
 void ParserTree::parseLightNode(Node *node, Scene *scene) {
-  std::vector<std::string> options;
-  if (findOptions(node->content, &options) == false)
-    return;
+  std::unordered_map<std::string, std::string> options = parseOptions(node->content);
   
-  std::string type;
-  if (findType(node->content, &type) == false)
-    return;
+  std::string type = parseKeyword(node->content, "type");
 
   Light *light;
 
   if (type == "distant") {
-    if (parseDistantLightOptions(options, &light) == false)
-      return;
+    light = parseDistantLightOptions(options);
   } else if (type == "point") {
-    if (parsePointLightOptions(options, &light) == false)
-      return;
+    light = parsePointLightOptions(options);
   } else {
     // unknown light type
     return;
@@ -442,8 +309,8 @@ void ParserTree::parseLightNode(Node *node, Scene *scene) {
 }
 
 std::shared_ptr<Material> ParserTree::parseMaterialNode(Node *node, RGBAColor *color, ObjectType *type) {
-  std::string name;
-  findName(node->content, &name);
+  std::string name = parseKeyword(node->content, "name");
+
   if (name == "glass") {
     *color = RGBAColor(0,0,0,0);
     *type = ObjectType::Refractive;
@@ -481,25 +348,19 @@ std::shared_ptr<Material> ParserTree::parseMaterialNode(Node *node, RGBAColor *c
 }
 
 std::shared_ptr<PNG> ParserTree::parseTextureNode(Node *node) {
-  std::string path;
-  if (findPath(node->content, &path) == false)
-    return nullptr;
+  std::string path = parseKeyword(node->content, "path");
   return std::make_shared<PNG>(path);
 }
 
 void ParserTree::parseShapeNode(Node *node, Scene *scene) {
-  std::vector<std::string> options;
-  if (findOptions(node->content, &options) == false)
-    return;
-  
-  std::string type;
-  if (findType(node->content, &type) == false)
-    return;
+  std::unordered_map<std::string, std::string> options = parseOptions(node->content);
+  std::string type = parseKeyword(node->content, "type");
 
   RGBAColor color(1,1,1,1);
   ObjectType objectType = ObjectType::Diffuse;
   std::shared_ptr<Material> material = std::make_unique<Material>();
   std::shared_ptr<PNG> texture = nullptr;
+
   for (Node *child : node->children) {
     if (child->type == Tag::Material) {
       material = parseMaterialNode(child, &color, &objectType);
@@ -508,16 +369,11 @@ void ParserTree::parseShapeNode(Node *node, Scene *scene) {
     }
   }
 
-
   if (type == "sphere") {
-    Sphere *sphere;
-    if(parseSphereOptions(options, &sphere, color, objectType, material, texture) == false)
-      return;
+    Sphere *sphere = parseSphereOptions(options, color, objectType, material, texture);
     scene->addObject(std::unique_ptr<Object>(sphere));
   } else if (type == "triangle") {
-    Triangle *triangle;
-    if (parseTriangleOptions(options, &triangle, color, objectType, material, texture) == false)
-      return;
+    Triangle *triangle = parseTriangleOptions(options, color, objectType, material, texture);
     if (dot(scene->camera.forward, triangle->centroid - scene->camera.eye) > 0
         && dot(scene->camera.forward, triangle->normal) > 0) {
         triangle->normal *= -1.0f;
@@ -527,9 +383,7 @@ void ParserTree::parseShapeNode(Node *node, Scene *scene) {
       triangle->n3 = triangle->normal;
     scene->addObject(std::unique_ptr<Triangle>(triangle));
   } else if (type == "plane") {
-    Plane *plane;
-    if (parsePlaneOptions(options, &plane, color, objectType, material, texture) == false)
-      return;
+    Plane *plane = parsePlaneOptions(options, color, objectType, material, texture);
     scene->addPlane(std::unique_ptr<Plane>(plane));
   } else {
     // unknown shape
@@ -538,13 +392,8 @@ void ParserTree::parseShapeNode(Node *node, Scene *scene) {
 }
 
 void ParserTree::parseWavefrontNode(Node *node, Scene *scene) {
-  std::vector<std::string> options;
-  if (findOptions(node->content, &options) == false)
-    return;
-  
-  std::string path;
-  if (findPath(node->content, &path) == false)
-    return;
+  std::unordered_map<std::string, std::string> options = parseOptions(node->content);
+  std::string path = parseKeyword(node->content, "path");
 
   RGBAColor color(1,1,1,1);
   ObjectType objectType = ObjectType::Diffuse;
@@ -555,30 +404,18 @@ void ParserTree::parseWavefrontNode(Node *node, Scene *scene) {
     }
   }
 
-  Vector3D center;
-  float scale = 1;
+  auto stof = [](const std::string &str) {
+    return std::stof(str);
+  };
 
-  for (const std::string &option : options) {
-    std::vector<std::string> keyValue = split(option, ':');
-    if (keyValue.size() != 2)
-      return;
-    
-    std::string key = trim_copy(keyValue[0]);
-    std::string value = trim_copy(keyValue[1]);
-
-    if (key == "center") {
-      if (stringTupleToVector3D(value, &center) == false)
-        return;
-    } else if (key == "scale") {
-      scale = std::stof(value);
-    } else if (key == "color") {
-      Vector3D temp;
-      if (stringTupleToVector3D(value, &temp) == false)
-        return;
-      color.r = temp.x;
-      color.g = temp.y;
-      color.b = temp.z;
-    }
+  Vector3D center = getDefaultOptionOrApply<Vector3D>(options, "center", &stringTupleToVector3D, Vector3D(0, 0, 0));
+  float scale     = getDefaultOptionOrApply<float>(options, "scale", stof, 1.0f);
+  auto it = options.find("color");
+  if (it != options.end()) {
+    Vector3D temp = stringTupleToVector3D(it->second);
+    color.r = temp.x;
+    color.g = temp.y;
+    color.b = temp.z;
   }
 
   loadOBJ(center, scale, path, scene, color, material);
@@ -657,8 +494,6 @@ void ParserTree::build(std::ifstream &filestream, Node *node) {
 }
 
 std::unique_ptr<Scene> parseFile(std::ifstream &filestream) {
-  std::string line;
-  Scene *scene = new Scene();
   ParserTree tree(filestream);
   return tree.parseIntoScene();
 }
