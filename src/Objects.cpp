@@ -34,13 +34,13 @@ bool EnvironmentLight::pointInShadow(const Vector3D &point, const Scene *scene) 
 }
 
 RGBAColor EnvironmentLight::intensity(const Vector3D &point, const Vector3D &n) const {
-  return emittedLight(point);
+  return emittedLight(n);
 }
 
-RGBAColor EnvironmentLight::emittedLight(const Vector3D &point) const {
+RGBAColor EnvironmentLight::emittedLight(const Vector3D &direction) const {
   if (luminanceMap == nullptr)
     return color;
-  const Vector3D mapCoordinates = sphericalToUV(point - center, luminanceMap);
+  const Vector3D mapCoordinates = sphericalToUV(center + direction * radius, luminanceMap);
   unsigned x = static_cast<unsigned>(mapCoordinates.x);
   unsigned y = static_cast<unsigned>(mapCoordinates.y);
   return luminanceMap->getPixel(y, x);

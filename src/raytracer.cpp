@@ -217,7 +217,7 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, Uni
     if (intersectInfo.obj == nullptr) {
       // Add environment lighting on miss
       for (auto it = lights.begin(); it != lights.end(); ++it) {
-        L += (*it)->emittedLight(rayOrigin);
+        L += (*it)->emittedLight(rayDirection);
       }
       break;
     }

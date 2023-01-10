@@ -100,27 +100,37 @@ T getDefaultOptionOrApply(
 };
 
 DistantLight *parseDistantLightOptions(const std::unordered_map<std::string, std::string> &options) {
-  RGBAColor color;
   Vector3D direction = getDefaultOptionOrApply<Vector3D>(options, "direction", &stringTupleToVector3D, Vector3D(0, 0, 0));
   Vector3D temp      = getDefaultOptionOrApply<Vector3D>(options, "color", &stringTupleToVector3D, Vector3D(1, 1, 1));
-  color.r = temp.x;
-  color.g = temp.y;
-  color.b = temp.z;
+  RGBAColor color(temp.x, temp.y, temp.z, 1);
 
   // @TODO make sure direction and color are both set, otherwise return false
   return new DistantLight(direction, color);
 }
 
 PointLight *parsePointLightOptions(const std::unordered_map<std::string, std::string> &options) {
-  RGBAColor color;
   Vector3D center = getDefaultOptionOrApply<Vector3D>(options, "center", &stringTupleToVector3D, Vector3D(0, 0, 0));
   Vector3D temp   = getDefaultOptionOrApply<Vector3D>(options, "color", &stringTupleToVector3D, Vector3D(1, 1, 1));
-  color.r = temp.x;
-  color.g = temp.y;
-  color.b = temp.z;
+  RGBAColor color(temp.x, temp.y, temp.z, 1);
 
   // @TODO make sure center and color are both set, otherwise return false
   return new PointLight(center, color);
+}
+
+EnvironmentLight *parseEnvironmentLightOptions(const std::unordered_map<std::string, std::string> &options, const std::string &path, const Vector3D &center) {
+  auto stof = [](const std::string &str) {
+    return std::stof(str);
+  };
+  float radius = getDefaultOptionOrApply<float>(options, "radius", stof, 1.0f);
+
+  if (path.empty() == false) {
+    Vector3D temp = getDefaultOptionOrApply<Vector3D>(options, "color", &stringTupleToVector3D, Vector3D(1, 1, 1));
+    RGBAColor color(temp.x, temp.y, temp.z, 1);
+    return new EnvironmentLight(center, radius, color);
+  }
+
+  float scale = getDefaultOptionOrApply<float>(options, "scale", stof, 1.0f);
+  return new EnvironmentLight(center, radius, scale, std::make_shared<PNG>(path));
 }
 
 Sphere *parseSphereOptions(
@@ -269,7 +279,17 @@ void ParserTree::parseSceneNode(Node *node, Scene *scene) {
   scene->setFilename(filename);
 
   scene->options = sceneOptions;
+
+  // move lights to be parsed at the end so any environment lights have the correct world center
+  int n = node->children.size();
+  for (int i = 0; i < n; ++i) {
+    if (node->children[i]->type == Tag::Light) {
+      node->children.push_back(node->children[i]);
+      node->children[i] = nullptr;
+    }
+  }
   for (Node *child : node->children) {
+    if (child != nullptr)
     parseNode(child, scene);
   }
 }
@@ -300,12 +320,16 @@ void ParserTree::parseLightNode(Node *node, Scene *scene) {
     light = parseDistantLightOptions(options);
   } else if (type == "point") {
     light = parsePointLightOptions(options);
+  } else if (type == "environment") {
+    std::string path = "";
+    if (node->content.find("path") != std::string::npos)
+      path = parseKeyword(node->content, "path");
+    light = parseEnvironmentLightOptions(options, path, scene->worldCenter());
   } else {
     // unknown light type
     return;
   }
 
-  // @TODO add environment light
   scene->addLight(light);
 }
 
@@ -323,7 +347,7 @@ std::shared_ptr<Material> ParserTree::parseMaterialNode(Node *node, RGBAColor *c
     *type = ObjectType::Metal;
     *color = MaterialColors.at(name);
     return std::make_shared<Material>(0.0f, 1.0f, 0.23883f, 0.9553f, 0.0f, 3.415658f, 0.01f, MaterialType::Metal);
-  } else if (name.find("copper") != std::string::npos) {
+  } else if (name.find("gold") != std::string::npos) {
     *type = ObjectType::Metal;
     *color = MaterialColors.at(name);
     return std::make_shared<Material>(0.0f, 1.0f, 0.18104f, 0.99f, 0.0f, 3.068099f, 0.01f, MaterialType::Metal);

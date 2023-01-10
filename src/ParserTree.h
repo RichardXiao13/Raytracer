@@ -47,6 +47,11 @@ T getDefaultOptionOrApply(
 
 DistantLight *parseDistantLightOptions(const std::unordered_map<std::string, std::string> &options);
 PointLight *parsePointLightOptions(const std::unordered_map<std::string, std::string> &options);
+EnvironmentLight *parseEnvironmentLightOptions(
+  const std::unordered_map<std::string, std::string> &options,
+  const std::string &path,
+  const Vector3D &center
+);
 
 Sphere *parseSphereOptions(
   const std::unordered_map<std::string, std::string> &options,

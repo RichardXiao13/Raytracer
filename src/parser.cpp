@@ -210,11 +210,12 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
       scene->addLight(new PointLight(Vector3D(x, y, z), currentColor));
     } else if (keyword == "environment") {
       EnvironmentLight *light;
-      if (lineInfo.size() < 2) {
-        light = new EnvironmentLight(scene->worldCenter(), currentColor);
+      float radius = std::stof(lineInfo.at(1));
+      if (lineInfo.size() < 3) {
+        light = new EnvironmentLight(scene->worldCenter(), radius, currentColor);
       } else {
-        float scale = std::stof(lineInfo.at(1));
-        const std::string &textureName = lineInfo.at(2);
+        float scale = std::stof(lineInfo.at(2));
+        const std::string &textureName = lineInfo.at(3);
         std::shared_ptr<PNG> luminanceMap = nullptr;
         if (textures.find(textureName) != textures.end()) {
           luminanceMap = textures[textureName];
@@ -222,7 +223,7 @@ std::unique_ptr<Scene> readDataFromStream(std::istream& in) {
           luminanceMap = std::make_shared<PNG>(textureName);
           textures[textureName] = luminanceMap;
         }
-        light = new EnvironmentLight(scene->worldCenter(), scale, luminanceMap);
+        light = new EnvironmentLight(scene->worldCenter(), radius, scale, luminanceMap);
       }
       scene->addLight(light);
     } else if (keyword == "xyz") {
