@@ -40,6 +40,7 @@ public:
   IntersectionInfo findAnyObject(const Vector3D& origin, const Vector3D& direction) const;
 
   void addObject(std::unique_ptr<Object> obj) {
+    centroidSum += obj->centroid;
     objects.push_back(std::move(obj));
   }
 
@@ -71,8 +72,12 @@ public:
     height_ = height;
   }
 
-  std::string filename() {
+  std::string filename() const {
     return filename_;
+  }
+
+  Vector3D worldCenter() const {
+    return centroidSum / objects.size();
   }
 
   Camera camera;
@@ -101,4 +106,5 @@ private:
   int height_;
   std::string filename_;
   std::unique_ptr<BVH> bvh;
+  Vector3D centroidSum;
 };

@@ -160,15 +160,21 @@ float Box::surfaceArea() {
 BVH::BVH(std::vector<std::unique_ptr<Object>> &objects, int maxThreads)
   : objects(objects), maxThreads(maxThreads), progress(70, objects.size(), std::max(1024.0, objects.size() * 0.01)) {
   Profiler p(Funcs::BVHConstruction);
+  
+  if (objects.size() == 0) {
+    nodes = nullptr;
+    std::cout << "No triangles or spheres in scene. BVH not created." << std::endl;
+    return;
+  }
 
   Node *root = new Node();
   root->start = 0;
   root->numObjects = objects.size();
   updateNodeBounds(root);
   int numNodes = partition(root);
-  int idx = 0;
   // Allocate array of 32 byte blocks and align array to 32 byte address for cache performance
   nodes = (FlattenedNode *) aligned_alloc(32, 32 * numNodes);
+  int idx = 0;
   flatten(root, idx);
   std::cout << "BVH created with " << numNodes << " nodes on " << objects.size() << " objects." << std::endl;
   this->maxThreads += 0;
@@ -277,6 +283,8 @@ IntersectionInfo BVH::findClosestObject(const Vector3D& origin, const Vector3D& 
   #ifdef PROFILE_INTERSECT
   Profiler p(Funcs::BVHIntersectClosest);
   #endif
+  if (nodes == nullptr)
+    return { INF_D, {}, {}, nullptr };
   // Use vector as the underlying container
   // Better/faster for operations on the top of the stack, which is all this function does
   int to_visit[STACK_SIZE];
@@ -334,6 +342,8 @@ bool BVH::findAnyObject(const Vector3D& origin, const Vector3D& direction) {
   #ifdef PROFILE_INTERSECT
   Profiler p(Funcs::BVHIntersectAny);
   #endif
+  if (nodes == nullptr)
+    return false;
   // Use array which is lighter and faster than vector/stack
   // to_visit stores next node index to visit
   int to_visit[STACK_SIZE];

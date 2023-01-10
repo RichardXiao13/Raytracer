@@ -90,14 +90,17 @@ public:
 
 class EnvironmentLight : public Light {
 public:
-  EnvironmentLight(float x, float y, float z, const RGBAColor &color, std::shared_ptr<PNG> luminanceMap)
-    : Light(color), center(x, y, z), luminanceMap(luminanceMap) {};
+  EnvironmentLight(const Vector3D &center, const RGBAColor &color)
+    : Light(color), center(center), luminanceMap(nullptr) {};
+    EnvironmentLight(const Vector3D &center, float scale, std::shared_ptr<PNG> luminanceMap)
+    : Light(RGBAColor()), center(center), scale(scale), luminanceMap(luminanceMap) {};
   ~EnvironmentLight() {};
   bool pointInShadow(const Vector3D &point, const Scene *scene) const;
   RGBAColor intensity(const Vector3D &point, const Vector3D &n) const;
   RGBAColor emittedLight(const Vector3D &point) const;
 
   Vector3D center;
+  float scale;
   std::shared_ptr<PNG> luminanceMap;
 };
 
