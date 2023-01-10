@@ -17,3 +17,5 @@
 !.gitignore
 !Makefile
 !README.md
+!Benchmarks.md
+!FileFormat.md
