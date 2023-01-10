@@ -185,7 +185,8 @@ bool parseSphereOptions(
   Sphere **sphere,
   RGBAColor color,
   ObjectType objectType,
-  std::shared_ptr<Material> material
+  std::shared_ptr<Material> material,
+  std::shared_ptr<PNG> texture
 )
 {
   Vector3D center;
@@ -216,7 +217,7 @@ bool parseSphereOptions(
   }
 
   // @TODO make sure center, color, and radius are set, otherwise return false
-  *sphere = new Sphere(center, radius, color, material);
+  *sphere = new Sphere(center, radius, color, material, texture);
   return true;
 }
 
@@ -225,7 +226,8 @@ bool parseTriangleOptions(
   Triangle **triangle,
   RGBAColor color,
   ObjectType objectType,
-  std::shared_ptr<Material> material
+  std::shared_ptr<Material> material,
+  std::shared_ptr<PNG> texture
 )
 {
   Vector3D p1, p2, p3;
@@ -259,7 +261,7 @@ bool parseTriangleOptions(
   }
 
   // @TODO make sure p1, p2, and p3 are set, otherwise return false
-  *triangle = new Triangle(p1, p2, p3, color, material);
+  *triangle = new Triangle(p1, p2, p3, color, material, texture);
   return true;
 }
 
@@ -268,7 +270,8 @@ bool parsePlaneOptions(
   Plane **plane,
   RGBAColor color,
   ObjectType objectType,
-  std::shared_ptr<Material> material
+  std::shared_ptr<Material> material,
+  std::shared_ptr<PNG> texture
 )
 {
   Vector3D normal;
@@ -299,7 +302,7 @@ bool parsePlaneOptions(
   }
 
   // @TODO make sure center, color, and radius are set, otherwise return false
-  *plane = new Plane(normal, D, color, material);
+  *plane = new Plane(normal, D, color, material, texture);
   return true;
 }
 
@@ -477,6 +480,13 @@ std::shared_ptr<Material> ParserTree::parseMaterialNode(Node *node, RGBAColor *c
   return nullptr;
 }
 
+std::shared_ptr<PNG> ParserTree::parseTextureNode(Node *node) {
+  std::string path;
+  if (findPath(node->content, &path) == false)
+    return nullptr;
+  return std::make_shared<PNG>(path);
+}
+
 void ParserTree::parseShapeNode(Node *node, Scene *scene) {
   std::vector<std::string> options;
   if (findOptions(node->content, &options) == false)
@@ -489,21 +499,24 @@ void ParserTree::parseShapeNode(Node *node, Scene *scene) {
   RGBAColor color(1,1,1,1);
   ObjectType objectType = ObjectType::Diffuse;
   std::shared_ptr<Material> material = std::make_unique<Material>();
+  std::shared_ptr<PNG> texture = nullptr;
   for (Node *child : node->children) {
     if (child->type == Tag::Material) {
       material = parseMaterialNode(child, &color, &objectType);
+    } else if (child->type == Tag::Texture) {
+      texture = parseTextureNode(child);
     }
   }
 
 
   if (type == "sphere") {
     Sphere *sphere;
-    if(parseSphereOptions(options, &sphere, color, objectType, material) == false)
+    if(parseSphereOptions(options, &sphere, color, objectType, material, texture) == false)
       return;
     scene->addObject(std::unique_ptr<Object>(sphere));
   } else if (type == "triangle") {
     Triangle *triangle;
-    if (parseTriangleOptions(options, &triangle, color, objectType, material) == false)
+    if (parseTriangleOptions(options, &triangle, color, objectType, material, texture) == false)
       return;
     if (dot(scene->camera.forward, triangle->centroid - scene->camera.eye) > 0
         && dot(scene->camera.forward, triangle->normal) > 0) {
@@ -515,7 +528,7 @@ void ParserTree::parseShapeNode(Node *node, Scene *scene) {
     scene->addObject(std::unique_ptr<Triangle>(triangle));
   } else if (type == "plane") {
     Plane *plane;
-    if (parsePlaneOptions(options, &plane, color, objectType, material) == false)
+    if (parsePlaneOptions(options, &plane, color, objectType, material, texture) == false)
       return;
     scene->addPlane(std::unique_ptr<Plane>(plane));
   } else {

@@ -24,21 +24,24 @@ bool parseSphereOptions(
   Sphere **sphere,
   RGBAColor color,
   ObjectType objectType,
-  std::shared_ptr<Material> material
+  std::shared_ptr<Material> material,
+  std::shared_ptr<PNG> texture
 );
 bool parseTriangleOptions(
   const std::vector<std::string> &options,
   Triangle **triangle,
   RGBAColor color,
   ObjectType objectType,
-  std::shared_ptr<Material> material
+  std::shared_ptr<Material> material,
+  std::shared_ptr<PNG> texture
 );
 bool parsePlaneOptions(
   const std::vector<std::string> &options,
   Plane **plane,
   RGBAColor color,
   ObjectType objectType,
-  std::shared_ptr<Material> material
+  std::shared_ptr<Material> material,
+  std::shared_ptr<PNG> texture
 );
 
 class ParserTree {
@@ -64,6 +67,7 @@ private:
   void parseShapeNode(Node *node, Scene *scene);
   void parseWavefrontNode(Node *node, Scene *scene);
   std::shared_ptr<Material> parseMaterialNode(Node *node, RGBAColor *color, ObjectType *type);
+  std::shared_ptr<PNG> parseTextureNode(Node *node);
   void print(Node *node);
   void build(std::ifstream &filestream, Node *node);
 
