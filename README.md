@@ -19,16 +19,6 @@ make
 
 Any feedback or issues found are very much welcome, as well as additional contributors!
 
-# TODOs - Version 2: Realistic Rendering
-* Find a better file format or parse other formats into this format
-    * Configured a custom format dubbed SDML (Scene Description Markup Language); Still needs a lot of work but basic interface is implemented
-
-* Implement other materials (plastic, matte surfaces, metals, ...) and update Material interface - Copper, Gold, Plastic added
-
-* Add more benchmarking scenes (Gruesome... Unless a generous soul wants to do this by hand, I'll probably find a better file format and parse those instead)
-    * Need scenes with lots of primitives, dense, overlapping, or evenly distributed throughout the scene
-        * Parsed some .obj files from Stanford's 3D Repo [here](https://github.com/alecjacobson/common-3d-test-models); Format of the files was funky so I used MeshLab to convert the objs to plys and back to objs rather than figure out the parsing
-
-* Document everything
-
-* Create a testing suite
+# Example Scene
+![plot](./example_scenes/scene_images/example1.png)
+4 minute 17.61 second render on 1 environment light, 1 point light, 1,048,897 objects + 3 planes, and 256 rays per pixel. Credits to <a href="https://www.freepik.com/free-photo/close-up-black-marble-textured-background_3472377.htm#query=marble%20texture&position=0&from_view=keyword">marble by rawpixel.com</a> and <a href="https://www.freepik.com/free-photo/wooden_1175802.htm#query=wood%20floor%20texture&position=8&from_view=keyword">wooden by evening_tao</a> on Freepik for the textures.
