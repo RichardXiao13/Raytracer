@@ -22,7 +22,7 @@ Any feedback or issues found are very much welcome, as well as additional contri
 # TODOs - Version 2: Realistic Rendering
 * Add environment lighting - Need to figure out shadowing
 
-* Add textures - Add interface for Planar textures (wrapping)
+* Add textures - Fix textures for planes not flat with xy plane
 
 * Find a better file format or parse other formats into this format
     * Configured a custom format dubbed SDML (Scene Description Markup Language); Still needs a lot of work but basic interface is implemented for all except textures
