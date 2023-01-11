@@ -83,6 +83,12 @@ Triangle options
 
 ```color:  [(float, float, float)]```
 
+```t1:     [(float, float, float)]```
+
+```t2:     [(float, float, float)]```
+
+```t3:     [(float, float, float)]```
+
 Sphere options
 
 ```center: [(float, float, float)]```
@@ -93,11 +99,13 @@ Sphere options
 
 Plane options
 
-```normal: [(float, float, float)]```
+```normal:    [(float, float, float)]```
 
-```D:      [float]```
+```D:         [float]```
 
-```color:  [(float, float, float)]```
+```color:     [(float, float, float)]```
+
+```top-left:  [(float, float, float)]```
 
 ## Materials
 ```<Material name="" options={}/>```
