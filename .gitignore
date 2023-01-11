@@ -3,13 +3,9 @@
 
 !src/
 !src/*
-!src/materials
-!src/materials/*
+!src/*/*
 
-!test_objs/
-!test_objs/*
 .DS_Store
-xyzrgb_dragon.obj
 
 !example_scenes/
 !example_scenes/*
@@ -20,3 +16,6 @@ xyzrgb_dragon.obj
 !.gitignore
 !Makefile
 !README.md
+!Benchmarks.md
+!FileFormat.md
+!TODO.md

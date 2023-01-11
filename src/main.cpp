@@ -1,8 +1,9 @@
 #include "macros.h"
-#include "vector3d.h"
-#include "parser.h"
-#include "raytracer.h"
-#include "Profiler.h"
+
+#include "vector/vector3d.h"
+#include "parser/parser.h"
+#include "scene/raytracer.h"
+#include "acceleration/Profiler.h"
 
 int main(int argc, char **argv) {
   if (argc > 3) {

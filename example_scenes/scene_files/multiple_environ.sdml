@@ -1,0 +1,44 @@
+<Scene options={width: 1920; height: 1920; filename: example_scenes/scene_images/multiple_environ.png; numRays: 1024}>
+  <Camera options={}/>
+
+  <Light type="environment" options={color: (1, 1, 1); radius: 10}/>
+
+  <Wavefront path="test_objs/bunny.obj" options={center: (-1, -2.4, -3.8); scale: 2.35}>
+    <Material name="copper penny"/>
+  </Wavefront>
+
+  <Wavefront path="test_objs/lucy.obj" options={center: (1.5, 0, -3.5); scale: 4}>
+    <Material name="glass"/>
+  </Wavefront>
+
+  <Wavefront path="test_objs/teapot.obj" options={center: (-1.25, 2, -3.5); scale: 2.5}>
+    <Material name="mirror"/>
+  </Wavefront>
+
+  <Wavefront path="test_objs/dragon.obj" options={center: (0.25, -2.3, -2.5); scale: 2; color: (0.7, 0, 0)}>
+    <Material name="plastic"/>
+  </Wavefront>
+
+  <Wavefront path="test_objs/cow.obj" options={center: (3.5, -2.1, -3.5); scale: 1}>
+    <Material name="metallic gold"/>
+  </Wavefront>
+
+  <Shape type="sphere" options={radius: 0.7; center: (-1, 3, -4)}>
+    <Material name="plastic"/>
+    <Texture path="test_textures/earth.png"/>
+  </Shape>
+
+  <Shape type="sphere" options={radius: 0.2; center: (0.1, 3, -4)}>
+    <Material name="plastic"/>
+    <Texture path="test_textures/moon.png"/>
+  </Shape>
+
+  <Shape type="plane" options={color: (0, 0.6, 1); normal: (0, 0, 1); D: 6}>
+  </Shape>
+
+  <Shape type="plane" options={color: (1, 1, 1); normal: (0, 1, 0); D: 2}>
+  </Shape>
+
+  <Shape type="plane" options={color: (1, 1, 1); normal: (1, 0, 0); D: 3}>
+  </Shape>
+</Scene>
