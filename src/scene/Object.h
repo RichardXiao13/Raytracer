@@ -128,6 +128,8 @@ public:
     const RGBAColor &color,
     std::shared_ptr<Material> material,
     const Vector3D &textureTopLeft=Vector3D(),
+    float textureZoom=1.0f,
+    const Vector3D &textureShift=Vector3D(),
     std::shared_ptr<PNG> textureMap=nullptr
   );
   IntersectionInfo intersect(const Vector3D& origin, const Vector3D& direction) const;
@@ -136,6 +138,8 @@ public:
   Vector3D normal;
   Vector3D point;
   Vector3D textureTopLeft;
+  float textureZoom;
+  Vector3D textureShift;
 };
 
 class Triangle : public Object {

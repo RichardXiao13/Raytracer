@@ -114,9 +114,12 @@ Plane::Plane(
   const RGBAColor &color,
   std::shared_ptr<Material> material,
   const Vector3D &textureTopLeft,
+  float textureZoom,
+  const Vector3D &textureShift,
   std::shared_ptr<PNG> textureMap
 )
-  : Object(color, material, textureMap), normal(normalized(normal)), textureTopLeft(textureTopLeft)
+  : Object(color, material, textureMap), normal(normalized(normal)),
+    textureTopLeft(textureTopLeft), textureZoom(textureZoom), textureShift(textureShift)
 {
   if (normal.x != 0) {
     point.x = -D/normal.x;
@@ -142,8 +145,9 @@ RGBAColor Plane::getColor(const Vector3D &intersectionPoint) const {
     return color;
 
   Vector3D transformedPoint = transformToWorld(intersectionPoint.y, intersectionPoint.x, intersectionPoint.z, Vector3D(0, 0, 1));
-  float x = transformedPoint.x - textureTopLeft.x;
-  float y = transformedPoint.y - textureTopLeft.y;
+  transformedPoint = transformedPoint / transformedPoint.z;
+  float x = textureZoom * (transformedPoint.x - textureTopLeft.x) + textureShift.x;
+  float y = textureZoom * (transformedPoint.y - textureTopLeft.y) + textureShift.y;
   float width = textureMap->width();
   float height = textureMap->height();
   x = x > 0 ? std::fmod(x, width) : width - std::fmod(-x, width);

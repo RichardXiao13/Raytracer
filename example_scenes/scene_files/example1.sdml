@@ -1,7 +1,8 @@
-<Scene options={width: 1920; height: 1920; filename: example_scenes/scene_images/multiple_environ.png; numRays: 1024}>
+<Scene options={width: 1080; height: 1080; filename: test_format/example1.png; numRays: 256}>
   <Camera options={}/>
 
-  <Light type="environment" options={color: (1, 1, 1); radius: 10}/>
+  <Light type="point" options={color: (6, 6, 6); center: (2, 2, 1)}/>
+  <Light type="environment" options={color: (0.05, 0.05, 0.05); radius: 10}/>
 
   <Wavefront path="test_objs/bunny.obj" options={center: (-1, -2.4, -3.8); scale: 2.35}>
     <Material name="copper penny"/>
@@ -15,7 +16,7 @@
     <Material name="mirror"/>
   </Wavefront>
 
-  <Wavefront path="test_objs/dragon.obj" options={center: (0.25, -2.3, -2.5); scale: 2; color: (0.7, 0, 0)}>
+  <Wavefront path="test_objs/dragon.obj" options={center: (0.25, -2.45, -2.5); scale: 2; color: (0.7, 0, 0)}>
     <Material name="plastic"/>
   </Wavefront>
 
@@ -33,12 +34,18 @@
     <Texture path="test_textures/moon.png"/>
   </Shape>
 
-  <Shape type="plane" options={color: (0, 0.6, 1); normal: (0, 0, 1); D: 6}>
+  <Shape type="plane" options={normal: (0, 0, 1); D: 6; texture-zoom: 1600; texture-shift: (1000,400,0)}>
+    <Material name="plastic"/>
+    <Texture path="test_textures/marble.png"/>
   </Shape>
 
-  <Shape type="plane" options={color: (1, 1, 1); normal: (0, 1, 0); D: 2}>
+  <Shape type="plane" options={normal: (0, 1, 0); D: 2; texture-zoom: 1600; texture-shift: (2000,400,0)}>
+    <Material name="plastic"/>
+    <Texture path="test_textures/wooden.png"/>
   </Shape>
 
-  <Shape type="plane" options={color: (1, 1, 1); normal: (1, 0, 0); D: 3}>
+  <Shape type="plane" options={normal: (1, 0, 0); D: 3; texture-zoom: 1600}>
+    <Material name="plastic"/>
+    <Texture path="test_textures/marble.png"/>
   </Shape>
 </Scene>

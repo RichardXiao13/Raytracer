@@ -1,4 +1,4 @@
-png 1920 1920 test_scenes/multiple_objs.png
+png 1920 1920 example_scenes/scene_images/multiple_objs.png
 
 aa 256
 

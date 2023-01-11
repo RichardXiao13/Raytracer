@@ -206,6 +206,8 @@ Plane *parsePlaneOptions(
   Vector3D normal         = getDefaultOptionOrApply<Vector3D>(options, "normal", &stringTupleToVector3D, Vector3D(0, 0, 0));
   float D                 = getDefaultOptionOrApply<float>(options, "D", stof, 1.0f);
   Vector3D textureTopLeft = getDefaultOptionOrApply<Vector3D>(options, "top-left", &stringTupleToVector3D, Vector3D(0, 0, 0));
+  float textureZoom       = getDefaultOptionOrApply<float>(options, "texture-zoom", stof, 1.0f);
+  Vector3D textureShift   = getDefaultOptionOrApply<Vector3D>(options, "texture-shift", &stringTupleToVector3D, Vector3D(0, 0, 0));
   auto it = options.find("color");
   if (it != options.end()) {
     Vector3D temp = stringTupleToVector3D(it->second);
@@ -214,8 +216,7 @@ Plane *parsePlaneOptions(
     color.b = temp.z;
   }
 
-  // @TODO make sure center, color, and radius are set, otherwise return false
-  return new Plane(normal, D, color, material, textureTopLeft, texture);
+  return new Plane(normal, D, color, material, textureTopLeft, textureZoom, textureShift, texture);
 }
 
 ParserTree::ParserTree(std::ifstream &filestream) {

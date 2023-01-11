@@ -99,13 +99,17 @@ Sphere options
 
 Plane options
 
-```normal:    [(float, float, float)]```
+```normal:         [(float, float, float)]```
 
-```D:         [float]```
+```D:              [float]```
 
-```color:     [(float, float, float)]```
+```color:          [(float, float, float)]```
 
-```top-left:  [(float, float, float)]```
+```top-left:       [(float, float, float)]```
+
+```texture-zoom:   [(float, float, float)]```
+
+```texture-shift:  [(float, float, float)]```
 
 ## Materials
 ```<Material name="" options={}/>```
