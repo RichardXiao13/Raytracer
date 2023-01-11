@@ -4,6 +4,7 @@
 #include "../vector/vector3d.h"
 #include "../image/PNG.h"
 
+
 class UniformDistribution {
 public:
   UniformDistribution(const std::mt19937 &rng, const std::uniform_real_distribution<float> &distribution)
@@ -18,6 +19,8 @@ private:
 };
 
 Vector3D transformToWorld(float x, float y, float z, const Vector3D &normal);
+
+Vector3D sampleHemisphere(const Vector3D &n, UniformDistribution &sampler);
 
 /**
  * sphericalToUV

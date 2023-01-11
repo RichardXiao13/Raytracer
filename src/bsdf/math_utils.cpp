@@ -20,6 +20,21 @@ Vector3D transformToWorld(float x, float y, float z, const Vector3D &normal) {
   return u * x + v * y + w * z;
 }
 
+Vector3D sampleHemisphere(const Vector3D &n, UniformDistribution &sampler) {
+  // sample unit hemisphere and map it to the normal
+  float rand = sampler();
+  float r = std::sqrtf(rand);
+  float theta = sampler() * 2.0f * M_PI;
+
+  float x = r * std::cosf(theta);
+  float y = r * std::sinf(theta);
+
+  // Project z up to the unit hemisphere
+  float z = std::sqrtf(1.0f - x * x - y * y);
+
+  return normalized(transformToWorld(x, y, z, n));
+}
+
 Vector3D sphericalToUV(const Vector3D &point, std::shared_ptr<PNG> textureMap) {
   Vector3D normalizedPoint = normalized(point);
   float cosPhi = normalizedPoint.z;

@@ -4,16 +4,18 @@
 #include "../macros.h"
 #include "../vector/vector3d.h"
 
-bool DistantLight::pointInShadow(const Vector3D &point, const Scene *scene) const {
+bool DistantLight::pointInShadow(const Vector3D &point, const Vector3D &direction, const Scene *scene) const {
   IntersectionInfo info = scene->findAnyObject(point, direction);
   return info.obj != nullptr;
 }
 
-RGBAColor DistantLight::intensity(const Vector3D &point, const Vector3D &n) const {
+RGBAColor DistantLight::intensity(const Vector3D &point, const Vector3D &n, const Scene *scene, UniformDistribution &sampler) const {
+  if (pointInShadow(point, direction, scene))
+    return RGBAColor(0, 0, 0, 1);
   return color * clipDot(n, direction);
 }
 
-bool PointLight::pointInShadow(const Vector3D &point, const Scene *scene) const {
+bool PointLight::pointInShadow(const Vector3D &point, const Vector3D &direction, const Scene *scene) const {
   const Vector3D lightDirection = center - point;
   float intersectToBulbDist = magnitude(lightDirection);
   IntersectionInfo info = scene->findClosestObject(point, lightDirection);
@@ -22,20 +24,25 @@ bool PointLight::pointInShadow(const Vector3D &point, const Scene *scene) const 
   return info.obj != nullptr && objectToIntersect < intersectToBulbDist;
 }
 
-RGBAColor PointLight::intensity(const Vector3D &point, const Vector3D &n) const {
+RGBAColor PointLight::intensity(const Vector3D &point, const Vector3D &n, const Scene *scene, UniformDistribution &sampler) const {
   const Vector3D lightDirection = center - point;
+  if (pointInShadow(point, lightDirection, scene))
+    return RGBAColor(0, 0, 0, 1);
   float distance = magnitude(lightDirection);
   float invDistance =  1.0f / (distance * distance);
   return color * clipDot(n, lightDirection) * invDistance;
 }
 
-bool EnvironmentLight::pointInShadow(const Vector3D &point, const Scene *scene) const {
-  // @TODO: need to figure this out...
-  return false;
+bool EnvironmentLight::pointInShadow(const Vector3D &point, const Vector3D &direction, const Scene *scene) const {
+  IntersectionInfo info = scene->findAnyObject(point, direction);
+  return info.obj != nullptr;
 }
 
-RGBAColor EnvironmentLight::intensity(const Vector3D &point, const Vector3D &n) const {
-  return emittedLight(n);
+RGBAColor EnvironmentLight::intensity(const Vector3D &point, const Vector3D &n, const Scene *scene, UniformDistribution &sampler) const {
+  Vector3D wi = sampleHemisphere(n, sampler);
+  if (pointInShadow(point, wi, scene))
+    return RGBAColor(0, 0, 0, 1);
+  return emittedLight(wi);
 }
 
 RGBAColor EnvironmentLight::emittedLight(const Vector3D &direction) const {

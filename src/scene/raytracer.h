@@ -93,7 +93,7 @@ public:
   SceneOptions options;
 
 private:
-  RGBAColor illuminate(const Vector3D &direction, const IntersectionInfo& info);
+  RGBAColor illuminate(const IntersectionInfo& info, UniformDistribution &sampler);
   RGBAColor raytrace(const Vector3D& origin, const Vector3D& direction, UniformDistribution &sampler);
   void expose(PNG *img);
   /**

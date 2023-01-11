@@ -11,18 +11,7 @@ BDFType operator&(BDFType lhs, BDFType rhs) {
 }
 
 float BDF::sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, UniformDistribution &sampler, float *pdf, BDFType *type) const {
-  // sample unit hemisphere and map it to the normal
-  float rand = sampler();
-  float r = std::sqrtf(rand);
-  float theta = sampler() * 2.0f * M_PI;
-
-  float x = r * std::cosf(theta);
-  float y = r * std::sinf(theta);
-
-  // Project z up to the unit hemisphere
-  float z = std::sqrtf(1.0f - x * x - y * y);
-
-  *wi = normalized(transformToWorld(x, y, z, n));
+  *wi = sampleHemisphere(n, sampler);
   *pdf = this->pdf(wo, *wi, n);
   *type = BDFType::DIFFUSE;
   return func(wo, *wi, n);

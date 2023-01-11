@@ -56,8 +56,8 @@ public:
   Light(const RGBAColor& color)
     : color(color) {};
   virtual ~Light() {};
-  virtual bool pointInShadow(const Vector3D &point, const Scene *scene) const = 0;
-  virtual RGBAColor intensity(const Vector3D &point, const Vector3D &n) const = 0;
+  virtual bool pointInShadow(const Vector3D &point, const Vector3D &direction, const Scene *scene) const = 0;
+  virtual RGBAColor intensity(const Vector3D &point, const Vector3D &n, const Scene *scene, UniformDistribution &sampler) const = 0;
   virtual RGBAColor emittedLight(const Vector3D &point) const {
     return RGBAColor(0,0,0,0);
   }
@@ -70,8 +70,8 @@ public:
   DistantLight(const Vector3D &direction, const RGBAColor& color)
     : Light(color), direction(direction) {};
   ~DistantLight() {};
-  bool pointInShadow(const Vector3D &point, const Scene *scene) const;
-  RGBAColor intensity(const Vector3D &point, const Vector3D &n) const;
+  bool pointInShadow(const Vector3D &point, const Vector3D &direction, const Scene *scene) const;
+  RGBAColor intensity(const Vector3D &point, const Vector3D &n, const Scene *scene, UniformDistribution &sampler) const;
 
   Vector3D direction;
 };
@@ -81,8 +81,8 @@ public:
   PointLight(const Vector3D &center, const RGBAColor &color)
     : Light(color), center(center) {};
   ~PointLight() {};
-  bool pointInShadow(const Vector3D &point, const Scene *scene) const;
-  RGBAColor intensity(const Vector3D &point, const Vector3D &n) const;
+  bool pointInShadow(const Vector3D &point, const Vector3D &direction, const Scene *scene) const;
+  RGBAColor intensity(const Vector3D &point, const Vector3D &n, const Scene *scene, UniformDistribution &sampler) const;
 
   Vector3D center;
 };
@@ -94,8 +94,8 @@ public:
     EnvironmentLight(const Vector3D &center, float radius, float scale, std::shared_ptr<PNG> luminanceMap)
     : Light(RGBAColor()), center(center), radius(radius), scale(scale), luminanceMap(luminanceMap) {};
   ~EnvironmentLight() {};
-  bool pointInShadow(const Vector3D &point, const Scene *scene) const;
-  RGBAColor intensity(const Vector3D &point, const Vector3D &n) const;
+  bool pointInShadow(const Vector3D &point, const Vector3D &direction, const Scene *scene) const;
+  RGBAColor intensity(const Vector3D &point, const Vector3D &n, const Scene *scene, UniformDistribution &sampler) const;
   RGBAColor emittedLight(const Vector3D &point) const;
 
   Vector3D center;

@@ -195,13 +195,11 @@ IntersectionInfo Scene::findClosestObject(const Vector3D& origin, const Vector3D
   return closestInfo;
 }
 
-RGBAColor Scene::illuminate(const Vector3D &direction, const IntersectionInfo& info) {
+RGBAColor Scene::illuminate(const IntersectionInfo& info, UniformDistribution &sampler) {
   RGBAColor L;
 
   for (auto it = lights.begin(); it != lights.end(); ++it) {
-    if ((*it)->pointInShadow(info.point, this) == false) {
-      L += (*it)->intensity(info.point, info.normal);
-    }
+      L += (*it)->intensity(info.point, info.normal, this, sampler);
   }
 
   return info.obj->getColor(info.point) * L;
@@ -230,7 +228,7 @@ RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, Uni
     intersectInfo.point += options.bias * outNormal;
     const std::shared_ptr<Material> &material = intersectInfo.obj->material;
 
-    L += beta * illuminate(rayDirection, intersectInfo);
+    L += beta * illuminate(intersectInfo, sampler);
     // Add metallic object specular contribution
     if (material->type == MaterialType::Metal)
       beta *= intersectInfo.obj->color;
