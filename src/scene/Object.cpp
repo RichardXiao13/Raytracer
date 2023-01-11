@@ -42,7 +42,7 @@ RGBAColor EnvironmentLight::intensity(const Vector3D &point, const Vector3D &n, 
   Vector3D wi = sampleHemisphere(n, sampler);
   if (pointInShadow(point, wi, scene))
     return RGBAColor(0, 0, 0, 1);
-  return emittedLight(wi);
+  return emittedLight(wi) * clipDot(n, wi);
 }
 
 RGBAColor EnvironmentLight::emittedLight(const Vector3D &direction) const {
