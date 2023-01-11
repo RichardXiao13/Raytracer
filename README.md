@@ -20,9 +20,9 @@ make
 Any feedback or issues found are very much welcome, as well as additional contributors!
 
 # TODOs - Version 2: Realistic Rendering
-* Add environment lighting (Requires spherical textures) - Need to figure out shadowing
+* Add environment lighting - Need to figure out shadowing
 
-* Add textures - Fix sphere textures
+* Add textures - Add interface for Planar textures (wrapping)
 
 * Find a better file format or parse other formats into this format
     * Configured a custom format dubbed SDML (Scene Description Markup Language); Still needs a lot of work but basic interface is implemented for all except textures

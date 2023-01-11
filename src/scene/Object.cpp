@@ -94,7 +94,7 @@ IntersectionInfo Sphere::intersect(const Vector3D& origin, const Vector3D& direc
 RGBAColor Sphere::getColor(const Vector3D &intersectionPoint) const {
   if (textureMap == nullptr)
     return color;
-  const Vector3D textureCoordinates = sphericalToUV(intersectionPoint, textureMap);
+  const Vector3D textureCoordinates = sphericalToUV(intersectionPoint - center, textureMap);
   unsigned x = static_cast<unsigned>(textureCoordinates.x);
   unsigned y = static_cast<unsigned>(textureCoordinates.y);
   return textureMap->getPixel(y, x);
