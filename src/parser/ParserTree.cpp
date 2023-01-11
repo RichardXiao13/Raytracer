@@ -421,16 +421,21 @@ void ParserTree::parseShapeNode(Node *node, Scene *scene) {
     scene->addObject(std::unique_ptr<Object>(sphere));
   } else if (type == "triangle") {
     Triangle *triangle = parseTriangleOptions(options, color, objectType, material, texture);
-    if (dot(scene->camera.forward, triangle->centroid - scene->camera.eye) > 0
-        && dot(scene->camera.forward, triangle->normal) > 0) {
-        triangle->normal *= -1.0f;
-      }
-      triangle->n1 = triangle->normal;
-      triangle->n2 = triangle->normal;
-      triangle->n3 = triangle->normal;
+    bool isInFront = dot(scene->camera.forward, triangle->centroid - scene->camera.eye) > 0;
+    bool isWithForward = dot(scene->camera.forward, triangle->normal) > 0;
+    if (isInFront && isWithForward) {
+      triangle->normal = -triangle->normal;
+    }
+    triangle->n1 = triangle->normal;
+    triangle->n2 = triangle->normal;
+    triangle->n3 = triangle->normal;
     scene->addObject(std::unique_ptr<Triangle>(triangle));
   } else if (type == "plane") {
     Plane *plane = parsePlaneOptions(options, color, objectType, material, texture);
+    bool isWithForward = dot(scene->camera.forward, plane->normal) > 0;
+    if (isWithForward) {
+      plane->normal = -plane->normal;
+    }
     scene->addPlane(std::unique_ptr<Plane>(plane));
   } else {
     // unknown shape
