@@ -94,6 +94,7 @@ IntersectionInfo Sphere::intersect(const Vector3D& origin, const Vector3D& direc
 RGBAColor Sphere::getColor(const Vector3D &intersectionPoint) const {
   if (textureMap == nullptr)
     return color;
+  
   const Vector3D textureCoordinates = sphericalToUV(intersectionPoint - center, textureMap);
   unsigned x = static_cast<unsigned>(textureCoordinates.x);
   unsigned y = static_cast<unsigned>(textureCoordinates.y);
@@ -105,9 +106,10 @@ Plane::Plane(
   float D,
   const RGBAColor &color,
   std::shared_ptr<Material> material,
+  const Vector3D &textureTopLeft,
   std::shared_ptr<PNG> textureMap
 )
-  : Object(color, material, textureMap), normal(normalized(normal))
+  : Object(color, material, textureMap), normal(normalized(normal)), textureTopLeft(textureTopLeft)
 {
   if (normal.x != 0) {
     point.x = -D/normal.x;
@@ -126,6 +128,21 @@ IntersectionInfo Plane::intersect(const Vector3D& origin, const Vector3D& direct
   return (t < 0)
   ? IntersectionInfo{ INF_D, Vector3D(), Vector3D(), nullptr }
   : IntersectionInfo{ t, t * normalizedDirection + origin, normal, this };
+}
+
+RGBAColor Plane::getColor(const Vector3D &intersectionPoint) const {
+  if (textureMap == nullptr)
+    return color;
+
+  float x = intersectionPoint.x - textureTopLeft.x;
+  float y = intersectionPoint.y - textureTopLeft.y;
+  float width = textureMap->width();
+  float height = textureMap->height();
+  x = x > 0 ? std::fmod(x, width) : width - std::fmod(-x, width);
+  y = y > 0 ? std::fmod(y, height) : height - std::fmod(-y, height);
+  x = clamp(x, 0, width - 1);
+  y = height - y;
+  return textureMap->getPixel(y, x);
 }
 
 Triangle::Triangle(

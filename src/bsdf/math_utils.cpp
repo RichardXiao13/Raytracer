@@ -27,7 +27,7 @@ Vector3D sphericalToUV(const Vector3D &point, std::shared_ptr<PNG> textureMap) {
   float theta = M_PI + std::atan2(normalizedPoint.y, normalizedPoint.x);
   float width = textureMap->width();
   float height = textureMap->height();
-  float y = clamp(phi * 0.5 * M_1_PI * height, 0, height - 1);
+  float y = (height - 1) - clamp(phi * 0.5 * M_1_PI * height, 0, height - 1);
   float x = clamp(theta * 0.5 * M_1_PI * width, 0, width - 1);
   return Vector3D(x, y, 0.0f);
 }

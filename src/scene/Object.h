@@ -127,12 +127,15 @@ public:
     float D,
     const RGBAColor &color,
     std::shared_ptr<Material> material,
+    const Vector3D &textureTopLeft=Vector3D(),
     std::shared_ptr<PNG> textureMap=nullptr
   );
   IntersectionInfo intersect(const Vector3D& origin, const Vector3D& direction) const;
+  RGBAColor getColor(const Vector3D &intersectionPoint) const;
 
   Vector3D normal;
   Vector3D point;
+  Vector3D textureTopLeft;
 };
 
 class Triangle : public Object {
