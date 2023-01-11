@@ -134,14 +134,15 @@ RGBAColor Plane::getColor(const Vector3D &intersectionPoint) const {
   if (textureMap == nullptr)
     return color;
 
-  float x = intersectionPoint.x - textureTopLeft.x;
-  float y = intersectionPoint.y - textureTopLeft.y;
+  Vector3D transformedPoint = transformToWorld(intersectionPoint.y, intersectionPoint.x, intersectionPoint.z, Vector3D(0, 0, 1));
+  float x = transformedPoint.x - textureTopLeft.x;
+  float y = transformedPoint.y - textureTopLeft.y;
   float width = textureMap->width();
   float height = textureMap->height();
   x = x > 0 ? std::fmod(x, width) : width - std::fmod(-x, width);
   y = y > 0 ? std::fmod(y, height) : height - std::fmod(-y, height);
   x = clamp(x, 0, width - 1);
-  y = height - y;
+  y = clamp(height - y, 0, height - 1);
   return textureMap->getPixel(y, x);
 }
 
