@@ -5,7 +5,7 @@ I originally started this project as a fun exercise for myself following some gu
 
 The format of the scene files can be found [here](https://cs418.cs.illinois.edu/website/hw-raytracer.html) on the course site.
 
-Note that Version 2 is transitioning away from the txt-based scene files whil integrating a custom format that can be found in FileFormat.md. While some functionality still works with the original scene files, most has shifted to a different model of rendering.
+Note that Version 2 is transitioning away from the txt-based scene files while integrating a custom format that can be found in FileFormat.md. While some functionality still works with the original scene files, most has shifted to a different model of rendering.
 
 Benchmarks from Version 1 can be found in benchmarks. This includes rendering times with Bounding Volume Hierarchy acceleration and multi-threading.
 
