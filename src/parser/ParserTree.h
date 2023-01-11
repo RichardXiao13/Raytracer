@@ -84,6 +84,7 @@ public:
   };
 
   ParserTree(std::ifstream &filestream);
+  ~ParserTree();
   std::unique_ptr<Scene> parseIntoScene();
 
   void print() {
@@ -101,6 +102,7 @@ private:
   std::shared_ptr<PNG> parseTextureNode(Node *node);
   void print(Node *node);
   void build(std::ifstream &filestream, Node *node);
+  void clear(Node *node);
 
   Node *root;
 };

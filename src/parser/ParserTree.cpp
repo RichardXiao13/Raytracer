@@ -235,6 +235,19 @@ ParserTree::ParserTree(std::ifstream &filestream) {
   build(filestream, root);
 }
 
+ParserTree::~ParserTree() {
+  clear(root);
+}
+
+void ParserTree::clear(Node *node) {
+  if (node == nullptr)
+    return;
+  for (Node *child : node->children) {
+    clear(child);
+  }
+  delete node;
+}
+
 std::unique_ptr<Scene> ParserTree::parseIntoScene() {
   Scene *scene = new Scene();
   parseNode(root, scene);
