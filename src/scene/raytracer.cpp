@@ -204,7 +204,7 @@ RGBAColor Scene::illuminate(const Vector3D &direction, const IntersectionInfo& i
     }
   }
 
-  return info.obj->getColor(info.point + direction * info.t) * L;
+  return info.obj->getColor(info.point) * L;
 }
 
 RGBAColor Scene::raytrace(const Vector3D& origin, const Vector3D& direction, UniformDistribution &sampler) {

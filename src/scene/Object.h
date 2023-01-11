@@ -138,19 +138,28 @@ public:
 class Triangle : public Object {
 public:
   Triangle(
-    const Vector3D& p1,
-    const Vector3D& p2,
-    const Vector3D& p3,
+    const Vector3D &p1,
+    const Vector3D &p2,
+    const Vector3D &p3,
     const RGBAColor &color,
     std::shared_ptr<Material> material,
+    const Vector3D &t1=Vector3D(),
+    const Vector3D &t2=Vector3D(),
+    const Vector3D &t3=Vector3D(),
     std::shared_ptr<PNG> textureMap=nullptr
   );
   IntersectionInfo intersect(const Vector3D& origin, const Vector3D& direction) const;
+  RGBAColor getColor(const Vector3D &intersectionPoint) const;
+  void setTextureCoordinates(const Vector3D &tex1, const Vector3D &tex2, const Vector3D &tex3);
 
   Vector3D p1;
   Vector3D normal;
   Vector3D e1;
   Vector3D e2;
+
+  Vector3D t1;
+  Vector3D t2;
+  Vector3D t3;
   
   Vector3D n1;
   Vector3D n2;

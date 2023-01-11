@@ -30,7 +30,7 @@ float BDF::sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, Unifo
 
 float BDF::pdf(const Vector3D &wo, const Vector3D &wi, const Vector3D &n) const {
   // Check if wo and wi are in the same direction before returning pdf
-  return (dot(wo, wi) > 0) ? std::abs(dot(wi, n)) * M_1_PI : 0;
+  return (dot(wo, wi) > 0) ? std::abs(dot(wi, n)) * M_1_PI * 2: 0;
 }
 
 float SpecularReflection::sampleFunc(const Vector3D &wo, Vector3D *wi, const Vector3D &n, UniformDistribution &sampler, float *pdf, BDFType *type) const {

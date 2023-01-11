@@ -134,9 +134,12 @@ Triangle::Triangle(
   const Vector3D& p3,
   const RGBAColor &color,
   std::shared_ptr<Material> material,
+  const Vector3D &t1,
+  const Vector3D &t2,
+  const Vector3D &t3,
   std::shared_ptr<PNG> textureMap
 )
-  : Object(color, material, textureMap), p1(p1)
+  : Object(color, material, textureMap), p1(p1), t1(t1), t2(t2), t3(t3)
 {
   aabbMin.x = std::min(std::min(p1.x, p2.x), p3.x);
   aabbMin.y = std::min(std::min(p1.y, p2.y), p3.y);
@@ -178,4 +181,21 @@ IntersectionInfo Triangle::intersect(const Vector3D& origin, const Vector3D& dir
   return (b1 < 0 || b1 > 1 || b2 < 0 || b2 > 1 || b3 < 0 || b3 > 1)
   ? IntersectionInfo{ INF_D, Vector3D(), Vector3D(), nullptr }
   : IntersectionInfo{ t, intersectionPoint, normalized(n1 * b1 + n2 * b2 + n3 * b3), this };
+}
+
+RGBAColor Triangle::getColor(const Vector3D &intersectionPoint) const {
+  if (textureMap == nullptr)
+    return color;
+  
+  float b2 = dot(e1, intersectionPoint - p1);
+  float b3 = dot(e2, intersectionPoint - p1);
+  float b1 = 1.0f - b3 - b2;
+  Vector3D textureCoordinates = t1 * b1 + t2 * b2 + t3 * b3;
+  return textureMap->getPixel(textureCoordinates.y, textureCoordinates.x);
+}
+
+void Triangle::setTextureCoordinates(const Vector3D &tex1, const Vector3D &tex2, const Vector3D &tex3) {
+  t1 = tex1;
+  t2 = tex2;
+  t3 = tex3;
 }

@@ -174,6 +174,11 @@ Triangle *parseTriangleOptions(
   Vector3D p1 = getDefaultOptionOrApply<Vector3D>(options, "p1", &stringTupleToVector3D, Vector3D(0, 0, 0));
   Vector3D p2 = getDefaultOptionOrApply<Vector3D>(options, "p2", &stringTupleToVector3D, Vector3D(0, 0, 0));
   Vector3D p3 = getDefaultOptionOrApply<Vector3D>(options, "p3", &stringTupleToVector3D, Vector3D(0, 0, 0));
+
+  Vector3D t1 = getDefaultOptionOrApply<Vector3D>(options, "t1", &stringTupleToVector3D, Vector3D(0, 0, 0));
+  Vector3D t2 = getDefaultOptionOrApply<Vector3D>(options, "t2", &stringTupleToVector3D, Vector3D(0, 0, 0));
+  Vector3D t3 = getDefaultOptionOrApply<Vector3D>(options, "t3", &stringTupleToVector3D, Vector3D(0, 0, 0));
+
   auto it = options.find("color");
   if (it != options.end()) {
     Vector3D temp = stringTupleToVector3D(it->second);
@@ -183,7 +188,7 @@ Triangle *parseTriangleOptions(
   }
 
   // @TODO make sure p1, p2, and p3 are set, otherwise return false
-  return new Triangle(p1, p2, p3, color, material, texture);
+  return new Triangle(p1, p2, p3, color, material, t1, t2, t3, texture);
 }
 
 Plane *parsePlaneOptions(
