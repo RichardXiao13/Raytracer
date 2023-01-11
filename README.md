@@ -21,4 +21,4 @@ Any feedback or issues found are very much welcome, as well as additional contri
 
 # Example Scene
 ![plot](./example_scenes/scene_images/example1.png)
-4 minute 17.61 second render on 1 environment light, 1 point light, 1,048,897 objects + 3 planes, and 256 rays per pixel. Credits to <a href="https://www.freepik.com/free-photo/close-up-black-marble-textured-background_3472377.htm#query=marble%20texture&position=0&from_view=keyword">marble by rawpixel.com</a> and <a href="https://www.freepik.com/free-photo/wooden_1175802.htm#query=wood%20floor%20texture&position=8&from_view=keyword">wooden by evening_tao</a> on Freepik for the textures.
+4 minute 17.61 second 1080 by 1080 render on 1 environment light, 1 point light, 1,048,897 objects + 3 planes, and 256 rays per pixel. Credits to <a href="https://www.freepik.com/free-photo/close-up-black-marble-textured-background_3472377.htm#query=marble%20texture&position=0&from_view=keyword">marble by rawpixel.com</a> and <a href="https://www.freepik.com/free-photo/wooden_1175802.htm#query=wood%20floor%20texture&position=8&from_view=keyword">wooden by evening_tao</a> on Freepik for the textures.

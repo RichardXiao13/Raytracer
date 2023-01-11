@@ -1,4 +1,4 @@
-<Scene options={width: 1080; height: 1080; filename: test_format/example1.png; numRays: 256}>
+<Scene options={width: 1080; height: 1080; filename: example_scenes/scene_images/example1.png; numRays: 256}>
   <Camera options={}/>
 
   <Light type="point" options={color: (6, 6, 6); center: (2, 2, 1)}/>
